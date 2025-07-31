@@ -2,19 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Readable Modern Theme with Excellent Contrast */
+/* High Readability Modern Theme */
 :root {
-  /* Lighter dark theme with optimal readability */
-  --background: 210 30% 12%;          /* Lighter navy background */
-  --foreground: 210 20% 98%;          /* Bright white text */
-  --muted: 210 25% 20%;               /* Much lighter surface */
-  --muted-foreground: 210 15% 85%;    /* Very light gray text */
-  --popover: 210 30% 15%;             /* Lighter popover */
-  --popover-foreground: 210 20% 95%;  /* Bright popover text */
-  --card: 210 25% 18%;                /* Lighter card background */
-  --card-foreground: 210 20% 95%;     /* Bright card text */
-  --border: 210 25% 30%;              /* Much more visible borders */
-  --input: 210 25% 22%;               /* Lighter input background */
+  /* Very light theme for maximum readability */
+  --background: 210 20% 45%;          /* Very light background */
+  --foreground: 210 30% 98%;          /* Bright white text */
+  --muted: 210 15% 55%;               /* Light surface */
+  --muted-foreground: 210 20% 95%;    /* Very bright text */
+  --popover: 210 20% 50%;             /* Light popover */
+  --popover-foreground: 210 30% 98%;  /* Bright popover text */
+  --card: 210 15% 52%;                /* Light card background */
+  --card-foreground: 210 30% 98%;     /* Bright card text */
+  --border: 210 15% 65%;              /* Highly visible borders */
+  --input: 210 15% 55%;               /* Light input background */
   --primary: 199 89% 55%;             /* Slightly brighter blue */
   --primary-foreground: 210 40% 98%;  /* White on primary */
   --secondary: 142 76% 45%;           /* Brighter green */
@@ -33,16 +33,16 @@
 }
 
 .dark {
-  --background: 210 30% 12%;
-  --foreground: 210 20% 98%;
-  --muted: 210 25% 20%;
-  --muted-foreground: 210 15% 85%;
-  --popover: 210 30% 15%;
-  --popover-foreground: 210 20% 95%;
-  --card: 210 25% 18%;
-  --card-foreground: 210 20% 95%;
-  --border: 210 25% 30%;
-  --input: 210 25% 22%;
+  --background: 210 20% 45%;
+  --foreground: 210 30% 98%;
+  --muted: 210 15% 55%;
+  --muted-foreground: 210 20% 95%;
+  --popover: 210 20% 50%;
+  --popover-foreground: 210 30% 98%;
+  --card: 210 15% 52%;
+  --card-foreground: 210 30% 98%;
+  --border: 210 15% 65%;
+  --input: 210 15% 55%;
   --primary: 199 89% 55%;
   --primary-foreground: 210 40% 98%;
   --secondary: 142 76% 45%;
@@ -61,30 +61,30 @@
 
 /* Light theme for better accessibility */
 .light {
-  --background: 0 0% 100%;
-  --foreground: 210 40% 8%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 210 40% 45%;
+  --background: 0 0% 98%;
+  --foreground: 210 40% 12%;
+  --muted: 210 20% 90%;
+  --muted-foreground: 210 40% 35%;
   --popover: 0 0% 100%;
-  --popover-foreground: 210 40% 8%;
-  --card: 0 0% 100%;
-  --card-foreground: 210 40% 8%;
-  --border: 210 40% 85%;
-  --input: 210 40% 96%;
-  --primary: 199 89% 48%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 142 76% 36%;
-  --secondary-foreground: 210 40% 98%;
-  --accent: 31 81% 56%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 210 40% 98%;
-  --success: 142 76% 36%;
-  --warning: 38 92% 50%;
-  --info: 199 89% 48%;
-  --purple: 271 81% 56%;
-  --cyan: 180 78% 40%;
-  --ring: 199 89% 48%;
+  --popover-foreground: 210 40% 12%;
+  --card: 0 0% 95%;
+  --card-foreground: 210 40% 12%;
+  --border: 210 30% 75%;
+  --input: 210 20% 92%;
+  --primary: 199 89% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 142 76% 35%;
+  --secondary-foreground: 0 0% 100%;
+  --accent: 31 81% 55%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 55%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 142 76% 35%;
+  --warning: 38 92% 45%;
+  --info: 199 89% 45%;
+  --purple: 271 81% 55%;
+  --cyan: 180 78% 35%;
+  --ring: 199 89% 45%;
 }
 
 /* Enhanced animations and effects with better contrast */

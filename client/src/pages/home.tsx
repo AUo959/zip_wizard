@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Archive, Settings, Upload, Activity, ChevronDown, MoreVertical, Download, Folder, Search, Filter, Zap, Moon } from "lucide-react";
+import { Archive, Settings, Upload, Activity, ChevronDown, MoreVertical, Download, Folder, Search, Filter, Zap, Moon, Sun } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuGroup } from "@/components/ui/dropdown-menu";
 import UploadZone from "@/components/upload-zone";
 import FileTree from "@/components/file-tree";
@@ -91,14 +91,25 @@ export default function Home() {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <Archive className="text-primary h-8 w-8 vscode-glow" />
-                <h1 className="text-xl font-semibold quantum-text">ZipWizard</h1>
+                <h1 className="text-xl font-bold text-foreground">ZipWizard</h1>
               </div>
-              <Badge variant="secondary" className="text-xs quantum-gradient text-white">v2.2.6b</Badge>
+              <Badge variant="secondary" className="text-xs bg-primary text-primary-foreground font-semibold">v2.2.6b</Badge>
             </div>
             <div className="flex items-center space-x-4">
               <Button className="interactive-primary modern-button">
                 <Upload className="w-4 h-4 mr-2" />
                 Upload Archive
+              </Button>
+              
+              {/* Theme Toggle */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="bg-warning/10 border-warning text-warning hover:bg-warning hover:text-warning-foreground font-semibold"
+              >
+                <Sun className="w-4 h-4 mr-2" />
+                {isDarkMode ? "Light Mode" : "Dark Mode"}
               </Button>
               
               {/* Settings Dropdown */}
@@ -111,10 +122,6 @@ export default function Home() {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>Settings</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setIsDarkMode(!isDarkMode)}>
-                    <Moon className="w-4 h-4 mr-2" />
-                    Toggle Dark Mode
-                  </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Settings className="w-4 h-4 mr-2" />
                     Preferences
@@ -140,9 +147,9 @@ export default function Home() {
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <Archive className="text-primary h-8 w-8 vscode-glow" />
-              <h1 className="text-xl font-semibold quantum-text">ZipWizard</h1>
+              <h1 className="text-xl font-bold text-foreground">ZipWizard</h1>
             </div>
-            <Badge variant="secondary" className="text-xs quantum-gradient text-white">v2.2.6b</Badge>
+            <Badge variant="secondary" className="text-xs bg-primary text-primary-foreground font-semibold">v2.2.6b</Badge>
           </div>
           <div className="flex items-center space-x-4">
             {/* Archive Actions Dropdown */}
