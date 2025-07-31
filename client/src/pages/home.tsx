@@ -21,7 +21,7 @@ export default function Home() {
   const [openTabs, setOpenTabs] = useState<File[]>([]);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [fileTreeMode, setFileTreeMode] = useState<"classic" | "enhanced">("enhanced");
 
   // Apply theme to document
@@ -84,7 +84,7 @@ export default function Home() {
 
   if (showUpload || !archives?.length) {
     return (
-      <div className="h-screen bg-background text-foreground dark">
+      <div className="h-screen bg-background text-foreground">
         {/* Header */}
         <header className="bg-card border-b border-border px-6 py-4 vscode-fadeIn">
           <div className="flex items-center justify-between">
@@ -140,7 +140,7 @@ export default function Home() {
   }
 
   return (
-    <div className="h-screen bg-background text-foreground flex flex-col dark">
+    <div className="h-screen bg-background text-foreground flex flex-col">
       {/* Header */}
       <header className="bg-card border-b border-border px-6 py-4 vscode-fadeIn">
         <div className="flex items-center justify-between">

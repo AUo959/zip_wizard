@@ -4,17 +4,17 @@
 
 /* High Readability Modern Theme */
 :root {
-  /* Very light theme for maximum readability */
-  --background: 210 20% 45%;          /* Very light background */
-  --foreground: 210 30% 98%;          /* Bright white text */
-  --muted: 210 15% 55%;               /* Light surface */
-  --muted-foreground: 210 20% 95%;    /* Very bright text */
-  --popover: 210 20% 50%;             /* Light popover */
-  --popover-foreground: 210 30% 98%;  /* Bright popover text */
-  --card: 210 15% 52%;                /* Light card background */
-  --card-foreground: 210 30% 98%;     /* Bright card text */
-  --border: 210 15% 65%;              /* Highly visible borders */
-  --input: 210 15% 55%;               /* Light input background */
+  /* Light gray theme for excellent readability */
+  --background: 210 15% 85%;          /* Light gray background */
+  --foreground: 210 40% 15%;          /* Dark text for contrast */
+  --muted: 210 10% 75%;               /* Lighter surface */
+  --muted-foreground: 210 30% 25%;    /* Dark gray text */
+  --popover: 210 15% 90%;             /* Very light popover */
+  --popover-foreground: 210 40% 15%;  /* Dark popover text */
+  --card: 210 10% 80%;                /* Light card background */
+  --card-foreground: 210 40% 15%;     /* Dark card text */
+  --border: 210 20% 60%;              /* Visible borders */
+  --input: 210 10% 75%;               /* Light input background */
   --primary: 199 89% 55%;             /* Slightly brighter blue */
   --primary-foreground: 210 40% 98%;  /* White on primary */
   --secondary: 142 76% 45%;           /* Brighter green */
@@ -33,15 +33,15 @@
 }
 
 .dark {
-  --background: 210 20% 45%;
-  --foreground: 210 30% 98%;
+  --background: 210 20% 65%;
+  --foreground: 210 40% 15%;
   --muted: 210 15% 55%;
-  --muted-foreground: 210 20% 95%;
-  --popover: 210 20% 50%;
-  --popover-foreground: 210 30% 98%;
-  --card: 210 15% 52%;
-  --card-foreground: 210 30% 98%;
-  --border: 210 15% 65%;
+  --muted-foreground: 210 30% 25%;
+  --popover: 210 20% 70%;
+  --popover-foreground: 210 40% 15%;
+  --card: 210 15% 60%;
+  --card-foreground: 210 40% 15%;
+  --border: 210 15% 45%;
   --input: 210 15% 55%;
   --primary: 199 89% 55%;
   --primary-foreground: 210 40% 98%;
