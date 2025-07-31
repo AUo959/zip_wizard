@@ -1,8 +1,8 @@
-# Code Archive Analyzer
+# ZIP Wizard v2.2.6b - Quantum-Enhanced Code Archive Analyzer
 
 ## Overview
 
-This is a full-stack web application that allows users to upload code archives (ZIP files) and provides intelligent code analysis and exploration features. The application extracts files from uploaded archives, analyzes the code using NLP-like techniques, and presents the results through an interactive file browser with syntax highlighting and metadata analysis.
+This is a quantum-inspired full-stack web application that allows users to upload code archives (ZIP files) and provides intelligent code analysis with advanced observer logic and symbolic threading. The application extracts files from uploaded archives, analyzes the code using NLP-like techniques, tracks all system events through an observer service, and presents the results through an interactive file browser with syntax highlighting, metadata analysis, and a comprehensive status dashboard.
 
 ## User Preferences
 
@@ -39,12 +39,27 @@ Preferred communication style: Simple, everyday language.
 - Archive extraction and file content analysis
 - Automatic language detection and complexity assessment
 - Dependency extraction from code files
+- Hash-based mutation tracking for file integrity
 
 ### Code Analysis Engine
 - NLP-like analysis for programming languages
 - Automatic tagging and categorization
 - Complexity scoring (Low/Medium/High)
 - Dependency identification from import statements
+
+### Observer Service (v2.2.6b Enhancement)
+- Real-time event tracking (upload, analysis, mutation, export, access)
+- Activity summaries with severity levels
+- Monitoring window support (default 48 hours)
+- Critical event alerts and filtering
+
+### Quantum-Inspired Status Dashboard
+- Symbolic threading visualization (T1_CHAIN format)
+- Ethics lock and trust anchor display
+- Deployment status tracking
+- Replay state management
+- Activity monitoring with event distribution charts
+- Purple/blue gradient quantum-inspired UI design
 
 ### File Explorer
 - Hierarchical tree view of uploaded archives
@@ -57,6 +72,13 @@ Preferred communication style: Simple, everyday language.
 - File metadata display (size, language, complexity)
 - Copy and export functionality
 - Analysis panel with detailed code insights
+- Mutation tracking display
+
+### Security & Trust Features (v2.2.6b)
+- **Ethics Lock**: Configurable ethical boundaries (default: Picard_Delta_3)
+- **Trust Anchor**: Security verification system (default: SN1-AS3-TRUSTED)
+- **Symbolic Chain**: Traceable operation history
+- **Thread Tags**: Unique identifiers for operation sequences
 
 ### Cross-Platform Integration Features
 - **RESTful API v1**: Versioned API endpoints for stability
@@ -66,6 +88,9 @@ Preferred communication style: Simple, everyday language.
 - **Export Capabilities**: JSON export of archive analysis
 - **Query Filtering**: Language, tag, complexity filters on file endpoints
 - **Consistent Response Format**: Standardized success/error responses
+- **Observer Events API**: `/api/v1/observer/events` for event tracking
+- **Status Dashboard API**: `/api/v1/archives/:id/status` for quantum status
+- **Mutations API**: `/api/v1/mutations` for tracking file changes
 
 ## Data Flow
 

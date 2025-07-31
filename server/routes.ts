@@ -3,9 +3,11 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import JSZip from "jszip";
 import { storage } from "./storage";
+import { observer } from "./observer";
 import { insertArchiveSchema, insertFileSchema } from "@shared/schema";
 import path from "path";
 import cors from "cors";
+import crypto from "crypto";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -216,12 +218,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const zip = new JSZip();
       const contents = await zip.loadAsync(req.file.buffer);
       
-      // Create archive record
+      // Create archive record with enhanced metadata
+      const symbolicChain = `T1_CHAIN::ZIPWizard::v2.2.6b::${req.body.from || 'USER'}::${req.body.operation || 'Upload'}`;
+      const threadTag = `Thread_${req.body.tag || 'Upload'}_${Date.now()}`;
+      
       const archive = await storage.createArchive({
         name: req.file.originalname,
         originalSize: req.file.size,
         fileCount: Object.keys(contents.files).length,
+        symbolicChain,
+        threadTag,
+        ethicsLock: req.body.ethicsLock || "Picard_Delta_3",
+        trustAnchor: req.body.trustAnchor || "SN1-AS3-TRUSTED",
+        replayable: true,
+        monitoringWindow: parseInt(req.body.monitoringWindow) || 48,
       });
+
+      // Track upload event
+      await observer.trackUpload(archive.id, archive.name, archive.fileCount);
 
       // Process files
       const processedFiles = [];
@@ -264,6 +278,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             analysis = analyzeCodeFile(name, content, extension);
           }
 
+          // Calculate hash for mutation tracking
+          const contentHash = crypto.createHash('sha256').update(content).digest('hex');
+          
           const file = await storage.createFile({
             archiveId: archive.id,
             path: relativePath,
@@ -278,7 +295,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             tags: analysis.tags,
             complexity: analysis.complexity,
             dependencies: analysis.dependencies,
+            originalHash: contentHash,
+            currentHash: contentHash,
           });
+          
+          // Track analysis event
+          if (analysis.language) {
+            await observer.trackAnalysis(archive.id, file.id, name, analysis);
+          }
+          
           processedFiles.push(file);
         }
       }
@@ -449,6 +474,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false,
         error: "Failed to delete archive" 
+      });
+    }
+  });
+
+  // Get observer events
+  app.get("/api/v1/observer/events", async (req, res) => {
+    try {
+      const { archiveId, limit = "100", type } = req.query;
+      const events = type 
+        ? await storage.getObserverEventsByType(type as string, parseInt(limit as string))
+        : await storage.getObserverEvents(archiveId as string, parseInt(limit as string));
+      
+      res.json({
+        success: true,
+        data: events,
+        meta: {
+          total: events.length,
+          limit: parseInt(limit as string),
+          filters: { archiveId, type }
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to retrieve observer events"
+      });
+    }
+  });
+
+  // Get status dashboard for an archive
+  app.get("/api/v1/archives/:id/status", async (req, res) => {
+    try {
+      const archive = await storage.getArchive(req.params.id);
+      if (!archive) {
+        return res.status(404).json({ 
+          success: false, 
+          error: "Archive not found" 
+        });
+      }
+
+      const withinWindow = await observer.isWithinMonitoringWindow(req.params.id);
+      const activitySummary = await observer.getActivitySummary(req.params.id, archive.monitoringWindow || 48);
+      
+      res.json({
+        success: true,
+        data: {
+          symbolicChain: archive.symbolicChain || "N/A",
+          threadTag: archive.threadTag || "N/A",
+          ethicsLock: archive.ethicsLock || "N/A",
+          trustAnchor: archive.trustAnchor || "N/A",
+          deploymentStatus: {
+            guiHabitat: true,
+            glyphcardExport: true,
+            zipBundle: archive.name,
+            monitoring: withinWindow ? "Active" : "Expired",
+            acknowledgment: false,
+          },
+          replayState: {
+            replayable: archive.replayable,
+            continuityAnchors: "Verified",
+          },
+          activitySummary,
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to retrieve status"
+      });
+    }
+  });
+
+  // Get recent mutations
+  app.get("/api/v1/mutations", async (req, res) => {
+    try {
+      const { limit = "50" } = req.query;
+      const mutations = await storage.getRecentMutations(parseInt(limit as string));
+      
+      res.json({
+        success: true,
+        data: mutations,
+        meta: {
+          total: mutations.length,
+          limit: parseInt(limit as string)
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to retrieve mutations"
       });
     }
   });

@@ -1,6 +1,19 @@
-import { archives, files, type Archive, type InsertArchive, type File, type InsertFile } from "@shared/schema";
+import { 
+  archives, 
+  files, 
+  observerEvents,
+  fileMutations,
+  type Archive, 
+  type InsertArchive, 
+  type File, 
+  type InsertFile,
+  type ObserverEvent,
+  type InsertObserverEvent,
+  type FileMutation,
+  type InsertFileMutation
+} from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 
 export interface IStorage {
   // Archive operations
@@ -16,6 +29,16 @@ export interface IStorage {
   getFileByPath(archiveId: string, path: string): Promise<File | undefined>;
   updateFile(id: string, updates: Partial<File>): Promise<File | undefined>;
   deleteFilesByArchiveId(archiveId: string): Promise<void>;
+
+  // Observer event operations
+  createObserverEvent(event: InsertObserverEvent): Promise<ObserverEvent>;
+  getObserverEvents(archiveId?: string, limit?: number): Promise<ObserverEvent[]>;
+  getObserverEventsByType(type: string, limit?: number): Promise<ObserverEvent[]>;
+
+  // File mutation operations
+  createFileMutation(mutation: InsertFileMutation): Promise<FileMutation>;
+  getFileMutations(fileId: string): Promise<FileMutation[]>;
+  getRecentMutations(limit?: number): Promise<FileMutation[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -79,6 +102,66 @@ export class DatabaseStorage implements IStorage {
 
   async deleteFilesByArchiveId(archiveId: string): Promise<void> {
     await db.delete(files).where(eq(files.archiveId, archiveId));
+  }
+
+  // Observer event operations
+  async createObserverEvent(event: InsertObserverEvent): Promise<ObserverEvent> {
+    const [observerEvent] = await db
+      .insert(observerEvents)
+      .values([event])
+      .returning();
+    return observerEvent;
+  }
+
+  async getObserverEvents(archiveId?: string, limit: number = 100): Promise<ObserverEvent[]> {
+    if (archiveId) {
+      return await db
+        .select()
+        .from(observerEvents)
+        .where(eq(observerEvents.archiveId, archiveId))
+        .orderBy(desc(observerEvents.timestamp))
+        .limit(limit);
+    }
+    
+    return await db
+      .select()
+      .from(observerEvents)
+      .orderBy(desc(observerEvents.timestamp))
+      .limit(limit);
+  }
+
+  async getObserverEventsByType(type: string, limit: number = 100): Promise<ObserverEvent[]> {
+    return await db
+      .select()
+      .from(observerEvents)
+      .where(eq(observerEvents.type, type))
+      .orderBy(desc(observerEvents.timestamp))
+      .limit(limit);
+  }
+
+  // File mutation operations
+  async createFileMutation(mutation: InsertFileMutation): Promise<FileMutation> {
+    const [fileMutation] = await db
+      .insert(fileMutations)
+      .values([mutation])
+      .returning();
+    return fileMutation;
+  }
+
+  async getFileMutations(fileId: string): Promise<FileMutation[]> {
+    return await db
+      .select()
+      .from(fileMutations)
+      .where(eq(fileMutations.fileId, fileId))
+      .orderBy(desc(fileMutations.timestamp));
+  }
+
+  async getRecentMutations(limit: number = 50): Promise<FileMutation[]> {
+    return await db
+      .select()
+      .from(fileMutations)
+      .orderBy(desc(fileMutations.timestamp))
+      .limit(limit);
   }
 }
 

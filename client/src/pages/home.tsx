@@ -3,11 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Archive, Settings, Upload } from "lucide-react";
+import { Archive, Settings, Upload, Activity } from "lucide-react";
 import UploadZone from "@/components/upload-zone";
 import FileTree from "@/components/file-tree";
 import CodeEditor from "@/components/code-editor";
 import AnalysisPanel from "@/components/analysis-panel";
+import { StatusDashboard } from "@/components/status-dashboard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Archive as ArchiveType, File } from "@shared/schema";
 
 export default function Home() {
@@ -68,7 +70,7 @@ export default function Home() {
                 <Archive className="text-blue-600 h-8 w-8" />
                 <h1 className="text-xl font-semibold text-gray-900">Zip Archive Wizard</h1>
               </div>
-              <Badge variant="secondary" className="text-xs">v2.1.0</Badge>
+              <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700">v2.2.6b</Badge>
             </div>
             <div className="flex items-center space-x-4">
               <Button className="bg-blue-600 hover:bg-blue-700">
@@ -176,7 +178,21 @@ export default function Home() {
             {/* Analysis Panel */}
             {selectedFile && (
               <div className="w-96 border-l border-gray-200">
-                <AnalysisPanel file={selectedFile} />
+                <Tabs defaultValue="analysis" className="h-full">
+                  <TabsList className="w-full rounded-none">
+                    <TabsTrigger value="analysis" className="flex-1">Analysis</TabsTrigger>
+                    <TabsTrigger value="status" className="flex-1">
+                      <Activity className="w-4 h-4 mr-2" />
+                      Status
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="analysis" className="mt-0">
+                    <AnalysisPanel file={selectedFile} />
+                  </TabsContent>
+                  <TabsContent value="status" className="mt-0 p-4 overflow-y-auto">
+                    {selectedArchive && <StatusDashboard archiveId={selectedArchive.id} />}
+                  </TabsContent>
+                </Tabs>
               </div>
             )}
           </div>
