@@ -34,11 +34,13 @@ export interface IStorage {
   createObserverEvent(event: InsertObserverEvent): Promise<ObserverEvent>;
   getObserverEvents(archiveId?: string, limit?: number): Promise<ObserverEvent[]>;
   getObserverEventsByType(type: string, limit?: number): Promise<ObserverEvent[]>;
+  deleteObserverEventsByArchiveId(archiveId: string): Promise<void>;
 
   // File mutation operations
   createFileMutation(mutation: InsertFileMutation): Promise<FileMutation>;
   getFileMutations(fileId: string): Promise<FileMutation[]>;
   getRecentMutations(limit?: number): Promise<FileMutation[]>;
+  deleteFileMutationsByFileId(fileId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -60,9 +62,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteArchive(id: string): Promise<void> {
-    // Delete associated files first
+    // First, get all files for this archive to delete their mutations
+    const archiveFiles = await this.getFilesByArchiveId(id);
+    
+    // Delete file mutations for all files in this archive
+    for (const file of archiveFiles) {
+      await this.deleteFileMutationsByFileId(file.id);
+    }
+    
+    // Delete observer events for this archive
+    await this.deleteObserverEventsByArchiveId(id);
+    
+    // Delete associated files
     await this.deleteFilesByArchiveId(id);
-    // Then delete the archive
+    
+    // Finally delete the archive
     await db.delete(archives).where(eq(archives.id, id));
   }
 
@@ -139,6 +153,10 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
+  async deleteObserverEventsByArchiveId(archiveId: string): Promise<void> {
+    await db.delete(observerEvents).where(eq(observerEvents.archiveId, archiveId));
+  }
+
   // File mutation operations
   async createFileMutation(mutation: InsertFileMutation): Promise<FileMutation> {
     const [fileMutation] = await db
@@ -162,6 +180,10 @@ export class DatabaseStorage implements IStorage {
       .from(fileMutations)
       .orderBy(desc(fileMutations.timestamp))
       .limit(limit);
+  }
+
+  async deleteFileMutationsByFileId(fileId: string): Promise<void> {
+    await db.delete(fileMutations).where(eq(fileMutations.fileId, fileId));
   }
 }
 

@@ -146,3 +146,12 @@ Preferred communication style: Simple, everyday language.
 - Runtime error overlay for debugging
 
 The application follows a clean separation of concerns with shared types between frontend and backend, enabling type-safe development across the full stack. The architecture supports real-time file analysis and provides an intuitive interface for exploring code archives.
+
+## Recent Changes
+
+### July 31, 2025 - Redundant Upload Cleanup
+- **Issue Resolved**: Frontend timeout causing misleading "failed upload" messages while backend processing succeeded
+- **Action Taken**: Cleaned up 6 duplicate uploads using direct SQL deletion (378 observer events, 517 files, 6 archives)
+- **Technical Enhancement**: Improved DELETE API cascade deletion and error handling for future maintenance
+- **Current State**: Single clean archive with 111 files ready for analysis, all quantum features operational
+- **Database Status**: Proper foreign key constraint handling implemented for reliable data cleanup

@@ -625,9 +625,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Archive deleted successfully" 
       });
     } catch (error) {
+      console.error('Delete archive error:', error);
       res.status(500).json({ 
         success: false,
-        error: "Failed to delete archive" 
+        error: "Failed to delete archive",
+        details: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
