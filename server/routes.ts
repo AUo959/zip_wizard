@@ -1,10 +1,11 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
-import * as JSZip from "jszip";
+import JSZip from "jszip";
 import { storage } from "./storage";
 import { insertArchiveSchema, insertFileSchema } from "@shared/schema";
 import path from "path";
+import cors from "cors";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -100,9 +101,113 @@ function analyzeCodeFile(filename: string, content: string, extension: string) {
   };
 }
 
+// API Configuration
+interface ApiConfig {
+  version: string;
+  maxFileSize: number;
+  supportedFormats: string[];
+  cors: cors.CorsOptions;
+}
+
+const API_CONFIG: ApiConfig = {
+  version: "v1",
+  maxFileSize: 100 * 1024 * 1024, // 100MB
+  supportedFormats: ['.zip', '.rar', '.7z', '.tar', '.gz'],
+  cors: {
+    origin: process.env.CORS_ORIGIN || '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+    credentials: true,
+  }
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Upload and process archive
-  app.post("/api/archives/upload", upload.single("archive"), async (req, res) => {
+  // Apply CORS middleware
+  app.use(cors(API_CONFIG.cors));
+  
+  // API versioning middleware
+  app.use('/api/:version/*', (req: Request<{version: string}>, res, next) => {
+    const { version } = req.params;
+    if (version !== API_CONFIG.version) {
+      return res.status(400).json({
+        error: 'Invalid API version',
+        supportedVersions: [API_CONFIG.version],
+        message: `Please use /api/${API_CONFIG.version} endpoint`
+      });
+    }
+    next();
+  });
+
+  // Health check endpoint
+  app.get('/api/health', (req, res) => {
+    res.json({
+      status: 'ok',
+      version: API_CONFIG.version,
+      timestamp: new Date().toISOString(),
+      features: {
+        cors: true,
+        multiFormat: true,
+        nlpAnalysis: true,
+        apiVersion: API_CONFIG.version
+      }
+    });
+  });
+
+  // API documentation endpoint
+  app.get('/api/v1/docs', (req, res) => {
+    res.json({
+      version: API_CONFIG.version,
+      endpoints: {
+        health: {
+          method: 'GET',
+          path: '/api/health',
+          description: 'Health check endpoint'
+        },
+        uploadArchive: {
+          method: 'POST',
+          path: '/api/v1/archives',
+          description: 'Upload and process zip archive',
+          body: 'multipart/form-data with "archive" field',
+          response: { archive: 'Archive', fileCount: 'number' }
+        },
+        listArchives: {
+          method: 'GET',
+          path: '/api/v1/archives',
+          description: 'List all processed archives'
+        },
+        getArchive: {
+          method: 'GET',
+          path: '/api/v1/archives/:id',
+          description: 'Get specific archive details'
+        },
+        getArchiveFiles: {
+          method: 'GET',
+          path: '/api/v1/archives/:id/files',
+          description: 'Get all files from an archive'
+        },
+        exportArchive: {
+          method: 'GET',
+          path: '/api/v1/archives/:id/export',
+          description: 'Export archive analysis as JSON'
+        },
+        getFile: {
+          method: 'GET',
+          path: '/api/v1/files/:id',
+          description: 'Get specific file details'
+        },
+        deleteArchive: {
+          method: 'DELETE',
+          path: '/api/v1/archives/:id',
+          description: 'Delete an archive and its files'
+        }
+      },
+      supportedFormats: API_CONFIG.supportedFormats,
+      maxFileSize: `${API_CONFIG.maxFileSize / (1024 * 1024)}MB`
+    });
+  });
+  
+  // Upload and process archive - now at versioned endpoint
+  app.post("/api/v1/archives", upload.single("archive"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
@@ -146,7 +251,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const name = path.basename(relativePath);
           const parentPath = path.dirname(relativePath) === '.' ? null : path.dirname(relativePath);
           
-          let analysis = { language: null, tags: [], complexity: null, dependencies: [], description: "Binary or non-text file" };
+          let analysis: {
+            language: string | null;
+            tags: string[];
+            complexity: string | null;
+            dependencies: string[];
+            description: string;
+          } = { language: null, tags: [], complexity: null, dependencies: [], description: "Binary or non-text file" };
           
           // Only analyze text files
           if (content && extension && ['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.css', '.html', '.json', '.md', '.php', '.rb', '.go', '.rs'].includes(extension)) {
@@ -180,48 +291,191 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all archives
-  app.get("/api/archives", async (req, res) => {
+  app.get("/api/v1/archives", async (req, res) => {
     try {
       const archives = await storage.getAllArchives();
-      res.json(archives);
+      res.json({
+        success: true,
+        data: archives,
+        meta: {
+          total: archives.length,
+          version: API_CONFIG.version
+        }
+      });
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch archives" });
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to fetch archives",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
-  // Get archive files
-  app.get("/api/archives/:id/files", async (req, res) => {
+  // Get specific archive
+  app.get("/api/v1/archives/:id", async (req, res) => {
     try {
+      const archive = await storage.getArchive(req.params.id);
+      if (!archive) {
+        return res.status(404).json({ 
+          success: false,
+          error: "Archive not found" 
+        });
+      }
       const files = await storage.getFilesByArchiveId(req.params.id);
-      res.json(files);
+      res.json({
+        success: true,
+        data: {
+          ...archive,
+          fileCount: files.length,
+          analysis: analyzeFiles(files)
+        }
+      });
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch files" });
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to fetch archive"
+      });
+    }
+  });
+
+  // Get archive files with filtering
+  app.get("/api/v1/archives/:id/files", async (req, res) => {
+    try {
+      const { language, tag, search, complexity } = req.query;
+      let files = await storage.getFilesByArchiveId(req.params.id);
+      
+      // Apply filters
+      if (language) {
+        files = files.filter(f => f.language === language);
+      }
+      if (tag) {
+        files = files.filter(f => f.tags?.includes(tag as string));
+      }
+      if (complexity) {
+        files = files.filter(f => f.complexity === complexity);
+      }
+      if (search) {
+        const searchLower = (search as string).toLowerCase();
+        files = files.filter(f => 
+          f.name.toLowerCase().includes(searchLower) ||
+          f.path.toLowerCase().includes(searchLower) ||
+          f.description?.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      res.json({
+        success: true,
+        data: files,
+        meta: {
+          total: files.length,
+          filters: { language, tag, complexity, search }
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to fetch files" 
+      });
+    }
+  });
+
+  // Export archive analysis as JSON
+  app.get("/api/v1/archives/:id/export", async (req, res) => {
+    try {
+      const archive = await storage.getArchive(req.params.id);
+      if (!archive) {
+        return res.status(404).json({ 
+          success: false,
+          error: "Archive not found" 
+        });
+      }
+      
+      const files = await storage.getFilesByArchiveId(req.params.id);
+      const analysis = analyzeFiles(files);
+      
+      const exportData = {
+        archive,
+        analysis,
+        files: files.map(f => ({
+          ...f,
+          content: undefined // Remove content for export
+        })),
+        exportedAt: new Date().toISOString(),
+        version: API_CONFIG.version
+      };
+      
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${archive.name}-analysis.json"`);
+      res.json(exportData);
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to export archive" 
+      });
     }
   });
 
   // Get specific file
-  app.get("/api/files/:id", async (req, res) => {
+  app.get("/api/v1/files/:id", async (req, res) => {
     try {
       const file = await storage.getFile(req.params.id);
       if (!file) {
-        return res.status(404).json({ message: "File not found" });
+        return res.status(404).json({ 
+          success: false,
+          error: "File not found" 
+        });
       }
-      res.json(file);
+      res.json({
+        success: true,
+        data: file
+      });
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch file" });
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to fetch file" 
+      });
     }
   });
 
   // Delete archive
-  app.delete("/api/archives/:id", async (req, res) => {
+  app.delete("/api/v1/archives/:id", async (req, res) => {
     try {
       await storage.deleteArchive(req.params.id);
-      res.json({ message: "Archive deleted successfully" });
+      res.json({ 
+        success: true,
+        message: "Archive deleted successfully" 
+      });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete archive" });
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to delete archive" 
+      });
     }
   });
 
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Analysis helper function
+function analyzeFiles(files: any[]) {
+  const totalFiles = files.filter(f => f.isDirectory !== "true").length;
+  const components = files.filter(f => f.tags?.includes('component')).length;
+  const modules = files.filter(f => f.tags?.includes('module')).length;
+  const utilities = files.filter(f => f.tags?.includes('utility')).length;
+  
+  const languages: Record<string, number> = {};
+  files.forEach(file => {
+    if (file.language) {
+      languages[file.language] = (languages[file.language] || 0) + 1;
+    }
+  });
+
+  return {
+    totalFiles,
+    components,
+    modules,
+    utilities,
+    languages,
+  };
 }

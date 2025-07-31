@@ -17,13 +17,13 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(true);
 
-  const { data: archives, refetch: refetchArchives } = useQuery({
-    queryKey: ["/api/archives"],
+  const { data: archives = [], refetch: refetchArchives } = useQuery<ArchiveType[]>({
+    queryKey: ["archives"],
     enabled: !showUpload,
   });
 
-  const { data: files } = useQuery({
-    queryKey: ["/api/archives", selectedArchive?.id, "files"],
+  const { data: files = [] } = useQuery<File[]>({
+    queryKey: [`archives/${selectedArchive?.id}/files`],
     enabled: !!selectedArchive,
   });
 

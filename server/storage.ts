@@ -1,5 +1,6 @@
-import { type Archive, type InsertArchive, type File, type InsertFile } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { archives, files, type Archive, type InsertArchive, type File, type InsertFile } from "@shared/schema";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // Archive operations
@@ -17,79 +18,68 @@ export interface IStorage {
   deleteFilesByArchiveId(archiveId: string): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private archives: Map<string, Archive>;
-  private files: Map<string, File>;
-
-  constructor() {
-    this.archives = new Map();
-    this.files = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
   async createArchive(insertArchive: InsertArchive): Promise<Archive> {
-    const id = randomUUID();
-    const archive: Archive = { 
-      ...insertArchive, 
-      id,
-      uploadedAt: new Date()
-    };
-    this.archives.set(id, archive);
+    const [archive] = await db
+      .insert(archives)
+      .values([insertArchive])
+      .returning();
     return archive;
   }
 
   async getArchive(id: string): Promise<Archive | undefined> {
-    return this.archives.get(id);
+    const [archive] = await db.select().from(archives).where(eq(archives.id, id));
+    return archive || undefined;
   }
 
   async getAllArchives(): Promise<Archive[]> {
-    return Array.from(this.archives.values());
+    return await db.select().from(archives);
   }
 
   async deleteArchive(id: string): Promise<void> {
-    this.archives.delete(id);
-    // Also delete associated files
+    // Delete associated files first
     await this.deleteFilesByArchiveId(id);
+    // Then delete the archive
+    await db.delete(archives).where(eq(archives.id, id));
   }
 
   async createFile(insertFile: InsertFile): Promise<File> {
-    const id = randomUUID();
-    const file: File = { ...insertFile, id };
-    this.files.set(id, file);
+    const [file] = await db
+      .insert(files)
+      .values([insertFile])
+      .returning();
     return file;
   }
 
   async getFilesByArchiveId(archiveId: string): Promise<File[]> {
-    return Array.from(this.files.values()).filter(
-      (file) => file.archiveId === archiveId
-    );
+    return await db.select().from(files).where(eq(files.archiveId, archiveId));
   }
 
   async getFile(id: string): Promise<File | undefined> {
-    return this.files.get(id);
+    const [file] = await db.select().from(files).where(eq(files.id, id));
+    return file || undefined;
   }
 
   async getFileByPath(archiveId: string, path: string): Promise<File | undefined> {
-    return Array.from(this.files.values()).find(
-      (file) => file.archiveId === archiveId && file.path === path
-    );
+    const [file] = await db
+      .select()
+      .from(files)
+      .where(and(eq(files.archiveId, archiveId), eq(files.path, path)));
+    return file || undefined;
   }
 
   async updateFile(id: string, updates: Partial<File>): Promise<File | undefined> {
-    const file = this.files.get(id);
-    if (!file) return undefined;
-    
-    const updatedFile = { ...file, ...updates };
-    this.files.set(id, updatedFile);
-    return updatedFile;
+    const [updatedFile] = await db
+      .update(files)
+      .set(updates)
+      .where(eq(files.id, id))
+      .returning();
+    return updatedFile || undefined;
   }
 
   async deleteFilesByArchiveId(archiveId: string): Promise<void> {
-    for (const [id, file] of this.files.entries()) {
-      if (file.archiveId === archiveId) {
-        this.files.delete(id);
-      }
-    }
+    await db.delete(files).where(eq(files.archiveId, archiveId));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

@@ -27,7 +27,7 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
       }, 200);
 
       try {
-        const response = await apiRequest("POST", "/api/archives/upload", formData);
+        const response = await apiRequest("POST", "archives", formData);
         clearInterval(progressInterval);
         setUploadProgress(100);
         return await response.json();

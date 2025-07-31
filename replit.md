@@ -17,15 +17,17 @@ Preferred communication style: Simple, everyday language.
 - **State Management**: TanStack Query for server state management
 - **Routing**: Wouter for client-side routing
 - **UI Components**: Radix UI primitives with custom styling
+- **Configuration**: Centralized config system for cross-platform compatibility
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js
 - **Language**: TypeScript with ESM modules
 - **File Processing**: Multer for file uploads, JSZip for archive extraction
-- **API**: RESTful endpoints for archive and file operations
+- **API**: RESTful v1 API with versioning and CORS support
+- **Cross-Platform**: Configurable CORS, API versioning, health checks
 
 ### Data Storage Solutions
-- **Database**: PostgreSQL with Drizzle ORM
+- **Database**: PostgreSQL with Drizzle ORM (persistent storage)
 - **Connection**: Neon Database serverless PostgreSQL
 - **Schema**: Structured tables for archives and files with metadata
 - **Migrations**: Drizzle Kit for database schema management
@@ -55,6 +57,15 @@ Preferred communication style: Simple, everyday language.
 - File metadata display (size, language, complexity)
 - Copy and export functionality
 - Analysis panel with detailed code insights
+
+### Cross-Platform Integration Features
+- **RESTful API v1**: Versioned API endpoints for stability
+- **CORS Support**: Configurable cross-origin resource sharing
+- **Health Monitoring**: `/api/health` endpoint for system status
+- **API Documentation**: `/api/v1/docs` endpoint with complete API specs
+- **Export Capabilities**: JSON export of archive analysis
+- **Query Filtering**: Language, tag, complexity filters on file endpoints
+- **Consistent Response Format**: Standardized success/error responses
 
 ## Data Flow
 
