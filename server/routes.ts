@@ -446,9 +446,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             content: cleanContent,
             language: analysis.language,
             description: analysis.description,
-            tags: analysis.tags,
+            tags: Array.isArray(analysis.tags) ? analysis.tags : [],
             complexity: analysis.complexity,
-            dependencies: analysis.dependencies,
+            dependencies: Array.isArray(analysis.dependencies) ? analysis.dependencies : [],
             originalHash: contentHash,
             currentHash: contentHash,
           });
