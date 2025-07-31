@@ -22,8 +22,8 @@ function extractCodeFromText(content: string): { snippets: string[], languages: 
   while ((match = markdownCodeRegex.exec(content)) !== null) {
     const language = match[1] || 'unknown';
     const code = match[2].trim();
-    if (code) {
-      codeSnippets.push(code);
+    if (code && code.length < 10000) { // Limit individual snippet size
+      codeSnippets.push(code.substring(0, 5000)); // Truncate if needed
       if (language !== 'unknown' && !detectedLanguages.includes(language)) {
         detectedLanguages.push(language);
       }
@@ -64,21 +64,26 @@ function extractCodeFromText(content: string): { snippets: string[], languages: 
     }
   });
   
+  // Limit snippets to prevent memory issues
+  const limitedSnippets = codeSnippets.slice(0, 50); // Max 50 snippets
+  
   // Auto-detect languages if not already detected
-  if (detectedLanguages.length === 0 && codeSnippets.length > 0) {
-    const allCode = codeSnippets.join('\n');
-    if (allCode.match(/\b(function|const|let|var|=>|import|export)\b/)) detectedLanguages.push('javascript');
-    if (allCode.match(/\b(def|import|class|print|if __name__)\b/)) detectedLanguages.push('python');
-    if (allCode.match(/\b(public|private|class|interface|namespace)\b/)) detectedLanguages.push('java/csharp');
+  if (detectedLanguages.length === 0 && limitedSnippets.length > 0) {
+    // Sample first few snippets for language detection
+    const sampleCode = limitedSnippets.slice(0, 10).join('\n').substring(0, 5000);
+    if (sampleCode.match(/\b(function|const|let|var|=>|import|export)\b/)) detectedLanguages.push('javascript');
+    if (sampleCode.match(/\b(def|import|class|print|if __name__)\b/)) detectedLanguages.push('python');
+    if (sampleCode.match(/\b(public|private|class|interface|namespace)\b/)) detectedLanguages.push('java/csharp');
   }
   
-  return { snippets: codeSnippets, languages: detectedLanguages };
+  return { snippets: limitedSnippets, languages: detectedLanguages };
 }
 
 // Analyze chat/conversation files
 function analyzeChatContent(filename: string, content: string): any {
-  const { snippets, languages } = extractCodeFromText(content);
-  const lines = content.split('\n');
+  try {
+    const { snippets, languages } = extractCodeFromText(content);
+    const lines = content.split('\n');
   
   // Detect chat patterns
   const isChatHistory = content.includes('User:') || content.includes('Assistant:') || 
@@ -123,6 +128,24 @@ function analyzeChatContent(filename: string, content: string): any {
       wordCount: content.split(/\s+/).length,
     }
   };
+  } catch (error) {
+    console.error('Error analyzing chat content:', error);
+    // Return safe defaults on error
+    return {
+      language: 'Text',
+      tags: ['text', 'error-during-analysis'],
+      complexity: 'Low',
+      dependencies: [],
+      description: 'Text file (analysis incomplete due to processing error)',
+      metadata: {
+        codeSnippetCount: 0,
+        detectedLanguages: [],
+        topics: [],
+        lineCount: content.split('\n').length,
+        wordCount: 0,
+      }
+    };
+  }
 }
 
 // Simple NLP-like analysis

@@ -71,7 +71,21 @@
 - **Fix Applied**: 1:29 PM - Enhanced analyzeChatContent() function
 - **Status**: Fixed and deployed, ready for testing
 
+#### Issue #3: Memory Error on Large Files
+- **Time**: 1:30 PM
+- **Error**: "RangeError: Invalid string length" in extractCodeFromText
+- **Cause**: Attempting to join too many/large code snippets causing memory overflow
+- **Resolution**: Added safety limits:
+  - Max 5000 characters per code snippet
+  - Max 50 snippets per file
+  - Truncation for language detection (sample first 10 snippets)
+  - Try-catch error handling with safe defaults
+- **Fix Applied**: 1:32 PM - Added size limits and error handling
+- **Status**: Fixed and deployed, ready for final test
+
 ### Learning Points
 1. **UTF-8 Handling**: Always sanitize file content for database storage (remove null bytes)
 2. **Comprehensive Analysis**: Don't limit analysis to programming files - valuable code exists in documentation, chat logs, and text files
 3. **Pattern Recognition**: Multiple patterns needed to extract code from various formats (markdown, indented, inline)
+4. **Memory Management**: Large archives require careful memory handling - limit snippet sizes and counts
+5. **Error Recovery**: Always implement try-catch with safe defaults for file processing
