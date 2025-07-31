@@ -53,5 +53,25 @@
 - **Fix Applied**: 1:26 PM - Modified server/routes.ts to clean content
 - **Status**: Fixed and deployed, ready for re-test
 
+#### Issue #2: Limited File Analysis
+- **Time**: 1:27 PM
+- **Issue**: User reported "nothing to analyze" - only programming files were analyzed
+- **Cause**: Analysis limited to specific programming file extensions
+- **Resolution**: Enhanced analysis to extract code from:
+  - Text files (.txt, .log)
+  - Chat histories (.html, chat exports)
+  - Markdown files with embedded code
+  - Any text-based file
+- **Features Added**:
+  - Code snippet extraction from markdown blocks
+  - Detection of indented code blocks
+  - Pattern matching for code in natural text
+  - Chat history analysis with topic extraction
+  - Metadata tracking (snippet count, languages, topics)
+- **Fix Applied**: 1:29 PM - Enhanced analyzeChatContent() function
+- **Status**: Fixed and deployed, ready for testing
+
 ### Learning Points
-[Key insights for service improvement]
+1. **UTF-8 Handling**: Always sanitize file content for database storage (remove null bytes)
+2. **Comprehensive Analysis**: Don't limit analysis to programming files - valuable code exists in documentation, chat logs, and text files
+3. **Pattern Recognition**: Multiple patterns needed to extract code from various formats (markdown, indented, inline)

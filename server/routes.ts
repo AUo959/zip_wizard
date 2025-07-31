@@ -11,6 +11,120 @@ import crypto from "crypto";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+// Extract code snippets from text/chat content
+function extractCodeFromText(content: string): { snippets: string[], languages: string[] } {
+  const codeSnippets: string[] = [];
+  const detectedLanguages: string[] = [];
+  
+  // Pattern 1: Markdown-style code blocks ```language
+  const markdownCodeRegex = /```(\w+)?\n([\s\S]*?)```/g;
+  let match;
+  while ((match = markdownCodeRegex.exec(content)) !== null) {
+    const language = match[1] || 'unknown';
+    const code = match[2].trim();
+    if (code) {
+      codeSnippets.push(code);
+      if (language !== 'unknown' && !detectedLanguages.includes(language)) {
+        detectedLanguages.push(language);
+      }
+    }
+  }
+  
+  // Pattern 2: Indented code blocks (4+ spaces or tab)
+  const indentedCodeRegex = /(?:^|\n)((?:[ ]{4,}|\t).*(?:\n(?:[ ]{4,}|\t).*)*)/g;
+  while ((match = indentedCodeRegex.exec(content)) !== null) {
+    const code = match[1].replace(/^[ \t]+/gm, '').trim();
+    if (code && code.length > 20) { // Minimum length to avoid false positives
+      codeSnippets.push(code);
+    }
+  }
+  
+  // Pattern 3: Common code patterns in text
+  const patterns = [
+    /(?:function|const|let|var)\s+\w+\s*[=\(]/g, // JS functions/variables
+    /def\s+\w+\s*\(/g, // Python functions
+    /class\s+\w+/g, // Class definitions
+    /import\s+[\w{},\s]+from\s+['"][^'"]+['"]/g, // ES6 imports
+    /require\s*\(['"][^'"]+['"]\)/g, // CommonJS requires
+  ];
+  
+  patterns.forEach(pattern => {
+    const matches = content.match(pattern);
+    if (matches && matches.length > 0) {
+      // Extract surrounding context for each match
+      matches.forEach(matchText => {
+        const index = content.indexOf(matchText);
+        const start = Math.max(0, content.lastIndexOf('\n', index - 100));
+        const end = Math.min(content.length, content.indexOf('\n', index + 200));
+        const snippet = content.substring(start, end).trim();
+        if (snippet.length > 30) {
+          codeSnippets.push(snippet);
+        }
+      });
+    }
+  });
+  
+  // Auto-detect languages if not already detected
+  if (detectedLanguages.length === 0 && codeSnippets.length > 0) {
+    const allCode = codeSnippets.join('\n');
+    if (allCode.match(/\b(function|const|let|var|=>|import|export)\b/)) detectedLanguages.push('javascript');
+    if (allCode.match(/\b(def|import|class|print|if __name__)\b/)) detectedLanguages.push('python');
+    if (allCode.match(/\b(public|private|class|interface|namespace)\b/)) detectedLanguages.push('java/csharp');
+  }
+  
+  return { snippets: codeSnippets, languages: detectedLanguages };
+}
+
+// Analyze chat/conversation files
+function analyzeChatContent(filename: string, content: string): any {
+  const { snippets, languages } = extractCodeFromText(content);
+  const lines = content.split('\n');
+  
+  // Detect chat patterns
+  const isChatHistory = content.includes('User:') || content.includes('Assistant:') || 
+                       content.includes('<user>') || content.includes('<assistant>') ||
+                       content.includes('"role":') || content.includes('message:');
+  
+  // Extract topics and concepts
+  const topics: string[] = [];
+  const topicPatterns = [
+    /(?:about|regarding|concerning|discussing)\s+(\w+(?:\s+\w+){0,3})/gi,
+    /(?:implement|build|create|develop)\s+(\w+(?:\s+\w+){0,3})/gi,
+    /(?:fix|debug|solve|troubleshoot)\s+(\w+(?:\s+\w+){0,3})/gi,
+  ];
+  
+  topicPatterns.forEach(pattern => {
+    let match;
+    while ((match = pattern.exec(content)) !== null) {
+      const topic = match[1].toLowerCase().trim();
+      if (topic.length > 3 && !topics.includes(topic)) {
+        topics.push(topic);
+      }
+    }
+  });
+  
+  return {
+    language: languages.length > 0 ? languages.join(', ') : (isChatHistory ? 'Chat/Conversation' : 'Text'),
+    tags: [
+      ...(isChatHistory ? ['chat', 'conversation'] : ['text']),
+      ...(snippets.length > 0 ? ['contains-code'] : []),
+      ...(topics.length > 0 ? ['technical-discussion'] : []),
+    ],
+    complexity: snippets.length > 5 ? 'High' : snippets.length > 2 ? 'Medium' : 'Low',
+    dependencies: [],
+    description: isChatHistory 
+      ? `Chat history containing ${snippets.length} code snippets${topics.length > 0 ? ' discussing: ' + topics.slice(0, 3).join(', ') : ''}`
+      : `Text file with ${snippets.length} embedded code snippets${languages.length > 0 ? ' in ' + languages.join(', ') : ''}`,
+    metadata: {
+      codeSnippetCount: snippets.length,
+      detectedLanguages: languages,
+      topics: topics.slice(0, 10),
+      lineCount: lines.length,
+      wordCount: content.split(/\s+/).length,
+    }
+  };
+}
+
 // Simple NLP-like analysis
 function analyzeCodeFile(filename: string, content: string, extension: string) {
   let language = "";
@@ -273,9 +387,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             description: string;
           } = { language: null, tags: [], complexity: null, dependencies: [], description: "Binary or non-text file" };
           
-          // Only analyze text files
-          if (content && extension && ['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.css', '.html', '.json', '.md', '.php', '.rb', '.go', '.rs'].includes(extension)) {
-            analysis = analyzeCodeFile(name, content, extension);
+          // Analyze all text-based files
+          if (content) {
+            // Programming files
+            if (extension && ['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.css', '.json', '.php', '.rb', '.go', '.rs'].includes(extension)) {
+              analysis = analyzeCodeFile(name, content, extension);
+            }
+            // Text files, logs, and chat histories
+            else if (extension && ['.txt', '.log', '.html', '.md', '.xml'].includes(extension)) {
+              analysis = analyzeChatContent(name, content);
+            }
+            // Any file without extension or unknown extension - check if it contains text
+            else if (!extension || content.match(/[\x20-\x7E\n\r\t]/)) {
+              analysis = analyzeChatContent(name, content);
+            }
           }
 
           // Calculate hash for mutation tracking
