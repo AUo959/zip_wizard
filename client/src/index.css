@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(210, 11%, 15%);
+  --muted: hsl(210, 11%, 97%);
+  --muted-foreground: hsl(210, 6%, 45%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(210, 11%, 15%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(210, 11%, 15%);
+  --border: hsl(210, 11%, 87%);
+  --input: hsl(210, 11%, 87%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(210, 11%, 97%);
+  --secondary-foreground: hsl(210, 11%, 15%);
+  --accent: hsl(210, 11%, 97%);
+  --accent-foreground: hsl(210, 11%, 15%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(60, 9%, 98%);
+  --ring: hsl(207, 90%, 54%);
+  --radius: 0.5rem;
+  
+  /* GitHub-inspired colors */
+  --github-blue: hsl(207, 90%, 54%);
+  --github-purple: hsl(269, 58%, 51%);
+  --github-bg: hsl(210, 17%, 97%);
+  --github-text: hsl(210, 11%, 15%);
+  --github-success: hsl(130, 69%, 33%);
+  --github-accent: hsl(25, 95%, 53%);
+  --github-border: hsl(210, 11%, 82%);
+  --github-hover: hsl(210, 17%, 95%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 4%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 4%, 16%);
+  --muted-foreground: hsl(240, 5%, 65%);
+  --popover: hsl(240, 10%, 4%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 4%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 4%, 16%);
+  --input: hsl(240, 4%, 16%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(240, 4%, 16%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 4%, 16%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 63%, 31%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 5%, 84%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  code, pre {
+    font-family: 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  }
+}
+
+/* Custom scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--github-bg);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--github-border);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--github-text);
+}
+
+/* Tree view styles */
+.tree-item {
+  transition: background-color 0.15s ease;
+}
+
+.tree-item:hover {
+  background-color: var(--github-hover);
+}
+
+.tree-item.selected {
+  background-color: hsl(207, 90%, 95%);
+  border-left: 2px solid var(--github-blue);
+}
+
+/* Code editor styles */
+.code-editor {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.code-editor .line-numbers {
+  background-color: var(--github-bg);
+  color: hsl(210, 6%, 55%);
+  user-select: none;
+  min-width: 40px;
+  text-align: right;
+  padding-right: 12px;
+  border-right: 1px solid var(--github-border);
+}
+
+/* Upload zone styles */
+.upload-zone {
+  transition: all 0.2s ease;
+}
+
+.upload-zone.dragover {
+  border-color: var(--github-blue);
+  background-color: hsl(207, 90%, 97%);
+}
+
+/* Syntax highlighting */
+.token.comment { color: hsl(120, 100%, 30%); }
+.token.string { color: hsl(32, 100%, 40%); }
+.token.keyword { color: hsl(240, 100%, 50%); }
+.token.function { color: hsl(240, 100%, 65%); }
+.token.number { color: hsl(15, 100%, 50%); }
+.token.operator { color: hsl(210, 11%, 15%); }
