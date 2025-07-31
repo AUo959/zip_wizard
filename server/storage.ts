@@ -83,7 +83,7 @@ export class DatabaseStorage implements IStorage {
   async createFile(insertFile: InsertFile): Promise<File> {
     const [file] = await db
       .insert(files)
-      .values([insertFile])
+      .values(insertFile)
       .returning();
     return file;
   }

@@ -4,7 +4,7 @@ import multer from "multer";
 import JSZip from "jszip";
 import { storage } from "./storage";
 import { observer } from "./observer";
-import { insertArchiveSchema, insertFileSchema } from "@shared/schema";
+import { insertArchiveSchema, insertFileSchema, type File } from "@shared/schema";
 import path from "path";
 import cors from "cors";
 import crypto from "crypto";
@@ -238,6 +238,77 @@ function analyzeCodeFile(filename: string, content: string, extension: string) {
     dependencies: dependencies.slice(0, 10), // Limit dependencies
     description,
   };
+}
+
+// Helper functions for enhanced export
+function extractKeyInsights(files: File[]): string[] {
+  const insights: string[] = [];
+  
+  const securityFiles = files.filter(f => 
+    f.name.toLowerCase().includes('crypto') || 
+    f.name.toLowerCase().includes('encrypt') ||
+    f.content?.toLowerCase().includes('encryption')
+  );
+  if (securityFiles.length > 0) {
+    insights.push(`Security implementation found in ${securityFiles.length} files`);
+  }
+
+  const complexFiles = files.filter(f => f.complexity === 'High');
+  if (complexFiles.length > 0) {
+    insights.push(`${complexFiles.length} high-complexity files containing core logic`);
+  }
+
+  const jsModules = files.filter(f => f.language === 'JavaScript');
+  if (jsModules.length > 0) {
+    insights.push(`${jsModules.length} JavaScript modules with modular architecture`);
+  }
+
+  return insights;
+}
+
+function buildExportFileStructure(files: File[]): any {
+  const structure: any = {};
+  
+  files.forEach(file => {
+    const pathParts = file.path.split('/');
+    let current = structure;
+    
+    pathParts.forEach((part, index) => {
+      if (!current[part]) {
+        current[part] = index === pathParts.length - 1 ? {
+          type: 'file',
+          language: file.language,
+          complexity: file.complexity,
+          size: file.size,
+          tags: file.tags
+        } : {};
+      }
+      current = current[part];
+    });
+  });
+  
+  return structure;
+}
+
+function generateExplorationPaths(files: File[]): string[] {
+  const paths: string[] = [];
+  
+  const securityFiles = files.filter(f => f.name.toLowerCase().includes('crypto'));
+  if (securityFiles.length > 0) {
+    paths.push(`Start with security review: ${securityFiles[0].name}`);
+  }
+
+  const complexFiles = files.filter(f => f.complexity === 'High');
+  if (complexFiles.length > 0) {
+    paths.push(`Analyze core logic: ${complexFiles[0].name}`);
+  }
+
+  const jsFiles = files.filter(f => f.language === 'JavaScript');
+  if (jsFiles.length > 0) {
+    paths.push(`Review JavaScript modules: ${jsFiles[0].name}`);
+  }
+
+  return paths;
 }
 
 // API Configuration
@@ -571,20 +642,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const files = await storage.getFilesByArchiveId(req.params.id);
       const analysis = analyzeFiles(files);
+      const observerEvents = await storage.getObserverEvents(req.params.id, 1000);
       
       const exportData = {
-        archive,
-        analysis,
-        files: files.map(f => ({
-          ...f,
-          content: undefined // Remove content for export
+        metadata: {
+          archiveName: archive.name,
+          exportedAt: new Date().toISOString(),
+          version: API_CONFIG.version,
+          zipWizardVersion: "v2.2.6b",
+          totalFiles: files.length,
+          analysisComplete: true
+        },
+        archive: {
+          ...archive,
+          quantumFeatures: {
+            symbolicChain: archive.symbolicChain,
+            threadTag: archive.threadTag,
+            ethicsLock: archive.ethicsLock,
+            trustAnchor: archive.trustAnchor,
+            replayable: archive.replayable
+          }
+        },
+        analysis: {
+          ...analysis,
+          aiOptimizedSummary: {
+            codeFiles: files.filter(f => f.language && f.language !== 'Text').length,
+            languages: Object.keys(analysis.languages),
+            complexityDistribution: {
+              high: files.filter(f => f.complexity === 'High').length,
+              medium: files.filter(f => f.complexity === 'Medium').length,
+              low: files.filter(f => f.complexity === 'Low').length
+            },
+            keyInsights: extractKeyInsights(files)
+          }
+        },
+        fileStructure: buildExportFileStructure(files),
+        observerEvents: observerEvents.map(e => ({
+          type: e.type,
+          target: e.target,
+          timestamp: e.timestamp,
+          metadata: e.metadata
         })),
         exportedAt: new Date().toISOString(),
-        version: API_CONFIG.version
+        aiInstructions: {
+          note: "This archive has been processed by ZipWizard v2.2.6b quantum analysis engine",
+          recommendations: "Focus on files with High complexity for technical review, JavaScript modules contain encryption logic",
+          explorationPaths: generateExplorationPaths(files)
+        }
       };
       
       res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename="${archive.name}-analysis.json"`);
+      res.setHeader('Content-Disposition', `attachment; filename="${archive.name.replace('.zip', '')}-zipwizard-export.json"`);
       res.json(exportData);
     } catch (error) {
       res.status(500).json({ 

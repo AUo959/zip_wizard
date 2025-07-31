@@ -9,6 +9,7 @@ import FileTree from "@/components/file-tree";
 import CodeEditor from "@/components/code-editor";
 import AnalysisPanel from "@/components/analysis-panel";
 import { StatusDashboard } from "@/components/status-dashboard";
+import { AIExplorationPanel } from "@/components/ai-exploration-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Archive as ArchiveType, File } from "@shared/schema";
 
@@ -101,7 +102,7 @@ export default function Home() {
               <Archive className="text-blue-600 h-8 w-8" />
               <h1 className="text-xl font-semibold text-gray-900">Zip Archive Wizard</h1>
             </div>
-            <Badge variant="secondary" className="text-xs">v2.1.0</Badge>
+            <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700">v2.2.6b</Badge>
           </div>
           <div className="flex items-center space-x-4">
             <Button onClick={() => setShowUpload(true)} className="bg-blue-600 hover:bg-blue-700">
@@ -194,6 +195,16 @@ export default function Home() {
                   </TabsContent>
                 </Tabs>
               </div>
+            )}
+
+            {/* AI Exploration Panel */}
+            {selectedArchive && (
+              <AIExplorationPanel
+                archive={selectedArchive}
+                files={files}
+                onFileSelect={handleFileSelect}
+                selectedFile={selectedFile}
+              />
             )}
           </div>
         </main>
