@@ -2,54 +2,92 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Modern VSCode-inspired Dark Theme */
+/* High-Contrast Modern Dark Theme with Color Variety */
 :root {
-  /* Tokyo Night inspired color palette */
-  --background: 218 28% 7%;           /* Deep dark blue-black */
-  --foreground: 218 20% 80%;          /* Light text */
-  --muted: 218 28% 12%;               /* Darker surface */
-  --muted-foreground: 218 14% 65%;    /* Muted text */
-  --popover: 218 28% 9%;              /* Popover background */
-  --popover-foreground: 218 20% 85%;  /* Popover text */
-  --card: 218 28% 10%;                /* Card background */
-  --card-foreground: 218 20% 82%;     /* Card text */
-  --border: 218 28% 15%;              /* Border color */
-  --input: 218 28% 14%;               /* Input background */
-  --primary: 200 100% 70%;            /* Bright blue accent */
-  --primary-foreground: 218 28% 7%;   /* Primary text */
-  --secondary: 270 60% 80%;           /* Purple accent */
-  --secondary-foreground: 218 28% 12%; /* Secondary text */
-  --accent: 310 100% 75%;             /* Pink accent */
-  --accent-foreground: 218 28% 10%;   /* Accent text */
-  --destructive: 0 84% 60%;           /* Red for danger */
-  --destructive-foreground: 218 20% 95%; /* Destructive text */
-  --ring: 200 100% 70%;               /* Focus ring */
-  --radius: 6px;                      /* Border radius */
+  /* Dark theme with excellent contrast and color diversity */
+  --background: 210 40% 2%;           /* Rich dark navy */
+  --foreground: 210 40% 98%;          /* Bright white text */
+  --muted: 210 40% 8%;                /* Dark surface */
+  --muted-foreground: 210 20% 75%;    /* Light gray text */
+  --popover: 210 40% 4%;              /* Popover background */
+  --popover-foreground: 210 40% 95%;  /* Popover text */
+  --card: 210 40% 6%;                 /* Card background */
+  --card-foreground: 210 40% 92%;     /* Card text */
+  --border: 210 40% 18%;              /* Visible borders */
+  --input: 210 40% 10%;               /* Input background */
+  --primary: 199 89% 48%;             /* Vibrant blue */
+  --primary-foreground: 210 40% 98%;  /* White on primary */
+  --secondary: 142 76% 36%;           /* Vibrant green */
+  --secondary-foreground: 210 40% 98%; /* White on secondary */
+  --accent: 31 81% 56%;               /* Vibrant orange */
+  --accent-foreground: 210 40% 98%;   /* White on accent */
+  --destructive: 0 84% 60%;           /* Bright red */
+  --destructive-foreground: 210 40% 98%; /* White on destructive */
+  --success: 142 76% 36%;             /* Success green */
+  --warning: 38 92% 50%;              /* Warning yellow */
+  --info: 199 89% 48%;                /* Info blue */
+  --purple: 271 81% 56%;              /* Vibrant purple */
+  --cyan: 180 78% 40%;                /* Cyan accent */
+  --ring: 199 89% 48%;                /* Focus ring */
+  --radius: 8px;                      /* Slightly more rounded */
 }
 
 .dark {
-  --background: 218 28% 7%;
-  --foreground: 218 20% 80%;
-  --muted: 218 28% 12%;
-  --muted-foreground: 218 14% 65%;
-  --popover: 218 28% 9%;
-  --popover-foreground: 218 20% 85%;
-  --card: 218 28% 10%;
-  --card-foreground: 218 20% 82%;
-  --border: 218 28% 15%;
-  --input: 218 28% 14%;
-  --primary: 200 100% 70%;
-  --primary-foreground: 218 28% 7%;
-  --secondary: 270 60% 80%;
-  --secondary-foreground: 218 28% 12%;
-  --accent: 310 100% 75%;
-  --accent-foreground: 218 28% 10%;
+  --background: 210 40% 2%;
+  --foreground: 210 40% 98%;
+  --muted: 210 40% 8%;
+  --muted-foreground: 210 20% 75%;
+  --popover: 210 40% 4%;
+  --popover-foreground: 210 40% 95%;
+  --card: 210 40% 6%;
+  --card-foreground: 210 40% 92%;
+  --border: 210 40% 18%;
+  --input: 210 40% 10%;
+  --primary: 199 89% 48%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 142 76% 36%;
+  --secondary-foreground: 210 40% 98%;
+  --accent: 31 81% 56%;
+  --accent-foreground: 210 40% 98%;
   --destructive: 0 84% 60%;
-  --destructive-foreground: 218 20% 95%;
-  --ring: 200 100% 70%;
+  --destructive-foreground: 210 40% 98%;
+  --success: 142 76% 36%;
+  --warning: 38 92% 50%;
+  --info: 199 89% 48%;
+  --purple: 271 81% 56%;
+  --cyan: 180 78% 40%;
+  --ring: 199 89% 48%;
 }
 
-/* VSCode-style animations and effects */
+/* Light theme for better accessibility */
+.light {
+  --background: 0 0% 100%;
+  --foreground: 210 40% 8%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 210 40% 45%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 40% 8%;
+  --card: 0 0% 100%;
+  --card-foreground: 210 40% 8%;
+  --border: 210 40% 85%;
+  --input: 210 40% 96%;
+  --primary: 199 89% 48%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 142 76% 36%;
+  --secondary-foreground: 210 40% 98%;
+  --accent: 31 81% 56%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+  --success: 142 76% 36%;
+  --warning: 38 92% 50%;
+  --info: 199 89% 48%;
+  --purple: 271 81% 56%;
+  --cyan: 180 78% 40%;
+  --ring: 199 89% 48%;
+}
+
+/* Enhanced animations and effects with better contrast */
 .vscode-fadeIn {
   animation: fadeIn 0.2s ease-in-out;
 }
@@ -59,58 +97,142 @@
 }
 
 .vscode-glow {
-  box-shadow: 0 0 10px rgba(102, 178, 255, 0.3);
+  box-shadow: 0 0 15px hsl(var(--primary) / 0.4);
 }
 
 .vscode-hover {
   transition: all 0.15s ease-in-out;
+  border-radius: var(--radius);
 }
 
 .vscode-hover:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  transform: translateX(2px);
+  background-color: hsl(var(--accent) / 0.1);
+  border-left: 3px solid hsl(var(--accent));
+  transform: translateX(3px);
+  box-shadow: 0 2px 8px hsl(var(--accent) / 0.2);
 }
 
-/* Modern dropdown styles */
+/* High contrast interactive states */
+.interactive-primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: 2px solid hsl(var(--primary));
+}
+
+.interactive-primary:hover {
+  background: hsl(var(--primary) / 0.9);
+  box-shadow: 0 4px 12px hsl(var(--primary) / 0.3);
+  transform: translateY(-1px);
+}
+
+.interactive-secondary {
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  border: 2px solid hsl(var(--secondary));
+}
+
+.interactive-secondary:hover {
+  background: hsl(var(--secondary) / 0.9);
+  box-shadow: 0 4px 12px hsl(var(--secondary) / 0.3);
+}
+
+/* High-contrast dropdown styles */
 .modern-dropdown {
-  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+  background: hsl(var(--popover));
   backdrop-filter: blur(10px);
-  border: 1px solid hsl(var(--border));
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 2px solid hsl(var(--border));
+  box-shadow: 0 12px 40px hsl(var(--background) / 0.5);
 }
 
-/* File tree enhancements */
+/* Enhanced file tree with better contrast */
 .file-tree-item {
-  border-left: 2px solid transparent;
+  border-left: 3px solid transparent;
   transition: all 0.15s ease-in-out;
+  border-radius: 0 var(--radius) var(--radius) 0;
 }
 
 .file-tree-item.selected {
-  border-left-color: hsl(var(--primary));
-  background: linear-gradient(90deg, rgba(102, 178, 255, 0.1) 0%, transparent 100%);
+  border-left-color: hsl(var(--accent));
+  background: linear-gradient(90deg, hsl(var(--accent) / 0.15) 0%, transparent 100%);
+  color: hsl(var(--foreground));
 }
 
 .file-tree-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: hsl(var(--muted));
+  border-left-color: hsl(var(--primary));
 }
 
-/* Quantum gradient effects */
+/* Complexity indicators with vibrant colors */
+.complexity-high {
+  background: hsl(var(--destructive) / 0.15);
+  color: hsl(var(--destructive));
+  border: 1px solid hsl(var(--destructive) / 0.3);
+}
+
+.complexity-medium {
+  background: hsl(var(--warning) / 0.15);
+  color: hsl(var(--warning));
+  border: 1px solid hsl(var(--warning) / 0.3);
+}
+
+.complexity-low {
+  background: hsl(var(--success) / 0.15);
+  color: hsl(var(--success));
+  border: 1px solid hsl(var(--success) / 0.3);
+}
+
+/* Colorful gradient effects with better contrast */
 .quantum-gradient {
   background: linear-gradient(135deg, 
     hsl(var(--primary)) 0%, 
-    hsl(var(--secondary)) 50%, 
-    hsl(var(--accent)) 100%
+    hsl(var(--purple)) 25%,
+    hsl(var(--accent)) 50%,
+    hsl(var(--secondary)) 75%,
+    hsl(var(--cyan)) 100%
   );
 }
 
 .quantum-text {
   background: linear-gradient(135deg, 
     hsl(var(--primary)), 
+    hsl(var(--purple)),
     hsl(var(--accent))
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  font-weight: 600;
+}
+
+/* Color-coded file type indicators */
+.file-type-js {
+  color: hsl(var(--warning));
+  background: hsl(var(--warning) / 0.1);
+  border: 1px solid hsl(var(--warning) / 0.3);
+}
+
+.file-type-json {
+  color: hsl(var(--secondary));
+  background: hsl(var(--secondary) / 0.1);
+  border: 1px solid hsl(var(--secondary) / 0.3);
+}
+
+.file-type-md {
+  color: hsl(var(--info));
+  background: hsl(var(--info) / 0.1);
+  border: 1px solid hsl(var(--info) / 0.3);
+}
+
+.file-type-security {
+  color: hsl(var(--destructive));
+  background: hsl(var(--destructive) / 0.1);
+  border: 1px solid hsl(var(--destructive) / 0.3);
+}
+
+.file-type-config {
+  color: hsl(var(--purple));
+  background: hsl(var(--purple) / 0.1);
+  border: 1px solid hsl(var(--purple) / 0.3);
 }
 
 /* Button improvements */

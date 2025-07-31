@@ -24,13 +24,14 @@ export default function Home() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [fileTreeMode, setFileTreeMode] = useState<"classic" | "enhanced">("enhanced");
 
-  // Apply dark mode to document
+  // Apply theme to document
   useEffect(() => {
     const root = document.documentElement;
+    root.classList.remove('dark', 'light');
     if (isDarkMode) {
       root.classList.add('dark');
     } else {
-      root.classList.remove('dark');
+      root.classList.add('light');
     }
   }, [isDarkMode]);
 
@@ -95,7 +96,7 @@ export default function Home() {
               <Badge variant="secondary" className="text-xs quantum-gradient text-white">v2.2.6b</Badge>
             </div>
             <div className="flex items-center space-x-4">
-              <Button className="modern-button quantum-gradient text-white">
+              <Button className="interactive-primary modern-button">
                 <Upload className="w-4 h-4 mr-2" />
                 Upload Archive
               </Button>
@@ -147,8 +148,8 @@ export default function Home() {
             {/* Archive Actions Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="modern-button">
-                  <Archive className="w-4 h-4 mr-2" />
+                <Button variant="outline" className="modern-button border-border bg-card text-card-foreground hover:bg-accent/10">
+                  <Archive className="w-4 h-4 mr-2 text-primary" />
                   Archive Actions
                   <ChevronDown className="w-4 h-4 ml-2" />
                 </Button>
@@ -157,7 +158,7 @@ export default function Home() {
                 <DropdownMenuLabel>Archive Management</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => setShowUpload(true)}>
+                  <DropdownMenuItem onClick={() => setShowUpload(true)} className="text-primary hover:text-primary-foreground hover:bg-primary">
                     <Upload className="w-4 h-4 mr-2" />
                     Upload New Archive
                   </DropdownMenuItem>
@@ -173,7 +174,7 @@ export default function Home() {
                       a.click();
                       window.URL.revokeObjectURL(url);
                       document.body.removeChild(a);
-                    }}>
+                    }} className="text-secondary hover:text-secondary-foreground hover:bg-secondary">
                       <Download className="w-4 h-4 mr-2" />
                       Export Analysis
                     </DropdownMenuItem>
@@ -181,11 +182,11 @@ export default function Home() {
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => setFileTreeMode(fileTreeMode === "classic" ? "enhanced" : "classic")}>
+                  <DropdownMenuItem onClick={() => setFileTreeMode(fileTreeMode === "classic" ? "enhanced" : "classic")} className="text-accent hover:text-accent-foreground hover:bg-accent">
                     <Folder className="w-4 h-4 mr-2" />
                     Toggle View: {fileTreeMode === "classic" ? "Enhanced" : "Classic"}
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem className="text-info hover:text-white hover:bg-info">
                     <Search className="w-4 h-4 mr-2" />
                     Advanced Search
                   </DropdownMenuItem>
@@ -203,15 +204,15 @@ export default function Home() {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>Application Settings</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setIsDarkMode(!isDarkMode)}>
+                <DropdownMenuItem onClick={() => setIsDarkMode(!isDarkMode)} className="text-warning hover:text-white hover:bg-warning">
                   <Moon className="w-4 h-4 mr-2" />
                   {isDarkMode ? "Light Mode" : "Dark Mode"}
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem className="text-purple hover:text-white hover:bg-purple">
                   <Settings className="w-4 h-4 mr-2" />
                   Preferences
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem className="text-cyan hover:text-white hover:bg-cyan">
                   <Zap className="w-4 h-4 mr-2" />
                   Quantum Features
                 </DropdownMenuItem>

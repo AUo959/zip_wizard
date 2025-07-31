@@ -150,27 +150,35 @@ export function EnhancedFileTree({
     }
 
     const ext = file.extension?.toLowerCase();
+    const isSecurity = file.name.toLowerCase().includes('crypto') || 
+                      file.name.toLowerCase().includes('security') || 
+                      file.name.toLowerCase().includes('encrypt');
+    
+    if (isSecurity) {
+      return () => <div className="w-4 h-4 file-type-security rounded text-xs flex items-center justify-center font-bold">SEC</div>;
+    }
+
     switch (ext) {
       case '.js':
       case '.jsx':
       case '.ts':
       case '.tsx':
-        return () => <div className="w-4 h-4 bg-yellow-500 rounded text-white text-xs flex items-center justify-center font-bold">JS</div>;
+        return () => <div className="w-4 h-4 file-type-js rounded text-xs flex items-center justify-center font-bold">JS</div>;
       case '.json':
-        return () => <div className="w-4 h-4 bg-green-500 rounded text-white text-xs flex items-center justify-center font-bold">JSON</div>;
+        return () => <div className="w-4 h-4 file-type-json rounded text-xs flex items-center justify-center font-bold">JSON</div>;
       case '.md':
-        return () => <div className="w-4 h-4 bg-blue-500 rounded text-white text-xs flex items-center justify-center font-bold">MD</div>;
+        return () => <div className="w-4 h-4 file-type-md rounded text-xs flex items-center justify-center font-bold">MD</div>;
       default:
-        return FileIcon;
+        return () => <div className="w-4 h-4 file-type-config rounded text-xs flex items-center justify-center font-bold">FILE</div>;
     }
   };
 
   const getComplexityColor = (complexity: string) => {
     switch (complexity) {
-      case 'High': return 'bg-red-100 text-red-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'High': return 'complexity-high';
+      case 'Medium': return 'complexity-medium';
+      case 'Low': return 'complexity-low';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -189,14 +197,14 @@ export function EnhancedFileTree({
         if (searchQuery && groupFiles.length === 0) return null;
 
         return (
-          <Card key={group.id} className="transition-all hover:shadow-md">
+          <Card key={group.id} className="transition-all hover:shadow-md vscode-hover bg-card border-border">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center justify-between text-card-foreground">
                 <div className="flex items-center space-x-2">
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-4 h-4" style={{color: `hsl(var(--${group.id === 'security' ? 'destructive' : group.id === 'core-logic' ? 'primary' : group.id === 'data-config' ? 'secondary' : group.id === 'archives' ? 'purple' : 'info'}))`}} />
                   <span>{group.name}</span>
                 </div>
-                <Badge className={group.color} variant="outline">
+                <Badge className={`${group.color} font-semibold`} variant="outline">
                   {group.files.length}
                 </Badge>
               </CardTitle>
@@ -213,8 +221,8 @@ export function EnhancedFileTree({
                       variant="ghost"
                       size="sm"
                       className={cn(
-                        "w-full justify-start h-8 text-xs transition-all",
-                        isSelected && "bg-blue-50 border-l-2 border-blue-600"
+                        "w-full justify-start h-8 text-xs file-tree-item transition-all",
+                        isSelected && "selected bg-accent/10 border-l-3 border-accent text-foreground"
                       )}
                       onClick={() => onFileSelect(file)}
                     >
@@ -288,7 +296,7 @@ export function EnhancedFileTree({
             <Button 
               size="sm" 
               variant="outline" 
-              className="w-full justify-start"
+              className="w-full justify-start vscode-hover border-destructive/30 text-destructive hover:bg-destructive/10"
               onClick={() => {
                 const cryptoFiles = files.filter(f => f.name.toLowerCase().includes('crypto'));
                 if (cryptoFiles.length > 0) onFileSelect(cryptoFiles[0]);
@@ -300,7 +308,7 @@ export function EnhancedFileTree({
             <Button 
               size="sm" 
               variant="outline" 
-              className="w-full justify-start"
+              className="w-full justify-start vscode-hover border-primary/30 text-primary hover:bg-primary/10"
               onClick={() => {
                 const complexFiles = files.filter(f => f.complexity === 'High');
                 if (complexFiles.length > 0) onFileSelect(complexFiles[0]);
@@ -312,7 +320,7 @@ export function EnhancedFileTree({
             <Button 
               size="sm" 
               variant="outline" 
-              className="w-full justify-start"
+              className="w-full justify-start vscode-hover border-warning/30 text-warning hover:bg-warning/10"
               onClick={() => {
                 const jsFiles = files.filter(f => f.language === 'JavaScript');
                 if (jsFiles.length > 0) onFileSelect(jsFiles[0]);
