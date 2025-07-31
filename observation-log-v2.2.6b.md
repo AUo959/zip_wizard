@@ -23,8 +23,17 @@
 
 ### Observer Events Log
 - **1:22 PM**: Initial check - No events recorded yet (system ready)
-- **Status**: Awaiting file upload to trigger observer tracking
-[Live events will be recorded as they occur]
+- **1:25 PM**: Upload event tracked for Comprehensive_Chat_Archive_20250410_032233.zip
+- **1:25 PM**: Multiple analysis events tracked:
+  - Aurora_Master_Knowledge_Core_v2.2.6b_CLEANED.md
+  - aurora_digital_key_readable.json
+  - Aurora_Continuity_Seal_v2.2.5.json
+  - aurora_module_manifest.json
+  - And several other JSON files
+- **1:25 PM**: ERROR - Upload failed with "invalid byte sequence for encoding UTF8: 0x00"
+  - Issue: File content contains null bytes incompatible with PostgreSQL text fields
+  - Location: DatabaseStorage.createFile method
+  - Impact: Archive processing halted after initial file analysis
 
 ### Status Dashboard Observations
 [Dashboard behavior will be documented here]
@@ -35,7 +44,14 @@
 - Analysis completion: TBD
 
 ### Issues/Findings
-[Any issues discovered during testing]
+
+#### Issue #1: UTF-8 Encoding Error
+- **Time**: 1:25 PM
+- **Error**: "invalid byte sequence for encoding UTF8: 0x00"
+- **Cause**: File content contained null bytes (0x00) incompatible with PostgreSQL text fields
+- **Resolution**: Added content cleaning to remove null bytes before database storage
+- **Fix Applied**: 1:26 PM - Modified server/routes.ts to clean content
+- **Status**: Fixed and deployed, ready for re-test
 
 ### Learning Points
 [Key insights for service improvement]

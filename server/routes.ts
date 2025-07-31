@@ -281,6 +281,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Calculate hash for mutation tracking
           const contentHash = crypto.createHash('sha256').update(content).digest('hex');
           
+          // Clean content for PostgreSQL - remove null bytes and ensure valid UTF-8
+          let cleanContent = content.replace(/\x00/g, ''); // Remove null bytes
+          if (cleanContent.length > 50000) {
+            cleanContent = cleanContent.substring(0, 50000) + "..."; // Truncate very large files
+          }
+          
           const file = await storage.createFile({
             archiveId: archive.id,
             path: relativePath,
@@ -289,7 +295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             isDirectory: "false",
             parentPath,
             extension,
-            content: content.length > 50000 ? content.substring(0, 50000) + "..." : content, // Truncate very large files
+            content: cleanContent,
             language: analysis.language,
             description: analysis.description,
             tags: analysis.tags,
