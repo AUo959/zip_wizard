@@ -2,6 +2,161 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Modern VSCode-inspired Dark Theme */
+:root {
+  /* Tokyo Night inspired color palette */
+  --background: 218 28% 7%;           /* Deep dark blue-black */
+  --foreground: 218 20% 80%;          /* Light text */
+  --muted: 218 28% 12%;               /* Darker surface */
+  --muted-foreground: 218 14% 65%;    /* Muted text */
+  --popover: 218 28% 9%;              /* Popover background */
+  --popover-foreground: 218 20% 85%;  /* Popover text */
+  --card: 218 28% 10%;                /* Card background */
+  --card-foreground: 218 20% 82%;     /* Card text */
+  --border: 218 28% 15%;              /* Border color */
+  --input: 218 28% 14%;               /* Input background */
+  --primary: 200 100% 70%;            /* Bright blue accent */
+  --primary-foreground: 218 28% 7%;   /* Primary text */
+  --secondary: 270 60% 80%;           /* Purple accent */
+  --secondary-foreground: 218 28% 12%; /* Secondary text */
+  --accent: 310 100% 75%;             /* Pink accent */
+  --accent-foreground: 218 28% 10%;   /* Accent text */
+  --destructive: 0 84% 60%;           /* Red for danger */
+  --destructive-foreground: 218 20% 95%; /* Destructive text */
+  --ring: 200 100% 70%;               /* Focus ring */
+  --radius: 6px;                      /* Border radius */
+}
+
+.dark {
+  --background: 218 28% 7%;
+  --foreground: 218 20% 80%;
+  --muted: 218 28% 12%;
+  --muted-foreground: 218 14% 65%;
+  --popover: 218 28% 9%;
+  --popover-foreground: 218 20% 85%;
+  --card: 218 28% 10%;
+  --card-foreground: 218 20% 82%;
+  --border: 218 28% 15%;
+  --input: 218 28% 14%;
+  --primary: 200 100% 70%;
+  --primary-foreground: 218 28% 7%;
+  --secondary: 270 60% 80%;
+  --secondary-foreground: 218 28% 12%;
+  --accent: 310 100% 75%;
+  --accent-foreground: 218 28% 10%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 218 20% 95%;
+  --ring: 200 100% 70%;
+}
+
+/* VSCode-style animations and effects */
+.vscode-fadeIn {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.vscode-slideIn {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+.vscode-glow {
+  box-shadow: 0 0 10px rgba(102, 178, 255, 0.3);
+}
+
+.vscode-hover {
+  transition: all 0.15s ease-in-out;
+}
+
+.vscode-hover:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  transform: translateX(2px);
+}
+
+/* Modern dropdown styles */
+.modern-dropdown {
+  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* File tree enhancements */
+.file-tree-item {
+  border-left: 2px solid transparent;
+  transition: all 0.15s ease-in-out;
+}
+
+.file-tree-item.selected {
+  border-left-color: hsl(var(--primary));
+  background: linear-gradient(90deg, rgba(102, 178, 255, 0.1) 0%, transparent 100%);
+}
+
+.file-tree-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Quantum gradient effects */
+.quantum-gradient {
+  background: linear-gradient(135deg, 
+    hsl(var(--primary)) 0%, 
+    hsl(var(--secondary)) 50%, 
+    hsl(var(--accent)) 100%
+  );
+}
+
+.quantum-text {
+  background: linear-gradient(135deg, 
+    hsl(var(--primary)), 
+    hsl(var(--accent))
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Button improvements */
+.modern-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease-in-out;
+}
+
+.modern-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 178, 255, 0.25);
+}
+
+.modern-button:active {
+  transform: translateY(0);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Improved scrollbars */
+.modern-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modern-scrollbar::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+.modern-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+
+.modern-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(210, 11%, 15%);
