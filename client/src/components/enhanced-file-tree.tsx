@@ -18,10 +18,13 @@ import {
   Shield,
   Layers,
   TrendingUp,
-  Zap
+  Zap,
+  Copy
 } from "lucide-react";
 import type { Archive, File } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import { formatFileSize, copyToClipboard } from "@/lib/file-utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface EnhancedFileTreeProps {
   files: File[];
@@ -48,6 +51,7 @@ export function EnhancedFileTree({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"tree" | "groups" | "insights">("groups");
+  const { toast } = useToast();
 
   const smartGroups = useMemo((): SmartGroup[] => {
     const groups: SmartGroup[] = [
@@ -204,9 +208,14 @@ export function EnhancedFileTree({
                   <Icon className="w-4 h-4" style={{color: `hsl(var(--${group.id === 'security' ? 'destructive' : group.id === 'core-logic' ? 'primary' : group.id === 'data-config' ? 'secondary' : group.id === 'archives' ? 'purple' : 'info'}))`}} />
                   <span>{group.name}</span>
                 </div>
-                <Badge className={`${group.color} font-semibold`} variant="outline">
-                  {group.files.length}
-                </Badge>
+                <div className="flex items-center space-x-2">
+                  <Badge className={`${group.color} font-semibold`} variant="outline">
+                    {group.files.length} files
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {formatFileSize(group.files.reduce((total, file) => total + file.size, 0))}
+                  </span>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -221,16 +230,38 @@ export function EnhancedFileTree({
                       variant="ghost"
                       size="sm"
                       className={cn(
-                        "w-full justify-start h-8 text-xs file-tree-item transition-all",
+                        "w-full justify-start h-8 text-xs file-tree-item transition-all group",
                         isSelected && "selected bg-accent/10 border-l-3 border-accent text-foreground"
                       )}
                       onClick={() => onFileSelect(file)}
                     >
                       <FileIcon className="w-3 h-3 mr-2" />
-                      <span className="flex-1 truncate text-left">{file.name}</span>
+                      <div className="flex-1 flex items-center justify-between min-w-0">
+                        <span className="truncate text-left">{file.name}</span>
+                        <div className="flex items-center space-x-1 ml-2">
+                          <span className="text-xs text-muted-foreground opacity-70">
+                            {formatFileSize(file.size)}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(file.name);
+                              toast({
+                                title: "Copied!",
+                                description: `File name "${file.name}" copied to clipboard`,
+                              });
+                            }}
+                          >
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
                       {file.complexity && (
                         <Badge 
-                          className={cn("text-xs", getComplexityColor(file.complexity))}
+                          className={cn("text-xs ml-1", getComplexityColor(file.complexity))}
                           variant="outline"
                         >
                           {file.complexity}

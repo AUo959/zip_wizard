@@ -2,6 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Copy, Download, Share } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { formatFileSize } from "@/lib/file-utils";
+import { cn } from "@/lib/utils";
 import type { File } from "@shared/schema";
 
 interface CodeEditorProps {
@@ -79,7 +81,28 @@ export default function CodeEditor({ file }: CodeEditorProps) {
             <span className="text-2xl">{getLanguageIcon()}</span>
             <div>
               <h2 className="text-lg font-medium text-gray-900">{file.name}</h2>
-              <p className="text-sm text-gray-500">{file.description}</p>
+              <p className="text-sm text-gray-500">
+                {file.extension} • {file.language || 'Text'} • {formatFileSize(file.size)}
+                {file.complexity && (
+                  <>
+                    {' • '}
+                    <Badge 
+                      variant="outline"
+                      className={cn(
+                        "text-xs h-4 px-1 ml-1",
+                        file.complexity === 'High' && "border-red-500 text-red-600",
+                        file.complexity === 'Medium' && "border-yellow-500 text-yellow-600", 
+                        file.complexity === 'Low' && "border-green-500 text-green-600"
+                      )}
+                    >
+                      {file.complexity}
+                    </Badge>
+                  </>
+                )}
+              </p>
+              {file.description && (
+                <p className="text-xs text-gray-400 mt-1">{file.description}</p>
+              )}
             </div>
           </div>
           <div className="flex items-center space-x-3">

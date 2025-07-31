@@ -12,7 +12,13 @@ import AnalysisPanel from "@/components/analysis-panel";
 import { StatusDashboard } from "@/components/status-dashboard";
 import { AIExplorationPanel } from "@/components/ai-exploration-panel";
 import { EnhancedFileTree } from "@/components/enhanced-file-tree";
+import { RecentFilesPanel } from "@/components/recent-files-panel";
+import { EnhancedSearch } from "@/components/enhanced-search";
+import { LoadingSpinner, FileTreeLoading, CodeEditorLoading } from "@/components/loading-states";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BreadcrumbNavigation } from "@/components/breadcrumb-navigation";
+import { ShortcutsDialog } from "@/components/shortcuts-dialog";
+import { useKeyboardShortcuts, defaultShortcuts, formatShortcut } from "@/hooks/use-keyboard-shortcuts";
 import type { Archive as ArchiveType, File } from "@shared/schema";
 
 export default function Home() {
@@ -23,6 +29,9 @@ export default function Home() {
   const [showUpload, setShowUpload] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [fileTreeMode, setFileTreeMode] = useState<"classic" | "enhanced">("enhanced");
+  const [recentFiles, setRecentFiles] = useState<File[]>([]);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Apply theme to document
   useEffect(() => {
@@ -60,12 +69,48 @@ export default function Home() {
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
     
+    // Add to recent files (keep last 10)
+    setRecentFiles(prev => {
+      const filtered = prev.filter(f => f.id !== file.id);
+      return [file, ...filtered].slice(0, 10);
+    });
+    
     // Add to tabs if not already open
     if (!openTabs.find(tab => tab.id === file.id)) {
       setOpenTabs([...openTabs, file]);
     }
     setActiveTab(file.id);
   };
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      ...defaultShortcuts.SEARCH,
+      action: () => document.getElementById('enhanced-search-input')?.focus()
+    },
+    {
+      ...defaultShortcuts.COPY,
+      action: () => {
+        if (selectedFile?.content) {
+          navigator.clipboard.writeText(selectedFile.content);
+        }
+      }
+    },
+    {
+      ...defaultShortcuts.CLOSE_TAB,
+      action: () => {
+        if (activeTab) handleTabClose(activeTab);
+      }
+    },
+    {
+      ...defaultShortcuts.TOGGLE_SIDEBAR,
+      action: () => setSidebarCollapsed(!sidebarCollapsed)
+    },
+    {
+      ...defaultShortcuts.HELP,
+      action: () => setShowShortcuts(true)
+    }
+  ]);
 
   const handleTabClose = (fileId: string) => {
     const newTabs = openTabs.filter(tab => tab.id !== fileId);
@@ -232,24 +277,80 @@ export default function Home() {
       <div className="flex-1 flex overflow-hidden vscode-slideIn">
         {/* Sidebar */}
         <aside className="w-80 bg-muted/50 border-r border-border flex flex-col modern-scrollbar">
-          {fileTreeMode === "enhanced" && selectedArchive ? (
-            <EnhancedFileTree
-              files={files || []}
-              selectedFile={selectedFile}
-              onFileSelect={handleFileSelect}
-              archive={selectedArchive}
-            />
-          ) : (
-            <FileTree
-              files={files || []}
-              selectedFile={selectedFile}
-              onFileSelect={handleFileSelect}
-              archive={selectedArchive}
-              archives={archives || []}
-              onArchiveSelect={setSelectedArchive}
-            />
-          )}
+          {/* Header with breadcrumb */}
+          <div className="p-4 border-b border-border/50">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium">Files</h3>
+              <Badge variant="outline" className="text-xs">
+                {files?.length || 0} files
+              </Badge>
+            </div>
+            
+            {/* Breadcrumb Navigation */}
+            {selectedFile && (
+              <div className="mb-3">
+                <BreadcrumbNavigation
+                  currentFile={selectedFile}
+                  archiveName={selectedArchive?.name}
+                  onNavigate={() => {}} // TODO: Implement folder navigation
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Tabs for Files, Search, and Recent */}
+          <div className="flex-1 overflow-hidden">
+            <Tabs defaultValue="files" className="h-full flex flex-col">
+              <TabsList className="grid w-full grid-cols-3 mx-3 mt-2">
+                <TabsTrigger value="files" className="text-xs">Files</TabsTrigger>
+                <TabsTrigger value="search" className="text-xs">Search</TabsTrigger>
+                <TabsTrigger value="recent" className="text-xs">Recent</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="files" className="flex-1 mt-2 overflow-hidden">
+                {fileTreeMode === "enhanced" && selectedArchive ? (
+                  <EnhancedFileTree
+                    files={files || []}
+                    selectedFile={selectedFile}
+                    onFileSelect={handleFileSelect}
+                    archive={selectedArchive}
+                  />
+                ) : (
+                  <FileTree
+                    files={files || []}
+                    selectedFile={selectedFile}
+                    onFileSelect={handleFileSelect}
+                    archive={selectedArchive}
+                    archives={archives || []}
+                    onArchiveSelect={setSelectedArchive}
+                  />
+                )}
+              </TabsContent>
+              
+              <TabsContent value="search" className="flex-1 mt-2 overflow-hidden px-3">
+                <EnhancedSearch
+                  files={files || []}
+                  selectedFile={selectedFile}
+                  onFileSelect={handleFileSelect}
+                />
+              </TabsContent>
+              
+              <TabsContent value="recent" className="flex-1 mt-2 overflow-hidden px-3">
+                <RecentFilesPanel
+                  recentFiles={recentFiles}
+                  selectedFile={selectedFile}
+                  onFileSelect={handleFileSelect}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
         </aside>
+
+        {/* Shortcuts Dialog */}
+        <ShortcutsDialog 
+          open={showShortcuts} 
+          onOpenChange={setShowShortcuts} 
+        />
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col overflow-hidden">
