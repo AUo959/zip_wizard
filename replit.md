@@ -149,6 +149,16 @@ The application follows a clean separation of concerns with shared types between
 
 ## Recent Changes
 
+### August 1, 2025 - UX Enhancement Suite Implementation
+- **10 High-Impact UX Improvements**: File sizes, copy buttons, breadcrumbs, file counts, recent files, enhanced search, keyboard shortcuts, loading states, 3-tab navigation, shortcuts help
+- **Critical DOM Fix**: Resolved nested button validation error in file tree by restructuring layout
+- **Enhanced Search**: Advanced filtering by language, complexity, extension with keyboard shortcuts (Ctrl+F)
+- **Navigation Improvements**: Breadcrumb paths, recent files panel (10 most recent), 3-tab sidebar (Files/Search/Recent)
+- **Keyboard Shortcuts**: Comprehensive system with help dialog (? key) - copy, search, navigation, tab management
+- **Visual Enhancements**: File size formatting, hover copy buttons, complexity badges, group file counts
+- **Loading States**: Proper feedback for uploads, searches, and file operations
+- **Code Quality**: No LSP diagnostics, all functionality validated
+
 ### July 31, 2025 - Redundant Upload Cleanup
 - **Issue Resolved**: Frontend timeout causing misleading "failed upload" messages while backend processing succeeded
 - **Action Taken**: Cleaned up 6 duplicate uploads using direct SQL deletion (378 observer events, 517 files, 6 archives)

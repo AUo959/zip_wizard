@@ -225,49 +225,52 @@ export function EnhancedFileTree({
                   const isSelected = selectedFile?.id === file.id;
                   
                   return (
-                    <Button
+                    <div
                       key={file.id}
-                      variant="ghost"
-                      size="sm"
                       className={cn(
-                        "w-full justify-start h-8 text-xs file-tree-item transition-all group",
+                        "w-full flex items-center justify-start h-8 text-xs file-tree-item transition-all group hover:bg-accent/10 rounded-md px-2",
                         isSelected && "selected bg-accent/10 border-l-3 border-accent text-foreground"
                       )}
-                      onClick={() => onFileSelect(file)}
                     >
-                      <FileIcon className="w-3 h-3 mr-2" />
-                      <div className="flex-1 flex items-center justify-between min-w-0">
-                        <span className="truncate text-left">{file.name}</span>
-                        <div className="flex items-center space-x-1 ml-2">
-                          <span className="text-xs text-muted-foreground opacity-70">
+                      <div 
+                        className="flex-1 flex items-center cursor-pointer"
+                        onClick={() => onFileSelect(file)}
+                      >
+                        <FileIcon className="w-3 h-3 mr-2" />
+                        <div className="flex-1 flex items-center justify-between min-w-0">
+                          <span className="truncate text-left">{file.name}</span>
+                          <span className="text-xs text-muted-foreground opacity-70 ml-2">
                             {formatFileSize(file.size)}
                           </span>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              copyToClipboard(file.name);
-                              toast({
-                                title: "Copied!",
-                                description: `File name "${file.name}" copied to clipboard`,
-                              });
-                            }}
-                          >
-                            <Copy className="w-3 h-3" />
-                          </Button>
                         </div>
                       </div>
-                      {file.complexity && (
-                        <Badge 
-                          className={cn("text-xs ml-1", getComplexityColor(file.complexity))}
-                          variant="outline"
+                      
+                      <div className="flex items-center space-x-1 ml-2">
+                        <button
+                          className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-accent rounded flex items-center justify-center"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyToClipboard(file.name);
+                            toast({
+                              title: "Copied!",
+                              description: `File name "${file.name}" copied to clipboard`,
+                            });
+                          }}
+                          title="Copy file name"
                         >
-                          {file.complexity}
-                        </Badge>
-                      )}
-                    </Button>
+                          <Copy className="w-3 h-3" />
+                        </button>
+                        
+                        {file.complexity && (
+                          <Badge 
+                            className={cn("text-xs", getComplexityColor(file.complexity))}
+                            variant="outline"
+                          >
+                            {file.complexity}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
                   );
                 })}
                 {groupFiles.length > 10 && (
