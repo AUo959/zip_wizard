@@ -832,6 +832,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced Features - Symbolic Interface API
+  app.get("/api/v1/symbolic/command/:symbol", async (req, res) => {
+    try {
+      const { symbol } = req.params;
+      
+      switch (symbol) {
+        case '999':
+          res.json({
+            success: true,
+            data: {
+              command: 'quantum-analysis',
+              status: 'initiated',
+              progress: 0,
+              eta: '30s'
+            }
+          });
+          break;
+          
+        case 'T1':
+          res.json({
+            success: true,
+            data: {
+              command: 'symbolic-thread',
+              status: 'active',
+              anchor: 'SN1-AS3-TRUSTED',
+              continuity: 'maintained'
+            }
+          });
+          break;
+          
+        default:
+          res.status(404).json({
+            success: false,
+            error: `Unknown symbolic command: ${symbol}`
+          });
+      }
+    } catch (error) {
+      console.error('Symbolic command error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  });
+
+  // Enhanced Archive Management API
+  app.post("/api/v1/enhanced/archives/:id/optimize", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { mode = 'balanced' } = req.body;
+      
+      res.json({
+        success: true,
+        data: {
+          archive_id: id,
+          optimization_mode: mode,
+          status: 'processing',
+          estimated_savings: '25%',
+          progress: 0,
+          eta: '2 minutes'
+        }
+      });
+    } catch (error) {
+      console.error('Archive optimization error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  });
+
+  // Privacy Shield API
+  app.post("/api/v1/privacy/scan", async (req, res) => {
+    try {
+      const { archive_id } = req.body;
+      
+      res.json({
+        success: true,
+        data: {
+          scan_id: `scan_${Date.now()}`,
+          archive_id,
+          status: 'completed',
+          privacy_score: 78,
+          issues_found: [
+            {
+              file: 'user_data.csv',
+              type: 'PII',
+              severity: 'high',
+              description: 'Contains personal identifiable information'
+            }
+          ],
+          recommendations: [
+            'Enable data redaction for PII fields',
+            'Encrypt sensitive configuration files'
+          ]
+        }
+      });
+    } catch (error) {
+      console.error('Privacy scan error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

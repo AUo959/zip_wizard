@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,10 @@ import { StatusDashboard } from "@/components/status-dashboard";
 import { AIExplorationPanel } from "@/components/ai-exploration-panel";
 import { AnalyticsView } from "@/components/analytics-view";
 import { AIToolsView } from "@/components/ai-tools-view";
+import { SymbolicInterface } from "@/components/symbolic-interface";
+import { EnhancedArchiveManager } from "@/components/enhanced-archive-manager";
+import { PrivacyShield } from "@/components/privacy-shield";
+import { MultilingualSupport } from "@/components/multilingual-support";
 import { EnhancedFileTree } from "@/components/enhanced-file-tree";
 import { RecentFilesPanel } from "@/components/recent-files-panel";
 import { EnhancedSearch } from "@/components/enhanced-search";
@@ -37,7 +41,10 @@ export default function Home() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [currentView, setCurrentView] = useState<"main" | "status" | "ai" | "analytics">("main");
+  const [currentView, setCurrentView] = useState<"main" | "status" | "ai" | "analytics" | "symbolic" | "archive-manager" | "privacy" | "multilingual">("main");
+  const [dreamMode, setDreamMode] = useState(false);
+  const [privacyShieldActive, setPrivacyShieldActive] = useState(true);
+  const [currentLanguage, setCurrentLanguage] = useState('en');
 
   // Apply theme to document
   useEffect(() => {
@@ -132,6 +139,41 @@ export default function Home() {
     setActiveTab(file.id);
     setSelectedFile(file);
   };
+
+  // Enhanced command handlers
+  const handleSymbolicCommand = useCallback((command: string, params?: any) => {
+    console.log('Symbolic command executed:', command, params);
+    switch (command) {
+      case 'quantum-analysis':
+        // Trigger quantum analysis
+        break;
+      case 'initialize-thread':
+        // Initialize symbolic thread
+        break;
+      case 'toggle-privacy':
+        setPrivacyShieldActive(params?.enabled ?? !privacyShieldActive);
+        break;
+      default:
+        console.log('Unknown symbolic command:', command);
+    }
+  }, [privacyShieldActive]);
+
+  const handleArchiveProcess = useCallback((archiveId: string, operation: string, params?: any) => {
+    console.log('Archive operation:', operation, 'on archive:', archiveId, 'with params:', params);
+  }, []);
+
+  const handleBatchOperation = useCallback((archiveIds: string[], operation: string) => {
+    console.log('Batch operation:', operation, 'on archives:', archiveIds);
+  }, []);
+
+  const handlePrivacySettingsChange = useCallback((settings: any) => {
+    console.log('Privacy settings changed:', settings);
+  }, []);
+
+  const handleLanguageChange = useCallback((language: string) => {
+    setCurrentLanguage(language);
+    console.log('Language changed to:', language);
+  }, []);
 
   if (showUpload || !archives?.length) {
     return (
@@ -255,6 +297,141 @@ export default function Home() {
           </div>
         );
       
+      case "symbolic":
+        return (
+          <div className="h-full bg-background">
+            <MainNavigation
+              onSettingsClick={() => setShowPreferences(true)}
+              onShortcutsClick={() => setShowShortcuts(true)}
+              onStatusDashboardClick={() => setCurrentView("status")}
+              onAIExplorationClick={() => setCurrentView("ai")}
+              onAnalyticsClick={() => setCurrentView("analytics")}
+              onUploadClick={() => setShowUpload(true)}
+              isDarkMode={isDarkMode}
+              onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+              selectedArchive={selectedArchive}
+              filesCount={files?.length}
+            />
+            <div className="flex items-center p-4 border-b">
+              <Button 
+                variant="ghost" 
+                onClick={() => setCurrentView("main")}
+                className="mr-4"
+              >
+                ← Back to Files
+              </Button>
+            </div>
+            <div className="p-6">
+              <SymbolicInterface
+                onCommandExecute={handleSymbolicCommand}
+                dreamMode={dreamMode}
+                onDreamModeToggle={() => setDreamMode(!dreamMode)}
+              />
+            </div>
+          </div>
+        );
+
+      case "archive-manager":
+        return (
+          <div className="h-full bg-background">
+            <MainNavigation
+              onSettingsClick={() => setShowPreferences(true)}
+              onShortcutsClick={() => setShowShortcuts(true)}
+              onStatusDashboardClick={() => setCurrentView("status")}
+              onAIExplorationClick={() => setCurrentView("ai")}
+              onAnalyticsClick={() => setCurrentView("analytics")}
+              onUploadClick={() => setShowUpload(true)}
+              isDarkMode={isDarkMode}
+              onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+              selectedArchive={selectedArchive}
+              filesCount={files?.length}
+            />
+            <div className="flex items-center p-4 border-b">
+              <Button 
+                variant="ghost" 
+                onClick={() => setCurrentView("main")}
+                className="mr-4"
+              >
+                ← Back to Files
+              </Button>
+            </div>
+            <div className="p-6">
+              <EnhancedArchiveManager
+                archives={archives}
+                onArchiveProcess={handleArchiveProcess}
+                onBatchOperation={handleBatchOperation}
+              />
+            </div>
+          </div>
+        );
+
+      case "privacy":
+        return (
+          <div className="h-full bg-background">
+            <MainNavigation
+              onSettingsClick={() => setShowPreferences(true)}
+              onShortcutsClick={() => setShowShortcuts(true)}
+              onStatusDashboardClick={() => setCurrentView("status")}
+              onAIExplorationClick={() => setCurrentView("ai")}
+              onAnalyticsClick={() => setCurrentView("analytics")}
+              onUploadClick={() => setShowUpload(true)}
+              isDarkMode={isDarkMode}
+              onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+              selectedArchive={selectedArchive}
+              filesCount={files?.length}
+            />
+            <div className="flex items-center p-4 border-b">
+              <Button 
+                variant="ghost" 
+                onClick={() => setCurrentView("main")}
+                className="mr-4"
+              >
+                ← Back to Files
+              </Button>
+            </div>
+            <div className="p-6">
+              <PrivacyShield
+                isActive={privacyShieldActive}
+                onToggle={setPrivacyShieldActive}
+                onSettingsChange={handlePrivacySettingsChange}
+              />
+            </div>
+          </div>
+        );
+
+      case "multilingual":
+        return (
+          <div className="h-full bg-background">
+            <MainNavigation
+              onSettingsClick={() => setShowPreferences(true)}
+              onShortcutsClick={() => setShowShortcuts(true)}
+              onStatusDashboardClick={() => setCurrentView("status")}
+              onAIExplorationClick={() => setCurrentView("ai")}
+              onAnalyticsClick={() => setCurrentView("analytics")}
+              onUploadClick={() => setShowUpload(true)}
+              isDarkMode={isDarkMode}
+              onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+              selectedArchive={selectedArchive}
+              filesCount={files?.length}
+            />
+            <div className="flex items-center p-4 border-b">
+              <Button 
+                variant="ghost" 
+                onClick={() => setCurrentView("main")}
+                className="mr-4"
+              >
+                ← Back to Files
+              </Button>
+            </div>
+            <div className="p-6">
+              <MultilingualSupport
+                onLanguageChange={handleLanguageChange}
+                currentLanguage={currentLanguage}
+              />
+            </div>
+          </div>
+        );
+      
       default:
         return (
           <div className="h-screen bg-background text-foreground flex flex-col">
@@ -345,6 +522,44 @@ export default function Home() {
                 </div>
               </div>
             </header>
+
+            {/* Enhanced Navigation */}
+            <div className="bg-muted/30 border-b border-border px-6 py-3">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={currentView === "symbolic" ? "default" : "outline"}
+                  onClick={() => setCurrentView("symbolic")}
+                  size="sm"
+                  className="text-xs"
+                >
+                  ⚡ Symbolic Interface
+                </Button>
+                <Button
+                  variant={currentView === "archive-manager" ? "default" : "outline"}
+                  onClick={() => setCurrentView("archive-manager")}
+                  size="sm"
+                  className="text-xs"
+                >
+                  📦 Archive Manager
+                </Button>
+                <Button
+                  variant={currentView === "privacy" ? "default" : "outline"}
+                  onClick={() => setCurrentView("privacy")}
+                  size="sm"
+                  className="text-xs"
+                >
+                  🛡️ Privacy Shield
+                </Button>
+                <Button
+                  variant={currentView === "multilingual" ? "default" : "outline"}
+                  onClick={() => setCurrentView("multilingual")}
+                  size="sm"
+                  className="text-xs"
+                >
+                  🌍 Multilingual
+                </Button>
+              </div>
+            </div>
 
             <div className="flex-1 flex overflow-hidden vscode-slideIn">
               {/* Sidebar */}

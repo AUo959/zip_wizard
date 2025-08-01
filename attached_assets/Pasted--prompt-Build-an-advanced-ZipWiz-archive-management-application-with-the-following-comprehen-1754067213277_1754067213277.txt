@@ -1,0 +1,219 @@
+
+{
+  "prompt": "Build an advanced ZipWiz archive management application with the following comprehensive feature set and architecture:",
+  "core_requirements": {
+    "application_type": "Full-stack web application",
+    "framework": "FastAPI backend with React/TypeScript frontend",
+    "port": "5000",
+    "deployment_target": "Replit"
+  },
+  "advanced_features": {
+    "archive_management": {
+      "description": "Comprehensive ZIP archive analysis and optimization",
+      "features": [
+        "Deep archive structure analysis with nested archive support",
+        "Duplicate file detection across multiple archives",
+        "Compression ratio optimization algorithms",
+        "Bulk archive processing with batch operations",
+        "Archive consolidation and smart merging",
+        "Large file identification and management",
+        "Archive health scoring and recommendations",
+        "Cross-platform compatibility validation"
+      ]
+    },
+    "symbolic_interface": {
+      "description": "Aurora-inspired symbolic command system",
+      "features": [
+        "Symbolic command routing (999, T1, REM//, SYNCANCHORS, etc.)",
+        "Visual glyph-based operation indicators",
+        "Dream mode UI overlays with immersive transitions",
+        "Symbolic continuity preservation across sessions",
+        "Command validation with privacy protection",
+        "Failsafe mechanisms with symbolic lockdown",
+        "Memory anchoring for consistent state management"
+      ]
+    },
+    "privacy_and_security": {
+      "description": "Privacy-first design with enterprise security",
+      "features": [
+        "Input data sanitization and validation",
+        "Sensitive data redaction in logs",
+        "Privacy compliance auditing",
+        "Secure archive processing without data exposure",
+        "Encrypted temporary file handling",
+        "User data anonymization options",
+        "GDPR compliance reporting",
+        "Zero-knowledge archive analysis modes"
+      ]
+    },
+    "multilingual_support": {
+      "description": "Global accessibility with cultural awareness",
+      "features": [
+        "Multi-language interface (English, Spanish, French, German, Japanese)",
+        "Cultural context-aware file naming suggestions",
+        "Localized error messages and help text",
+        "Right-to-left language support",
+        "Cultural-specific archive organization patterns",
+        "International character encoding detection",
+        "Timezone-aware operation logging"
+      ]
+    },
+    "ai_powered_optimization": {
+      "description": "Intelligent archive management with machine learning",
+      "features": [
+        "Smart file categorization using content analysis",
+        "Predictive duplicate detection algorithms",
+        "Optimization recommendation engine",
+        "Learning from user preferences and patterns",
+        "Automatic archive organization suggestions",
+        "Content-based file similarity detection",
+        "Intelligent compression algorithm selection"
+      ]
+    },
+    "visual_interface": {
+      "description": "Modern, intuitive user experience",
+      "features": [
+        "Drag-and-drop archive processing",
+        "Real-time progress visualization with symbolic indicators",
+        "Interactive archive tree visualization",
+        "Heat maps for file size and compression ratios",
+        "Animated transitions for operations",
+        "Dark/light theme with accessibility support",
+        "Responsive design for mobile and desktop",
+        "Keyboard shortcuts for power users"
+      ]
+    },
+    "integration_capabilities": {
+      "description": "Extensible architecture for future growth",
+      "features": [
+        "RESTful API for external integrations",
+        "WebSocket support for real-time updates",
+        "Plugin architecture for custom processors",
+        "Cloud storage integration (S3, Google Drive, Dropbox)",
+        "Git repository archive processing",
+        "Automated backup and sync capabilities",
+        "Webhook support for automation workflows"
+      ]
+    },
+    "performance_optimization": {
+      "description": "High-performance processing capabilities",
+      "features": [
+        "Streaming archive processing for large files",
+        "Worker thread utilization for CPU-intensive tasks",
+        "Memory-efficient processing algorithms",
+        "Caching strategies for repeated operations",
+        "Lazy loading for large archive listings",
+        "Progressive loading with user feedback",
+        "Background processing with status tracking"
+      ]
+    }
+  },
+  "technical_specifications": {
+    "backend": {
+      "framework": "FastAPI with Pydantic models",
+      "features": [
+        "Async/await for non-blocking operations",
+        "SQLite database for operation history and preferences",
+        "Background task processing with Celery-like functionality",
+        "Comprehensive logging with structured JSON output",
+        "Health check endpoints for monitoring",
+        "Auto-generated OpenAPI documentation",
+        "Rate limiting and request validation"
+      ]
+    },
+    "frontend": {
+      "framework": "React 18 with TypeScript",
+      "features": [
+        "Modern React hooks and context for state management",
+        "Material-UI or Chakra UI for consistent design",
+        "React Query for efficient data fetching",
+        "React Router for seamless navigation",
+        "Progressive Web App capabilities",
+        "Accessibility compliance (WCAG 2.1)",
+        "Component-based architecture with reusable elements"
+      ]
+    },
+    "data_processing": {
+      "libraries": [
+        "zipfile and tarfile for archive handling",
+        "pandas for data analysis and reporting",
+        "numpy for numerical computations",
+        "scikit-learn for ML-based optimizations",
+        "Pillow for image analysis within archives",
+        "chardet for encoding detection"
+      ]
+    }
+  },
+  "user_experience_flows": {
+    "quick_start": "Drag and drop archives → Instant analysis → One-click optimization",
+    "power_user": "Batch processing → Custom rules → Scheduled operations → Detailed reporting",
+    "symbolic_mode": "Command-based operation → Glyph feedback → Dream mode visualization",
+    "mobile_experience": "Touch-optimized interface → Simplified workflows → Essential features"
+  },
+  "api_endpoints": {
+    "core_operations": [
+      "POST /api/analyze - Analyze archive structure and contents",
+      "POST /api/optimize - Optimize archive with specified parameters",
+      "POST /api/extract - Extract archives with smart organization",
+      "POST /api/consolidate - Merge multiple archives intelligently",
+      "GET /api/status/{operation_id} - Track operation progress"
+    ],
+    "symbolic_interface": [
+      "GET /api/command/{symbol} - Execute symbolic commands",
+      "GET /api/glyph-status - Get current symbolic state",
+      "POST /api/anchor-sync - Synchronize continuity anchors",
+      "GET /api/dream-mode - Toggle immersive interface mode"
+    ],
+    "management": [
+      "GET /api/archives - List and filter managed archives",
+      "GET /api/reports - Generate analysis reports",
+      "GET /api/preferences - User settings and customization",
+      "GET /api/health - System health and privacy compliance"
+    ]
+  },
+  "file_structure": {
+    "backend": [
+      "main.py - FastAPI application entry point",
+      "models/ - Pydantic models for data validation",
+      "routers/ - API route handlers organized by feature",
+      "services/ - Business logic and archive processing",
+      "utils/ - Utility functions and helpers",
+      "symbolic/ - Symbolic interface implementation",
+      "privacy/ - Privacy and security validation",
+      "ml/ - Machine learning optimization engines"
+    ],
+    "frontend": [
+      "src/components/ - Reusable React components",
+      "src/pages/ - Main application pages",
+      "src/hooks/ - Custom React hooks",
+      "src/services/ - API communication layer",
+      "src/utils/ - Frontend utility functions",
+      "src/symbolic/ - Symbolic interface components",
+      "src/styles/ - Global styles and themes"
+    ]
+  },
+  "special_requirements": {
+    "symbolic_continuity": "Implement Aurora-inspired symbolic anchoring for session persistence",
+    "privacy_first": "All operations must be privacy-compliant with audit trails",
+    "future_ready": "Extensible architecture for AI and quantum computing integration",
+    "performance": "Handle archives up to 10GB with responsive user feedback",
+    "accessibility": "Full keyboard navigation and screen reader support",
+    "offline_capability": "Core features work without internet connectivity"
+  },
+  "deployment_configuration": {
+    "environment": "Replit with automatic dependency management",
+    "port_binding": "0.0.0.0:5000 for web access",
+    "static_files": "Serve React build from FastAPI static routes",
+    "database": "SQLite for simplicity and portability",
+    "logging": "Structured JSON logs with privacy filtering",
+    "monitoring": "Built-in health checks and performance metrics"
+  },
+  "innovation_features": {
+    "quantum_ready": "Architecture prepared for quantum-enhanced compression algorithms",
+    "ai_assistant": "Integrated AI assistant for archive management guidance",
+    "collaborative": "Multi-user collaboration on large archive projects",
+    "predictive": "Predictive analytics for storage optimization",
+    "immersive": "VR/AR ready interface for 3D archive exploration",
+    "blockchain": "Optional blockchain verification for archive integrity"
+  }
+}
