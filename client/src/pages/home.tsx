@@ -17,6 +17,11 @@ import { SymbolicInterface } from "@/components/symbolic-interface";
 import { EnhancedArchiveManager } from "@/components/enhanced-archive-manager";
 import { PrivacyShield } from "@/components/privacy-shield";
 import { MultilingualSupport } from "@/components/multilingual-support";
+import { FlowStateManager } from "@/components/flow-state-manager";
+import { WuWeiInterface } from "@/components/wu-wei-interface";
+import { MemoryCompression } from "@/components/memory-compression";
+import { CognitiveLoadReducer } from "@/components/cognitive-load-reducer";
+import { PatternRecognitionEngine } from "@/components/pattern-recognition-engine";
 import { EnhancedFileTree } from "@/components/enhanced-file-tree";
 import { RecentFilesPanel } from "@/components/recent-files-panel";
 import { EnhancedSearch } from "@/components/enhanced-search";
@@ -41,7 +46,7 @@ export default function Home() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [currentView, setCurrentView] = useState<"main" | "status" | "ai" | "analytics" | "symbolic" | "archive-manager" | "privacy" | "multilingual">("main");
+  const [currentView, setCurrentView] = useState<"main" | "status" | "ai" | "analytics" | "symbolic" | "archive-manager" | "privacy" | "multilingual" | "flow-manager" | "wu-wei" | "mushin" | "memory-compression" | "cognitive-load" | "pattern-recognition">("main");
   const [dreamMode, setDreamMode] = useState(false);
   const [privacyShieldActive, setPrivacyShieldActive] = useState(true);
   const [currentLanguage, setCurrentLanguage] = useState('en');
@@ -145,10 +150,32 @@ export default function Home() {
     console.log('Symbolic command executed:', command, params);
     switch (command) {
       case 'quantum-analysis':
-        // Trigger quantum analysis
+        // Trigger quantum analysis with Aurora-inspired flow state
+        console.log('Quantum analysis initiated with flow state:', params?.flowState);
         break;
       case 'initialize-thread':
-        // Initialize symbolic thread
+        // Initialize symbolic thread with continuity anchor
+        console.log('Thread initialized with anchor:', params?.anchor);
+        break;
+      case 'activate-wu-wei':
+        // Switch to wu-wei interface for effortless interactions
+        setCurrentView('wu-wei');
+        break;
+      case 'activate-mushin':
+        // Switch to mushin state for no-mind processing
+        setCurrentView('mushin');
+        break;
+      case 'toggle-compression':
+        // Toggle memory compression for pattern recognition
+        setCurrentView('memory-compression');
+        break;
+      case 'cognitive-load-analysis':
+        // Switch to cognitive load reduction interface
+        setCurrentView('cognitive-load');
+        break;
+      case 'pattern-recognition':
+        // Switch to pattern recognition engine
+        setCurrentView('pattern-recognition');
         break;
       case 'toggle-privacy':
         setPrivacyShieldActive(params?.enabled ?? !privacyShieldActive);
@@ -237,7 +264,7 @@ export default function Home() {
                 ← Back to Files
               </Button>
             </div>
-            <StatusDashboard archive={selectedArchive} />
+            <StatusDashboard archiveId={selectedArchive?.id || ''} />
           </div>
         );
       
@@ -265,7 +292,13 @@ export default function Home() {
                 ← Back to Files
               </Button>
             </div>
-            <AIToolsView files={files} selectedArchive={selectedArchive} />
+            <AIToolsView files={files?.map(f => ({
+              id: f.id,
+              name: f.name,
+              content: f.content || '',
+              language: f.language || 'unknown',
+              complexity: f.complexity || 'medium'
+            })) || []} selectedArchive={selectedArchive} />
           </div>
         );
       
@@ -293,7 +326,14 @@ export default function Home() {
                 ← Back to Files
               </Button>
             </div>
-            <AnalyticsView files={files} selectedArchive={selectedArchive} />
+            <AnalyticsView files={files?.map(f => ({
+              id: f.id,
+              name: f.name,
+              extension: f.extension || 'unknown',
+              language: f.language || 'unknown',
+              complexity: f.complexity || 'medium',
+              size: f.size
+            })) || []} selectedArchive={selectedArchive} />
           </div>
         );
       
@@ -431,6 +471,172 @@ export default function Home() {
             </div>
           </div>
         );
+
+      case "flow-manager":
+        return (
+          <div className="h-full bg-background">
+            <MainNavigation
+              onSettingsClick={() => setShowPreferences(true)}
+              onShortcutsClick={() => setShowShortcuts(true)}
+              onStatusDashboardClick={() => setCurrentView("status")}
+              onAIExplorationClick={() => setCurrentView("ai")}
+              onAnalyticsClick={() => setCurrentView("analytics")}
+              onUploadClick={() => setShowUpload(true)}
+              isDarkMode={isDarkMode}
+              onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+              selectedArchive={selectedArchive}
+              filesCount={files?.length}
+            />
+            <div className="flex items-center p-4 border-b">
+              <Button 
+                variant="ghost" 
+                onClick={() => setCurrentView("main")}
+                className="mr-4"
+              >
+                ← Back to Files
+              </Button>
+            </div>
+            <div className="p-6">
+              <FlowStateManager
+                onStateChange={(state) => console.log('Flow state changed:', state)}
+                currentActivity="Archive analysis and exploration"
+              />
+            </div>
+          </div>
+        );
+
+      case "wu-wei":
+        return (
+          <div className="h-full bg-background">
+            <MainNavigation
+              onSettingsClick={() => setShowPreferences(true)}
+              onShortcutsClick={() => setShowShortcuts(true)}
+              onStatusDashboardClick={() => setCurrentView("status")}
+              onAIExplorationClick={() => setCurrentView("ai")}
+              onAnalyticsClick={() => setCurrentView("analytics")}
+              onUploadClick={() => setShowUpload(true)}
+              isDarkMode={isDarkMode}
+              onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+              selectedArchive={selectedArchive}
+              filesCount={files?.length}
+            />
+            <div className="flex items-center p-4 border-b">
+              <Button 
+                variant="ghost" 
+                onClick={() => setCurrentView("main")}
+                className="mr-4"
+              >
+                ← Back to Files
+              </Button>
+            </div>
+            <div className="p-6">
+              <WuWeiInterface
+                onAction={(action, natural) => console.log('Wu Wei action:', action, 'Natural:', natural)}
+                currentFlow={75}
+              />
+            </div>
+          </div>
+        );
+
+      case "memory-compression":
+        return (
+          <div className="h-full bg-background">
+            <MainNavigation
+              onSettingsClick={() => setShowPreferences(true)}
+              onShortcutsClick={() => setShowShortcuts(true)}
+              onStatusDashboardClick={() => setCurrentView("status")}
+              onAIExplorationClick={() => setCurrentView("ai")}
+              onAnalyticsClick={() => setCurrentView("analytics")}
+              onUploadClick={() => setShowUpload(true)}
+              isDarkMode={isDarkMode}
+              onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+              selectedArchive={selectedArchive}
+              filesCount={files?.length}
+            />
+            <div className="flex items-center p-4 border-b">
+              <Button 
+                variant="ghost" 
+                onClick={() => setCurrentView("main")}
+                className="mr-4"
+              >
+                ← Back to Files
+              </Button>
+            </div>
+            <div className="p-6">
+              <MemoryCompression
+                files={files}
+                onCompressionApplied={(result) => console.log('Compression result:', result)}
+              />
+            </div>
+          </div>
+        );
+
+      case "cognitive-load":
+        return (
+          <div className="h-full bg-background">
+            <MainNavigation
+              onSettingsClick={() => setShowPreferences(true)}
+              onShortcutsClick={() => setShowShortcuts(true)}
+              onStatusDashboardClick={() => setCurrentView("status")}
+              onAIExplorationClick={() => setCurrentView("ai")}
+              onAnalyticsClick={() => setCurrentView("analytics")}
+              onUploadClick={() => setShowUpload(true)}
+              isDarkMode={isDarkMode}
+              onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+              selectedArchive={selectedArchive}
+              filesCount={files?.length}
+            />
+            <div className="flex items-center p-4 border-b">
+              <Button 
+                variant="ghost" 
+                onClick={() => setCurrentView("main")}
+                className="mr-4"
+              >
+                ← Back to Files
+              </Button>
+            </div>
+            <div className="p-6">
+              <CognitiveLoadReducer
+                onLoadChange={(load) => console.log('Cognitive load changed:', load)}
+                currentView={currentView}
+              />
+            </div>
+          </div>
+        );
+
+      case "pattern-recognition":
+        return (
+          <div className="h-full bg-background">
+            <MainNavigation
+              onSettingsClick={() => setShowPreferences(true)}
+              onShortcutsClick={() => setShowShortcuts(true)}
+              onStatusDashboardClick={() => setCurrentView("status")}
+              onAIExplorationClick={() => setCurrentView("ai")}
+              onAnalyticsClick={() => setCurrentView("analytics")}
+              onUploadClick={() => setShowUpload(true)}
+              isDarkMode={isDarkMode}
+              onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+              selectedArchive={selectedArchive}
+              filesCount={files?.length}
+            />
+            <div className="flex items-center p-4 border-b">
+              <Button 
+                variant="ghost" 
+                onClick={() => setCurrentView("main")}
+                className="mr-4"
+              >
+                ← Back to Files
+              </Button>
+            </div>
+            <div className="p-6">
+              <PatternRecognitionEngine
+                files={files}
+                onPatternsDetected={(patterns) => console.log('Patterns detected:', patterns)}
+                onOrganizationSuggested={(org) => console.log('Organization suggested:', org)}
+              />
+            </div>
+          </div>
+        );
       
       default:
         return (
@@ -557,6 +763,46 @@ export default function Home() {
                   className="text-xs"
                 >
                   🌍 Multilingual
+                </Button>
+                <Button
+                  variant={currentView === "flow-manager" ? "default" : "outline"}
+                  onClick={() => setCurrentView("flow-manager")}
+                  size="sm"
+                  className="text-xs"
+                >
+                  🧘 Flow States
+                </Button>
+                <Button
+                  variant={currentView === "wu-wei" ? "default" : "outline"}
+                  onClick={() => setCurrentView("wu-wei")}
+                  size="sm"
+                  className="text-xs"
+                >
+                  💫 Wu Wei
+                </Button>
+                <Button
+                  variant={currentView === "memory-compression" ? "default" : "outline"}
+                  onClick={() => setCurrentView("memory-compression")}
+                  size="sm"
+                  className="text-xs"
+                >
+                  🗜️ Compression
+                </Button>
+                <Button
+                  variant={currentView === "cognitive-load" ? "default" : "outline"}
+                  onClick={() => setCurrentView("cognitive-load")}
+                  size="sm"
+                  className="text-xs"
+                >
+                  🧠 Cognitive Load
+                </Button>
+                <Button
+                  variant={currentView === "pattern-recognition" ? "default" : "outline"}
+                  onClick={() => setCurrentView("pattern-recognition")}
+                  size="sm"
+                  className="text-xs"
+                >
+                  🔍 Patterns
                 </Button>
               </div>
             </div>
