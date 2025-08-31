@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { CloudUpload, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCircuitBreaker } from "@/hooks/use-circuit-breaker";
 import { apiRequest } from "@/lib/queryClient";
 
 interface UploadZoneProps {
@@ -15,26 +16,36 @@ interface UploadZoneProps {
 export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const { toast } = useToast();
+  
+  // Circuit breaker for upload protection
+  const { execute: executeWithBreaker, state: breakerState, healthScore } = useCircuitBreaker({
+    name: 'archive-upload',
+    failureThreshold: 3,
+    timeout: 60000 // 60 seconds for large files
+  });
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("archive", file);
+      // Use circuit breaker for upload protection
+      return executeWithBreaker(async () => {
+        const formData = new FormData();
+        formData.append("archive", file);
 
-      // Simulate progress updates
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 10, 90));
-      }, 200);
+        // Simulate progress updates
+        const progressInterval = setInterval(() => {
+          setUploadProgress((prev) => Math.min(prev + 10, 90));
+        }, 200);
 
-      try {
-        const response = await apiRequest("POST", "archives", formData);
-        clearInterval(progressInterval);
-        setUploadProgress(100);
-        return await response.json();
-      } catch (error) {
-        clearInterval(progressInterval);
-        throw error;
-      }
+        try {
+          const response = await apiRequest("POST", "archives", formData);
+          clearInterval(progressInterval);
+          setUploadProgress(100);
+          return await response.json();
+        } catch (error) {
+          clearInterval(progressInterval);
+          throw error;
+        }
+      });
     },
     onSuccess: (data) => {
       toast({

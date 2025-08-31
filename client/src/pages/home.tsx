@@ -28,6 +28,7 @@ import { VulnerabilityScanner } from "@/components/vulnerability-scanner";
 import { DependencyGraph } from "@/components/dependency-graph";
 import { CodeMetricsAnalyzer } from "@/components/code-metrics-analyzer";
 import { TimingOptimizer } from "@/components/timing-optimizer";
+import { CircuitBreakerMonitor } from "@/components/circuit-breaker-monitor";
 import { EnhancedFileTree } from "@/components/enhanced-file-tree";
 import { RecentFilesPanel } from "@/components/recent-files-panel";
 import { EnhancedSearch } from "@/components/enhanced-search";
@@ -52,7 +53,7 @@ export default function Home() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [currentView, setCurrentView] = useState<"main" | "status" | "ai" | "analytics" | "symbolic" | "archive-manager" | "privacy" | "multilingual" | "flow-manager" | "wu-wei" | "mushin" | "memory-compression" | "cognitive-load" | "pattern-recognition" | "incremental-processor" | "archive-comparison" | "vulnerability-scanner" | "dependency-graph" | "code-metrics" | "timing-optimizer">("main");
+  const [currentView, setCurrentView] = useState<"main" | "status" | "ai" | "analytics" | "symbolic" | "archive-manager" | "privacy" | "multilingual" | "flow-manager" | "wu-wei" | "mushin" | "memory-compression" | "cognitive-load" | "pattern-recognition" | "incremental-processor" | "archive-comparison" | "vulnerability-scanner" | "dependency-graph" | "code-metrics" | "timing-optimizer" | "circuit-breaker">("main");
   const [dreamMode, setDreamMode] = useState(false);
   const [privacyShieldActive, setPrivacyShieldActive] = useState(true);
   const [currentLanguage, setCurrentLanguage] = useState('en');
@@ -848,6 +849,36 @@ export default function Home() {
             </div>
           </div>
         );
+
+      case "circuit-breaker":
+        return (
+          <div className="h-full bg-background">
+            <MainNavigation
+              onSettingsClick={() => setShowPreferences(true)}
+              onShortcutsClick={() => setShowShortcuts(true)}
+              onStatusDashboardClick={() => setCurrentView("status")}
+              onAIExplorationClick={() => setCurrentView("ai")}
+              onAnalyticsClick={() => setCurrentView("analytics")}
+              onUploadClick={() => setShowUpload(true)}
+              isDarkMode={isDarkMode}
+              onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+              selectedArchive={selectedArchive}
+              filesCount={files?.length}
+            />
+            <div className="flex items-center p-4 border-b">
+              <Button 
+                variant="ghost" 
+                onClick={() => setCurrentView("main")}
+                className="mr-4"
+              >
+                ← Back to Files
+              </Button>
+            </div>
+            <div className="p-6">
+              <CircuitBreakerMonitor />
+            </div>
+          </div>
+        );
       
       default:
         return (
@@ -1062,6 +1093,14 @@ export default function Home() {
                   className="text-xs"
                 >
                   ⏱️ Timing
+                </Button>
+                <Button
+                  variant={currentView === "circuit-breaker" ? "default" : "outline"}
+                  onClick={() => setCurrentView("circuit-breaker")}
+                  size="sm"
+                  className="text-xs"
+                >
+                  🛡️ Breakers
                 </Button>
               </div>
             </div>
