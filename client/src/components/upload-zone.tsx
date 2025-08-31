@@ -70,17 +70,22 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (file) {
+      // Check if circuit breaker is open
+      if (breakerState?.state === 'open') {
+        toast({
+          title: "Upload Service Unavailable",
+          description: `Circuit breaker is open. Health score: ${healthScore}%. Please try again later.`,
+          variant: "destructive"
+        });
+        return;
+      }
       uploadMutation.mutate(file);
     }
-  }, [uploadMutation]);
+  }, [uploadMutation, breakerState, healthScore, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      'application/zip': ['.zip'],
-      'application/x-rar-compressed': ['.rar'],
-      'application/x-7z-compressed': ['.7z'],
-    },
+    // Accept all file types for comprehensive parsing
     maxFiles: 1,
   });
 
@@ -124,10 +129,10 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
     <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-4">
-          Upload Your Code Archive
+          Upload Any File or Archive
         </h2>
         <p className="text-lg text-gray-600">
-          Drag and drop a zip file to analyze and organize your codebase
+          Drag and drop any file here - ZIP, PDF, images, documents, code, or any other file type
         </p>
       </div>
 
@@ -155,10 +160,10 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
             ) : (
               <div>
                 <p className="text-lg font-medium text-gray-900 mb-2">
-                  Drop zip files here
+                  Drop any file here
                 </p>
                 <p className="text-sm text-gray-500 mb-4">
-                  or click to browse
+                  Archives, documents, images, code - we handle everything
                 </p>
                 <Button variant="outline">
                   Choose File

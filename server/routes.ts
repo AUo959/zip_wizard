@@ -416,15 +416,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
-  // Upload and process archive - now at versioned endpoint
+  // Upload and process any file type - now supports comprehensive parsing
   app.post("/api/v1/archives", upload.single("archive"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const zip = new JSZip();
-      const contents = await zip.loadAsync(req.file.buffer);
+      // Detect file type
+      const fileType = req.file.mimetype || 'application/octet-stream';
+      const isArchive = fileType.includes('zip') || fileType.includes('tar') || 
+                       fileType.includes('rar') || fileType.includes('7z') ||
+                       fileType.includes('gzip') || req.file.originalname.includes('.tar.');
+      
+      let contents: any = null;
+      let fileCount = 0;
+      let processedFiles = [];
+      
+      // Try to process as archive first if it looks like one
+      if (isArchive || req.file.originalname.endsWith('.zip')) {
+        try {
+          const zip = new JSZip();
+          contents = await zip.loadAsync(req.file.buffer);
+        } catch (error) {
+          // Not a valid ZIP, will process as single file
+          console.log("Not a valid ZIP archive, processing as single file");
+        }
+      }
       
       // Create archive record with enhanced metadata
       const symbolicChain = `T1_CHAIN::ZIPWizard::v2.2.6b::${req.body.from || 'USER'}::${req.body.operation || 'Upload'}`;
@@ -433,22 +451,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const archive = await storage.createArchive({
         name: req.file.originalname,
         originalSize: req.file.size,
-        fileCount: Object.keys(contents.files).length,
+        fileCount: contents && contents.files ? Object.keys(contents.files).length : 1,
         symbolicChain,
         threadTag,
-        ethicsLock: req.body.ethicsLock || "Picard_Delta_3",
-        trustAnchor: req.body.trustAnchor || "SN1-AS3-TRUSTED",
+        ethicsLock: req.body?.ethicsLock || "Picard_Delta_3",
+        trustAnchor: req.body?.trustAnchor || "SN1-AS3-TRUSTED",
         replayable: true,
-        monitoringWindow: parseInt(req.body.monitoringWindow) || 48,
+        monitoringWindow: parseInt(req.body?.monitoringWindow) || 48,
       });
 
       // Track upload event
       await observer.trackUpload(archive.id, archive.name, archive.fileCount);
 
-      // Process files
-      const processedFiles = [];
-      for (const [relativePath, zipEntry] of Object.entries(contents.files)) {
-        if (zipEntry.dir) {
+      // Process files based on type
+      if (contents && contents.files) {
+        // ZIP archive processing
+        for (const [relativePath, zipEntry] of Object.entries(contents.files)) {
+          if (zipEntry.dir) {
           // Directory entry
           const file = await storage.createFile({
             archiveId: archive.id,
@@ -531,6 +550,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           processedFiles.push(file);
         }
+        }
+      } else {
+        // Single file processing (non-archive)
+        fileCount = 1;
+        const fileContent = req.file.buffer.toString('utf-8');
+        const extension = path.extname(req.file.originalname);
+        const language = detectLanguage(extension);
+        const analysis = analyzeContent(fileContent, language);
+        
+        const file = await storage.createFile({
+          archiveId: archive.id,
+          path: req.file.originalname,
+          name: req.file.originalname,
+          size: req.file.size,
+          isDirectory: "false",
+          parentPath: null,
+          extension,
+          content: fileContent,
+          language,
+          description: `${req.file.mimetype} file`,
+          tags: [req.file.mimetype.split('/')[0], extension.replace('.', '')],
+          complexity: analysis.complexity,
+          dependencies: analysis.dependencies || [],
+          originalHash: crypto.createHash('sha256').update(fileContent).digest('hex'),
+          currentHash: crypto.createHash('sha256').update(fileContent).digest('hex'),
+        });
+        processedFiles.push(file);
       }
 
       res.json({ archive, fileCount: processedFiles.length });
