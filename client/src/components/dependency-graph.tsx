@@ -16,7 +16,8 @@ import {
   Download,
   Eye,
   EyeOff,
-  CircleDot
+  CircleDot,
+  AlertTriangle
 } from 'lucide-react';
 
 interface DependencyGraphProps {

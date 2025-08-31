@@ -154,6 +154,7 @@ The application follows a clean separation of concerns with shared types between
 - **Archive Comparison Tool**: Side-by-side archive comparison with detailed change tracking
 - **Vulnerability Scanner**: OWASP-compliant security scanning with CVE detection
 - **Dependency Graph Visualization**: Interactive force-directed graph with circular dependency detection
+- **Code Metrics & Complexity Analysis**: Comprehensive code quality metrics including cyclomatic/cognitive complexity, Halstead metrics, maintainability index, technical debt calculation, code smell detection, and duplication analysis
 - **Performance Improvements**: Background processing, concurrent chunk handling, memory optimization
 - **Security Analysis**: Pattern-based vulnerability detection, hardcoded secrets scanner, weak crypto detection
 - **Advanced Visualizations**: Zoomable graphs, cluster analysis, orphan file detection, hub file identification
