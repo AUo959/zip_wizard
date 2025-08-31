@@ -22,6 +22,10 @@ import { WuWeiInterface } from "@/components/wu-wei-interface";
 import { MemoryCompression } from "@/components/memory-compression";
 import { CognitiveLoadReducer } from "@/components/cognitive-load-reducer";
 import { PatternRecognitionEngine } from "@/components/pattern-recognition-engine";
+import { IncrementalProcessor } from "@/components/incremental-processor";
+import { ArchiveComparison } from "@/components/archive-comparison";
+import { VulnerabilityScanner } from "@/components/vulnerability-scanner";
+import { DependencyGraph } from "@/components/dependency-graph";
 import { EnhancedFileTree } from "@/components/enhanced-file-tree";
 import { RecentFilesPanel } from "@/components/recent-files-panel";
 import { EnhancedSearch } from "@/components/enhanced-search";
@@ -46,7 +50,7 @@ export default function Home() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [currentView, setCurrentView] = useState<"main" | "status" | "ai" | "analytics" | "symbolic" | "archive-manager" | "privacy" | "multilingual" | "flow-manager" | "wu-wei" | "mushin" | "memory-compression" | "cognitive-load" | "pattern-recognition">("main");
+  const [currentView, setCurrentView] = useState<"main" | "status" | "ai" | "analytics" | "symbolic" | "archive-manager" | "privacy" | "multilingual" | "flow-manager" | "wu-wei" | "mushin" | "memory-compression" | "cognitive-load" | "pattern-recognition" | "incremental-processor" | "archive-comparison" | "vulnerability-scanner" | "dependency-graph">("main");
   const [dreamMode, setDreamMode] = useState(false);
   const [privacyShieldActive, setPrivacyShieldActive] = useState(true);
   const [currentLanguage, setCurrentLanguage] = useState('en');
@@ -637,6 +641,144 @@ export default function Home() {
             </div>
           </div>
         );
+
+      case "incremental-processor":
+        return (
+          <div className="h-full bg-background">
+            <MainNavigation
+              onSettingsClick={() => setShowPreferences(true)}
+              onShortcutsClick={() => setShowShortcuts(true)}
+              onStatusDashboardClick={() => setCurrentView("status")}
+              onAIExplorationClick={() => setCurrentView("ai")}
+              onAnalyticsClick={() => setCurrentView("analytics")}
+              onUploadClick={() => setShowUpload(true)}
+              isDarkMode={isDarkMode}
+              onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+              selectedArchive={selectedArchive}
+              filesCount={files?.length}
+            />
+            <div className="flex items-center p-4 border-b">
+              <Button 
+                variant="ghost" 
+                onClick={() => setCurrentView("main")}
+                className="mr-4"
+              >
+                ← Back to Files
+              </Button>
+            </div>
+            <div className="p-6">
+              <IncrementalProcessor
+                file={undefined} // Will be set when user uploads
+                onProcessComplete={(result) => console.log('Processing complete:', result)}
+                onChunkProcessed={(chunk) => console.log('Chunk processed:', chunk)}
+              />
+            </div>
+          </div>
+        );
+
+      case "archive-comparison":
+        return (
+          <div className="h-full bg-background">
+            <MainNavigation
+              onSettingsClick={() => setShowPreferences(true)}
+              onShortcutsClick={() => setShowShortcuts(true)}
+              onStatusDashboardClick={() => setCurrentView("status")}
+              onAIExplorationClick={() => setCurrentView("ai")}
+              onAnalyticsClick={() => setCurrentView("analytics")}
+              onUploadClick={() => setShowUpload(true)}
+              isDarkMode={isDarkMode}
+              onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+              selectedArchive={selectedArchive}
+              filesCount={files?.length}
+            />
+            <div className="flex items-center p-4 border-b">
+              <Button 
+                variant="ghost" 
+                onClick={() => setCurrentView("main")}
+                className="mr-4"
+              >
+                ← Back to Files
+              </Button>
+            </div>
+            <div className="p-6">
+              <ArchiveComparison
+                archive1={selectedArchive}
+                archive2={undefined} // Will need a second archive selector
+                files1={files}
+                files2={[]}
+                onSelectFile={(file, side) => console.log('File selected:', file, side)}
+              />
+            </div>
+          </div>
+        );
+
+      case "vulnerability-scanner":
+        return (
+          <div className="h-full bg-background">
+            <MainNavigation
+              onSettingsClick={() => setShowPreferences(true)}
+              onShortcutsClick={() => setShowShortcuts(true)}
+              onStatusDashboardClick={() => setCurrentView("status")}
+              onAIExplorationClick={() => setCurrentView("ai")}
+              onAnalyticsClick={() => setCurrentView("analytics")}
+              onUploadClick={() => setShowUpload(true)}
+              isDarkMode={isDarkMode}
+              onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+              selectedArchive={selectedArchive}
+              filesCount={files?.length}
+            />
+            <div className="flex items-center p-4 border-b">
+              <Button 
+                variant="ghost" 
+                onClick={() => setCurrentView("main")}
+                className="mr-4"
+              >
+                ← Back to Files
+              </Button>
+            </div>
+            <div className="p-6">
+              <VulnerabilityScanner
+                files={files}
+                onVulnerabilityFound={(vuln) => console.log('Vulnerability found:', vuln)}
+                onScanComplete={(report) => console.log('Scan complete:', report)}
+              />
+            </div>
+          </div>
+        );
+
+      case "dependency-graph":
+        return (
+          <div className="h-full bg-background">
+            <MainNavigation
+              onSettingsClick={() => setShowPreferences(true)}
+              onShortcutsClick={() => setShowShortcuts(true)}
+              onStatusDashboardClick={() => setCurrentView("status")}
+              onAIExplorationClick={() => setCurrentView("ai")}
+              onAnalyticsClick={() => setCurrentView("analytics")}
+              onUploadClick={() => setShowUpload(true)}
+              isDarkMode={isDarkMode}
+              onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+              selectedArchive={selectedArchive}
+              filesCount={files?.length}
+            />
+            <div className="flex items-center p-4 border-b">
+              <Button 
+                variant="ghost" 
+                onClick={() => setCurrentView("main")}
+                className="mr-4"
+              >
+                ← Back to Files
+              </Button>
+            </div>
+            <div className="p-6">
+              <DependencyGraph
+                files={files}
+                onNodeClick={(node) => console.log('Node clicked:', node)}
+                onAnalysisComplete={(analysis) => console.log('Analysis complete:', analysis)}
+              />
+            </div>
+          </div>
+        );
       
       default:
         return (
@@ -803,6 +945,38 @@ export default function Home() {
                   className="text-xs"
                 >
                   🔍 Patterns
+                </Button>
+                <Button
+                  variant={currentView === "incremental-processor" ? "default" : "outline"}
+                  onClick={() => setCurrentView("incremental-processor")}
+                  size="sm"
+                  className="text-xs"
+                >
+                  ⚡ Incremental
+                </Button>
+                <Button
+                  variant={currentView === "archive-comparison" ? "default" : "outline"}
+                  onClick={() => setCurrentView("archive-comparison")}
+                  size="sm"
+                  className="text-xs"
+                >
+                  🔄 Compare
+                </Button>
+                <Button
+                  variant={currentView === "vulnerability-scanner" ? "default" : "outline"}
+                  onClick={() => setCurrentView("vulnerability-scanner")}
+                  size="sm"
+                  className="text-xs"
+                >
+                  🛡️ Security
+                </Button>
+                <Button
+                  variant={currentView === "dependency-graph" ? "default" : "outline"}
+                  onClick={() => setCurrentView("dependency-graph")}
+                  size="sm"
+                  className="text-xs"
+                >
+                  🕸️ Graph
                 </Button>
               </div>
             </div>

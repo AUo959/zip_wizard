@@ -149,6 +149,15 @@ The application follows a clean separation of concerns with shared types between
 
 ## Recent Changes
 
+### January 2, 2025 - Major Performance & Analysis Enhancements
+- **Incremental Archive Processing**: Chunked processing for large archives with pause/resume capability
+- **Archive Comparison Tool**: Side-by-side archive comparison with detailed change tracking
+- **Vulnerability Scanner**: OWASP-compliant security scanning with CVE detection
+- **Dependency Graph Visualization**: Interactive force-directed graph with circular dependency detection
+- **Performance Improvements**: Background processing, concurrent chunk handling, memory optimization
+- **Security Analysis**: Pattern-based vulnerability detection, hardcoded secrets scanner, weak crypto detection
+- **Advanced Visualizations**: Zoomable graphs, cluster analysis, orphan file detection, hub file identification
+
 ### August 1, 2025 - Enhanced Feature Suite Implementation  
 - **Comprehensive Requirements Integration**: Implemented advanced features from detailed specification document
 - **Symbolic Interface**: Aurora-inspired symbolic command system with quantum analysis (999, T1, REM//, SYNCANCHORS)
