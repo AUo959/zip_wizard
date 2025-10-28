@@ -75,11 +75,20 @@ export const bracketBalancingStrategy: CodeRepairStrategy = {
 
 /**
  * HTML/XML tag completion strategy
+ * 
+ * Note: This uses a simple regex-based approach for basic tag matching.
+ * Limitations:
+ * - Does not handle nested tags with the same name correctly
+ * - May produce false positives with complex HTML structures
+ * - Does not understand context (e.g., tags in strings or comments)
+ * 
+ * For production use with complex HTML, consider integrating a proper HTML parser
+ * like parse5 or htmlparser2.
  */
 export const tagCompletionStrategy: CodeRepairStrategy = {
   id: 'tag-completion',
   name: 'Tag Completion',
-  description: 'Completes missing HTML/XML closing tags',
+  description: 'Completes missing HTML/XML closing tags (basic heuristic)',
 
   async repair(content: string, language?: string): Promise<CodeRepairResult> {
     if (language && !['html', 'xml', 'jsx', 'tsx', 'vue', 'svelte'].includes(language)) {
@@ -95,7 +104,12 @@ export const tagCompletionStrategy: CodeRepairStrategy = {
     let repairedContent = content;
     let confidence = 1.0;
 
-    // Simple regex-based tag matching (not perfect, but good enough for repair)
+    // Note: This is a simplified heuristic approach for basic tag completion
+    // It will not work correctly with:
+    // - Nested tags with the same name (e.g., <div><div></div></div>)
+    // - Tags split across multiple lines
+    // - Tags in strings or comments
+    // For robust HTML parsing, integrate a proper HTML parser library
     const openTagRegex = /<(\w+)(?:\s[^>]*)?>(?!.*<\/\1>)/g;
     const selfClosingTags = new Set(['br', 'hr', 'img', 'input', 'link', 'meta', 'area', 'base', 'col', 'command', 'embed', 'keygen', 'param', 'source', 'track', 'wbr']);
 

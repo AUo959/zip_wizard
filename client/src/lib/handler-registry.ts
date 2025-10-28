@@ -86,7 +86,9 @@ export const createZipHandler = (): ArchiveHandler => {
 
     async load(data: ArrayBuffer | Blob): Promise<FileNode[]> {
       try {
-        // Dynamic import to avoid bundling issues
+        // Note: Using dynamic import for JSZip
+        // This allows the library to be code-split and only loaded when needed
+        // Reduces initial bundle size when ZIP functionality isn't immediately used
         const JSZip = (await import('jszip')).default;
         const zip = new JSZip();
         await zip.loadAsync(data);

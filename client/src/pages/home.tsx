@@ -16,6 +16,7 @@ import { AIToolsView } from "@/components/ai-tools-view";
 import { SymbolicInterface } from "@/components/symbolic-interface";
 import { EnhancedArchiveManager } from "@/components/enhanced-archive-manager";
 import { AdvancedArchiveManager } from "@/components/advanced-archive-manager";
+import { convertSchemaArchive } from "@/lib/archive-converter";
 import { PrivacyShield } from "@/components/privacy-shield";
 import { MultilingualSupport } from "@/components/multilingual-support";
 import { FlowStateManager } from "@/components/flow-state-manager";
@@ -430,18 +431,7 @@ export default function Home() {
             </div>
             <div className="p-6">
               <AdvancedArchiveManager
-                archives={archives.map(a => ({
-                  id: a.id.toString(),
-                  name: a.name,
-                  size: a.originalSize || 0,
-                  status: 'idle' as const,
-                  createdAt: a.uploadedAt || new Date(),
-                  modifiedAt: a.uploadedAt,
-                  tags: [],
-                  format: a.name.split('.').pop(),
-                  healthScore: 100,
-                  fileCount: a.fileCount,
-                }))}
+                archives={archives.map(a => convertSchemaArchive(a))}
                 onArchiveAction={async (archiveId, action, params) => {
                   console.log('Archive action:', action, 'on archive:', archiveId, 'with params:', params);
                   // Handle actions here
