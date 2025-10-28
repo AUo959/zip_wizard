@@ -8,7 +8,7 @@ interface BreadcrumbNavigationProps {
     path: string;
   } | null;
   archiveName?: string;
-  onNavigate?: (path: string) => void;
+  onNavigate?: (_path: string) => void;
 }
 
 export function BreadcrumbNavigation({

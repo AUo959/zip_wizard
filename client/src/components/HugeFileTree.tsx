@@ -12,7 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 export interface HugeFileTreeProps {
   files: FileNode[];
-  onFileClick?: (file: FileNode) => void;
+  onFileClick?: (_file: FileNode) => void;
   height?: number;
   width?: number | string;
   itemSize?: number;

@@ -30,9 +30,9 @@ export interface ArchiveManagerProps {
   initialArchiveName?: string;
 
   // Callbacks
-  onFileSelect?: (file: FileNode) => void;
-  onExtract?: (files: FileNode[]) => void;
-  onBatchOperation?: (operation: string, files: FileNode[]) => void;
+  onFileSelect?: (_file: FileNode) => void;
+  onExtract?: (_files: FileNode[]) => void;
+  onBatchOperation?: (_operation: string, _files: FileNode[]) => void;
 
   // Options
   enableCollaboration?: boolean;

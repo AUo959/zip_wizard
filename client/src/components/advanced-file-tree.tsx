@@ -26,10 +26,10 @@ interface TreeNodeProps {
   node: FileNode;
   depth: number;
   selected: boolean;
-  onSelect: (node: FileNode) => void;
-  onToggle: (nodeId: string, expanded: boolean) => void;
-  onLoadChildren?: (node: FileNode) => Promise<FileNode[]>;
-  renderNode?: (node: FileNode, depth: number) => React.ReactNode;
+  onSelect: (_node: FileNode) => void;
+  onToggle: (_nodeId: string, _expanded: boolean) => void;
+  onLoadChildren?: (_node: FileNode) => Promise<FileNode[]>;
+  renderNode?: (_node: FileNode, _depth: number) => React.ReactNode;
   maxDepth: number;
   searchQuery?: string;
   showErrors: boolean;

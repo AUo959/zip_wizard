@@ -15,9 +15,9 @@ interface ErrorBoundaryProps {
   /** Child components */
   children: ReactNode;
   /** Fallback UI to render on error */
-  fallback?: (error: Error, errorInfo: React.ErrorInfo, reset: () => void) => ReactNode;
+  fallback?: (_error: Error, _errorInfo: React.ErrorInfo, reset: () => void) => ReactNode;
   /** Callback when error occurs */
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  onError?: (_error: Error, _errorInfo: React.ErrorInfo) => void;
   /** Optional identifier for this boundary */
   boundaryId?: string;
   /** Whether to show detailed error info (dev mode) */

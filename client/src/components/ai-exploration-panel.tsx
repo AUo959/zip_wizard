@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 interface AIExplorationPanelProps {
   archive: Archive;
   files: File[];
-  onFileSelect: (file: File) => void;
+  onFileSelect: (_file: File) => void;
   selectedFile: File | null;
 }
 
@@ -48,7 +48,7 @@ export function AIExplorationPanel({
   archive,
   files,
   onFileSelect,
-  selectedFile,
+  selectedFile: _selectedFile,
 }: AIExplorationPanelProps) {
   const [insights, setInsights] = useState<ExplorationInsight[]>([]);
   const [smartClusters, setSmartClusters] = useState<SmartCluster[]>([]);

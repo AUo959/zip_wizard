@@ -25,8 +25,8 @@ import {
 
 interface CodeMetricsAnalyzerProps {
   files?: any[];
-  onAnalysisComplete?: (metrics: CodeMetrics) => void;
-  onFileAnalyzed?: (file: string, metrics: FileMetrics) => void;
+  onAnalysisComplete?: (_metrics: CodeMetrics) => void;
+  onFileAnalyzed?: (_file: string, _metrics: FileMetrics) => void;
 }
 
 interface CodeMetrics {
@@ -132,7 +132,7 @@ export function CodeMetricsAnalyzer({
   const [selectedFile, setSelectedFile] = useState<FileMetrics | null>(null);
   const [viewMode, setViewMode] = useState<'overview' | 'details' | 'trends'>('overview');
 
-  const calculateCyclomaticComplexity = (content: string, language: string): number => {
+  const calculateCyclomaticComplexity = (content: string, _language: string): number => {
     let complexity = 1; // Base complexity
 
     // Common control flow keywords
@@ -295,7 +295,7 @@ export function CodeMetricsAnalyzer({
       }
     }
 
-    codeBlocks.forEach((count, block) => {
+    codeBlocks.forEach((count, _block) => {
       if (count > 2) {
         smells.push({
           type: 'Duplicate Code',

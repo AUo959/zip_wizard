@@ -25,8 +25,8 @@ export interface SearchFilters {
 }
 
 export interface ArchiveSearchBarProps {
-  onSearch: (query: string) => void;
-  onFilterChange?: (filters: SearchFilters) => void;
+  onSearch: (_query: string) => void;
+  onFilterChange?: (_filters: SearchFilters) => void;
   placeholder?: string;
   className?: string;
 }

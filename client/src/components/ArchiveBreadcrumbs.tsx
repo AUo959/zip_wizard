@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 
 export interface ArchiveBreadcrumbsProps {
   stack: string[];
-  onJump: (level: number) => void;
+  onJump: (_level: number) => void;
   className?: string;
 }
 

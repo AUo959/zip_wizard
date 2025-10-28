@@ -45,7 +45,7 @@ export default function CodeEditor({ file }: CodeEditorProps) {
     }
   };
 
-  const highlightCode = (code: string, language: string) => {
+  const highlightCode = (code: string, _language: string) => {
     // Simple syntax highlighting
     return code
       .replace(

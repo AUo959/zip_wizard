@@ -46,8 +46,8 @@ interface ArchiveCardProps {
   archive: Archive;
   selected: boolean;
   onSelect: () => void;
-  onAction: (action: ArchiveAction, params?: any) => void;
-  renderDetails?: (archive: Archive) => React.ReactNode;
+  onAction: (_action: ArchiveAction, _params?: any) => void;
+  renderDetails?: (_archive: Archive) => React.ReactNode;
 }
 
 const ArchiveCard: React.FC<ArchiveCardProps> = ({
@@ -229,9 +229,9 @@ export const AdvancedArchiveManager: React.FC<ArchiveManagerProps> = ({
   renderFileTree,
   renderArchiveDetails,
   renderError,
-  handlerRegistry,
-  enableRepair = true,
-  enableComparison = true,
+  handlerRegistry: _handlerRegistry,
+  enableRepair: _enableRepair = true,
+  enableComparison: _enableComparison = true,
   className,
 }) => {
   const [selectedId, setSelectedId] = useState<string | undefined>(selectedArchiveId);
