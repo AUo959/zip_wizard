@@ -25,7 +25,7 @@ import { type ViewType } from '@shared/views';
 export function HomeWithEnhancedNav() {
   const [currentView, setCurrentView] = useState<ViewType>('main');
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [vulnerabilityCount, setVulnerabilityCount] = useState(0);
+  const [vulnerabilityCount, _setVulnerabilityCount] = useState(0);
 
   // Example: Configure dynamic badges based on app state
   const badgeConfig = {
@@ -137,7 +137,7 @@ export function HomeWithSupplementalNav() {
  */
 export function HomeWithConditionalNav() {
   const [currentView, setCurrentView] = useState<ViewType>('main');
-  const [useEnhancedNav, setUseEnhancedNav] = useState(true);
+  const [useEnhancedNav, _setUseEnhancedNav] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   if (useEnhancedNav) {
@@ -179,7 +179,7 @@ export function HomeWithConditionalNav() {
  */
 export function HomeWithDynamicBadges() {
   const [currentView, setCurrentView] = useState<ViewType>('main');
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, _setIsDarkMode] = useState(false);
 
   // State for dynamic badges
   const [vulnerabilities, setVulnerabilities] = useState(0);
@@ -189,17 +189,17 @@ export function HomeWithDynamicBadges() {
   // Simulate real-time updates
   useEffect(() => {
     // Example: Listen to vulnerability scan results
-    const handleVulnerabilityScan = (count: number) => {
+    const _handleVulnerabilityScan = (count: number) => {
       setVulnerabilities(count);
     };
 
     // Example: Listen to notification events
-    const handleNotification = () => {
+    const _handleNotification = () => {
       setUnreadNotifications(prev => prev + 1);
     };
 
     // Example: Listen to processing errors
-    const handleError = () => {
+    const _handleError = () => {
       setProcessingErrors(prev => prev + 1);
     };
 
@@ -249,7 +249,7 @@ export function HomeWithDynamicBadges() {
  */
 export function HomeWithRoleBasedNav({ userRole }: { userRole: 'admin' | 'user' | 'guest' }) {
   const [currentView, setCurrentView] = useState<ViewType>('main');
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, _setIsDarkMode] = useState(false);
 
   // Configure visibility based on role
   const hiddenViews: ViewType[] = [];

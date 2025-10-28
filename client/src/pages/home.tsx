@@ -107,9 +107,9 @@ export default function Home() {
   const [currentLanguage, setCurrentLanguage] = useState('en');
 
   // Badge state for enhanced navigation
-  const [vulnerabilityCount, setVulnerabilityCount] = useState(0);
-  const [circuitBreakerErrors, setCircuitBreakerErrors] = useState(0);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [vulnerabilityCount, _setVulnerabilityCount] = useState(0);
+  const [circuitBreakerErrors, _setCircuitBreakerErrors] = useState(0);
+  const [unreadNotifications, _setUnreadNotifications] = useState(0);
 
   // Apply theme to document
   useEffect(() => {
@@ -285,11 +285,11 @@ export default function Home() {
     [privacyShieldActive]
   );
 
-  const handleArchiveProcess = useCallback((archiveId: string, operation: string, params?: any) => {
+  const _handleArchiveProcess = useCallback((archiveId: string, operation: string, params?: any) => {
     console.log('Archive operation:', operation, 'on archive:', archiveId, 'with params:', params);
   }, []);
 
-  const handleBatchOperation = useCallback((archiveIds: string[], operation: string) => {
+  const _handleBatchOperation = useCallback((archiveIds: string[], operation: string) => {
     console.log('Batch operation:', operation, 'on archives:', archiveIds);
   }, []);
 
