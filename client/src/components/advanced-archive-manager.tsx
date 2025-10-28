@@ -45,7 +45,7 @@ interface ArchiveCardProps {
   archive: Archive;
   selected: boolean;
   onSelect: () => void;
-  onAction: (_action: ArchiveAction, _params?: any) => void;
+  onAction: (_action: ArchiveAction, _params?: Record<string, unknown>) => void;
   renderDetails?: (_archive: Archive) => React.ReactNode;
 }
 
@@ -262,7 +262,7 @@ export const AdvancedArchiveManager: React.FC<ArchiveManagerProps> = ({
 
   // Handle archive action
   const handleArchiveAction = useCallback(
-    (archiveId: string, action: ArchiveAction, params?: any) => {
+    (archiveId: string, action: ArchiveAction, params?: Record<string, unknown>) => {
       onArchiveAction(archiveId, action, params);
     },
     [onArchiveAction]

@@ -27,8 +27,8 @@ export interface FileMetadata {
   words?: number;
   language?: string;
   checksum?: string;
-  exif?: any;
-  customMetadata?: Record<string, any>;
+  exif?: Record<string, unknown>;
+  customMetadata?: Record<string, unknown>;
 }
 
 export interface ParsedFile {
@@ -39,15 +39,24 @@ export interface ParsedFile {
   children?: ParsedFile[];
   preview?: string;
   extractedText?: string;
-  structure?: any;
+  structure?: Record<string, unknown>;
   warnings?: string[];
   errors?: string[];
 }
 
 export interface ParserCapabilities {
   canParse: (file: File | Blob) => boolean;
-  parse: (file: File | Blob, options?: any) => Promise<ParsedFile>;
+  parse: (file: File | Blob, options?: Record<string, unknown>) => Promise<ParsedFile>;
   priority: number;
+}
+
+interface PdfMetadata {
+  pages: number;
+  encrypted: boolean;
+  text: string;
+  preview: string;
+  title?: string;
+  author?: string;
 }
 
 export class UniversalFileParser {
@@ -477,7 +486,7 @@ class PdfParser implements ParserCapabilities {
     };
   }
 
-  private extractPdfMetadata(buffer: ArrayBuffer): any {
+  private extractPdfMetadata(buffer: ArrayBuffer): PdfMetadata {
     const bytes = new Uint8Array(buffer);
     const text = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
 
@@ -485,7 +494,7 @@ class PdfParser implements ParserCapabilities {
     const isPdf = text.startsWith('%PDF');
 
     // Extract basic metadata
-    const metadata: any = {
+    const metadata: PdfMetadata = {
       pages: 0,
       encrypted: false,
       text: '',

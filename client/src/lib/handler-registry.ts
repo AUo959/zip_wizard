@@ -97,7 +97,7 @@ export const createZipHandler = (): ArchiveHandler => {
         const folderMap = new Map<string, FileNode>();
 
         // First pass: collect all entries with their metadata
-        const entries: Array<{ path: string; entry: any }> = [];
+        const entries: Array<{ path: string; entry: import('jszip').JSZipObject }> = [];
         zip.forEach((relativePath, zipEntry) => {
           entries.push({ path: relativePath, entry: zipEntry });
         });

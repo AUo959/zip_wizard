@@ -243,7 +243,7 @@ export class EmergentCircuitBreaker {
   /**
    * Record failed execution
    */
-  private recordFailure(name: string, responseTime: number, error: any) {
+  private recordFailure(name: string, responseTime: number, error: unknown) {
     const state = this.states.get(name)!;
     const config = this.configs.get(name)!;
 
@@ -527,7 +527,7 @@ class PatternDetector {
   private historyWindow = 100;
   private patterns: Map<string, FailurePattern[]> = new Map();
 
-  detectPatterns(state: CircuitState, _error: any): FailurePattern[] {
+  detectPatterns(state: CircuitState, _error: unknown): FailurePattern[] {
     const patterns: FailurePattern[] = [];
 
     // Detect periodic failures
