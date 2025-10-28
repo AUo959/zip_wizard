@@ -12,6 +12,7 @@ import {
   type FileMutation,
   type InsertFileMutation
 } from "@shared/schema";
+import { normalizeTags, normalizeDependencies } from "@shared/validation";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -80,11 +81,21 @@ export class DatabaseStorage implements IStorage {
     await db.delete(archives).where(eq(archives.id, id));
   }
 
+  /**
+   * Creates a new file record in the database.
+   * Validates and normalizes array fields before insertion.
+   * 
+   * @param insertFile - File data to insert
+   * @returns The created file record
+   * @see normalizeTags - For tags array validation
+   * @see normalizeDependencies - For dependencies array validation
+   */
   async createFile(insertFile: InsertFile): Promise<File> {
-    // Ensure tags is properly typed as string array
+    // Ensure tags and dependencies are properly typed as string arrays
     const fileToInsert = {
       ...insertFile,
-      tags: (Array.isArray(insertFile.tags) ? insertFile.tags : []) as string[]
+      tags: normalizeTags(insertFile.tags),
+      dependencies: normalizeDependencies(insertFile.dependencies)
     };
     
     const [file] = await db

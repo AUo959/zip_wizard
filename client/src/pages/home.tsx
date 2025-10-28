@@ -40,9 +40,15 @@ import { PreferencesDialog } from "@/components/preferences-dialog";
 import { MainNavigation } from "@/components/main-navigation";
 import { useKeyboardShortcuts, defaultShortcuts, formatShortcut } from "@/hooks/use-keyboard-shortcuts";
 import type { Archive as ArchiveType, File } from "@shared/schema";
+import { type ViewType, ALL_VIEWS, VIEW_METADATA } from "@shared/views";
 
-type ViewType = "main" | "status" | "ai" | "analytics" | "symbolic" | "archive-manager" | "privacy" | "multilingual" | "flow-manager" | "wu-wei" | "mushin" | "memory-compression" | "cognitive-load" | "pattern-recognition" | "incremental-processor" | "archive-comparison" | "vulnerability-scanner" | "dependency-graph" | "code-metrics" | "timing-optimizer" | "circuit-breaker";
-
+/**
+ * Main application component for ZipWizard.
+ * Manages view navigation and state across all application views.
+ * 
+ * @see ViewType - Centralized view type definition
+ * @see ALL_VIEWS - Complete list of available views
+ */
 export default function Home() {
   const [selectedArchive, setSelectedArchive] = useState<ArchiveType | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -211,8 +217,15 @@ export default function Home() {
     console.log('Language changed to:', language);
   }, []);
 
-  // Helper to check view without triggering TypeScript narrowing in switch
-  const isActiveView = (view: ViewType) => currentView === view;
+  /**
+   * Helper function to check if a view is currently active.
+   * Prevents TypeScript narrowing issues in switch statement default cases.
+   * 
+   * @param view - The view to check against currentView
+   * @returns True if the view is currently active
+   * @see ViewType - For available view options
+   */
+  const isActiveView = useCallback((view: ViewType) => currentView === view, [currentView]);
 
   if (showUpload || !archives?.length) {
     return (
@@ -249,8 +262,15 @@ export default function Home() {
     );
   }
 
-  // Handle different views
-  const renderCurrentView = () => {
+  /**
+   * Renders the current view based on currentView state.
+   * Uses exhaustive switch statement to ensure all views are handled.
+   * 
+   * @returns JSX for the current view
+   * @see ViewType - For complete list of available views
+   * @see ALL_VIEWS - Source of truth for view definitions
+   */
+  const renderCurrentView = (): JSX.Element => {
     switch (currentView) {
       case "status":
         return (
