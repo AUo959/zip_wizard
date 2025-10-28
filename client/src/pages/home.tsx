@@ -48,6 +48,7 @@ import { AIToolsView } from '@/components/ai-tools-view';
 import { SymbolicInterface } from '@/components/symbolic-interface';
 import { EnhancedArchiveManager } from '@/components/enhanced-archive-manager';
 import { AdvancedArchiveManager } from '@/components/advanced-archive-manager';
+import { ArchiveManager } from '@/components/ArchiveManager';
 import { convertSchemaArchive } from '@/lib/archive-converter';
 import { PrivacyShield } from '@/components/privacy-shield';
 import { MultilingualSupport } from '@/components/multilingual-support';
