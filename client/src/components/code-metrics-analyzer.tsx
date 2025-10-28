@@ -366,7 +366,7 @@ export function CodeMetricsAnalyzer({
     const commentLines = lines.filter((line: string) => line.trim().startsWith('//')).length;
     const blankLines = lines.filter((line: string) => !line.trim()).length;
 
-    const cyclomaticComplexity = calculateCyclomaticComplexity(content, file.language);
+    const cyclomaticComplexity = calculateCyclomaticComplexity(content, file.language || 'text');
     const cognitiveComplexity = calculateCognitiveComplexity(content);
     const halsteadMetrics = calculateHalsteadMetrics(content);
     const maintainabilityIndex = calculateMaintainabilityIndex(

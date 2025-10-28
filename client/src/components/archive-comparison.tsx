@@ -95,11 +95,8 @@ export function ArchiveComparison({
           leftFile,
         });
       } else {
-        // Check if file is modified
-        const isModified =
-          leftFile.size !== rightFile.size ||
-          leftFile.hash !== rightFile.hash ||
-          leftFile.content !== rightFile.content;
+        // Check if file is modified (compare by size only since hash/content not in FileNode)
+        const isModified = leftFile.size !== rightFile.size;
 
         if (isModified) {
           modified.push({
@@ -107,10 +104,7 @@ export function ArchiveComparison({
             name: leftFile.name,
             status: 'modified',
             sizeChange: (rightFile.size || 0) - (leftFile.size || 0),
-            complexityChange:
-              rightFile.complexity !== leftFile.complexity
-                ? `${leftFile.complexity} → ${rightFile.complexity}`
-                : undefined,
+            complexityChange: undefined,
             leftFile,
             rightFile,
           });

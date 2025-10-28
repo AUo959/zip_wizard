@@ -126,9 +126,12 @@ export function PatternRecognitionEngine({
         type: 'hierarchical',
         confidence: 91,
         structure: {
-          'Core Components': patterns[0].files.slice(0, 5),
-          'Business Logic': patterns[1].files.slice(0, 4),
-          Utilities: patterns[2].files.slice(0, 3),
+          folders: [
+            { name: 'Core Components', purpose: 'Main application components', suggestedFiles: patterns[0].files.slice(0, 5) },
+            { name: 'Business Logic', purpose: 'Business rules and domain logic', suggestedFiles: patterns[1].files.slice(0, 4) },
+            { name: 'Utilities', purpose: 'Helper functions and utilities', suggestedFiles: patterns[2].files.slice(0, 3) },
+          ],
+          rationale: 'Hierarchical organization improves code discoverability and maintainability',
         },
         benefits: [
           'Reduce cognitive load by 35%',
@@ -141,9 +144,12 @@ export function PatternRecognitionEngine({
         type: 'functional',
         confidence: 87,
         structure: {
-          'Data Layer': patterns[1].files.slice(0, 4),
-          'Interface Layer': patterns[0].files.slice(0, 6),
-          'Service Layer': patterns[2].files.slice(0, 3),
+          folders: [
+            { name: 'Data Layer', purpose: 'Data access and models', suggestedFiles: patterns[1].files.slice(0, 4) },
+            { name: 'Interface Layer', purpose: 'UI components and interfaces', suggestedFiles: patterns[0].files.slice(0, 6) },
+            { name: 'Service Layer', purpose: 'Business services', suggestedFiles: patterns[2].files.slice(0, 3) },
+          ],
+          rationale: 'Functional separation aligns with mental models and supports flow state',
         },
         benefits: [
           'Align with mental models',
