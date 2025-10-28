@@ -16,7 +16,6 @@ import {
   AlertCircle,
   CheckCircle,
   X,
-  Bell,
   BellOff,
   ExternalLink,
 } from 'lucide-react';

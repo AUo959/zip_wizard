@@ -2,22 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Shield,
   Eye,
-  EyeOff,
   Lock,
-  Unlock,
   AlertTriangle,
   CheckCircle,
   Scan,
   FileText,
   Database,
-  Server,
   Key,
   UserCheck,
   Clock,
