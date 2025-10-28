@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Enhanced Navigation Styles */
+@import './components/enhanced-navigation.css';
+
 /* High Readability Modern Theme */
 :root {
   /* Light gray theme for excellent readability */

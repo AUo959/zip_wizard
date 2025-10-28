@@ -38,6 +38,7 @@ import { BreadcrumbNavigation } from "@/components/breadcrumb-navigation";
 import { ShortcutsDialog } from "@/components/shortcuts-dialog";
 import { PreferencesDialog } from "@/components/preferences-dialog";
 import { MainNavigation } from "@/components/main-navigation";
+import { EnhancedViewTabs } from "@/components/enhanced-view-tabs";
 import { useKeyboardShortcuts, defaultShortcuts, formatShortcut } from "@/hooks/use-keyboard-shortcuts";
 import type { Archive as ArchiveType, File } from "@shared/schema";
 import { type ViewType, ALL_VIEWS, VIEW_METADATA } from "@shared/views";
@@ -65,6 +66,11 @@ export default function Home() {
   const [dreamMode, setDreamMode] = useState(false);
   const [privacyShieldActive, setPrivacyShieldActive] = useState(true);
   const [currentLanguage, setCurrentLanguage] = useState('en');
+  
+  // Badge state for enhanced navigation
+  const [vulnerabilityCount, setVulnerabilityCount] = useState(0);
+  const [circuitBreakerErrors, setCircuitBreakerErrors] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   // Apply theme to document
   useEffect(() => {
@@ -76,6 +82,44 @@ export default function Home() {
       root.classList.add('light');
     }
   }, [isDarkMode]);
+  
+  // Badge configuration for enhanced navigation
+  const badgeConfig = {
+    ai: { type: 'new' as const },
+    analytics: { type: 'beta' as const },
+    'vulnerability-scanner': vulnerabilityCount > 0 
+      ? { type: 'warning' as const, value: vulnerabilityCount }
+      : undefined,
+    'circuit-breaker': circuitBreakerErrors > 0
+      ? { type: 'warning' as const, value: circuitBreakerErrors }
+      : undefined,
+    status: unreadNotifications > 0
+      ? { type: 'count' as const, value: unreadNotifications }
+      : undefined,
+  };
+  
+  // Grouped views for enhanced navigation
+  const groupedViews = {
+    'Core': ['main', 'status', 'ai'] as ViewType[],
+    'Tools': ['analytics', 'archive-manager', 'archive-comparison'] as ViewType[],
+    'Security': ['vulnerability-scanner', 'privacy', 'circuit-breaker'] as ViewType[],
+    'Analysis': [
+      'dependency-graph',
+      'code-metrics',
+      'pattern-recognition',
+      'timing-optimizer',
+      'incremental-processor'
+    ] as ViewType[],
+    'Advanced': [
+      'mushin',
+      'wu-wei',
+      'symbolic',
+      'flow-manager',
+      'cognitive-load',
+      'memory-compression',
+      'multilingual'
+    ] as ViewType[],
+  };
 
   const { data: archives = [], refetch: refetchArchives } = useQuery<ArchiveType[]>({
     queryKey: ["archives"],
@@ -239,6 +283,16 @@ export default function Home() {
           onUploadClick={() => setShowUpload(true)}
           isDarkMode={isDarkMode}
           onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
+        />
+        
+        {/* Enhanced Navigation with Keyboard Shortcuts */}
+        <EnhancedViewTabs
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          showHomeButton
+          onHomeClick={() => setCurrentView('main')}
+          badgeConfig={badgeConfig}
+          groupedViews={groupedViews}
         />
 
         {/* Dialogs for Upload View */}
@@ -995,6 +1049,16 @@ export default function Home() {
                 </div>
               </div>
             </header>
+
+            {/* Enhanced Navigation Tabs with Keyboard Shortcuts */}
+            <EnhancedViewTabs
+              currentView={currentView}
+              onViewChange={setCurrentView}
+              showHomeButton
+              onHomeClick={() => setCurrentView('main')}
+              badgeConfig={badgeConfig}
+              groupedViews={groupedViews}
+            />
 
             {/* Enhanced Navigation */}
             <div className="bg-muted/30 border-b border-border px-6 py-3">
