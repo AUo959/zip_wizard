@@ -1,6 +1,5 @@
 import { storage } from './storage';
 import { type InsertObserverEvent } from '@shared/schema';
-import { nanoid } from 'nanoid';
 
 export class ObserverService {
   private static instance: ObserverService;

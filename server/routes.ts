@@ -4,7 +4,7 @@ import multer from 'multer';
 import JSZip from 'jszip';
 import { storage } from './storage';
 import { observer } from './observer';
-import { insertArchiveSchema, insertFileSchema, type File } from '@shared/schema';
+import { type File } from '@shared/schema';
 import path from 'path';
 import cors from 'cors';
 import crypto from 'crypto';
