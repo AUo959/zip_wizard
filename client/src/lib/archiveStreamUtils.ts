@@ -148,7 +148,14 @@ export function estimateMemoryUsage(fileSize: number, chunkSize: number): {
   const peakMemory = chunkSize * 3;
   
   // Check if we have performance.memory API (Chrome/Edge)
-  const availableMemory = (performance as any).memory?.jsHeapSizeLimit || 
+  interface PerformanceMemory {
+    jsHeapSizeLimit?: number;
+    usedJSHeapSize?: number;
+    totalJSHeapSize?: number;
+  }
+  
+  const perfWithMemory = performance as Performance & { memory?: PerformanceMemory };
+  const availableMemory = perfWithMemory.memory?.jsHeapSizeLimit || 
                           2 * 1024 * 1024 * 1024; // Default 2GB
   
   const safe = peakMemory < availableMemory * 0.1; // Use max 10% of available memory

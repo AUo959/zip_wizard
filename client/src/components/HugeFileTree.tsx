@@ -4,7 +4,7 @@
  * Uses simple virtualization for efficient rendering of huge lists.
  */
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { FileNode } from "@/lib/archiveHandlers";
 import { File, Folder, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -35,7 +35,7 @@ export const HugeFileTree: React.FC<HugeFileTreeProps> = ({
   const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
 
   // Calculate visible range based on scroll position
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
     if (!scrollRef.current) return;
     
     const scrollTop = scrollRef.current.scrollTop;
@@ -44,7 +44,7 @@ export const HugeFileTree: React.FC<HugeFileTreeProps> = ({
     const end = start + visibleCount + 10; // Add buffer
     
     setVisibleRange({ start: Math.max(0, start - 10), end: Math.min(files.length, end) });
-  };
+  }, [height, itemSize, files.length]);
 
   useEffect(() => {
     const scrollElement = scrollRef.current;
@@ -52,7 +52,7 @@ export const HugeFileTree: React.FC<HugeFileTreeProps> = ({
       scrollElement.addEventListener('scroll', handleScroll);
       return () => scrollElement.removeEventListener('scroll', handleScroll);
     }
-  }, []);
+  }, [handleScroll]);
 
   const FileRow: React.FC<{ file: FileNode; index: number }> = ({ file, index }) => {
     const handleClick = () => {
