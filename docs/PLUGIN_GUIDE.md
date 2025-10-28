@@ -29,6 +29,7 @@ ZIP Wizard's plugin system allows you to:
 Add support for custom archive formats.
 
 **Interface:**
+
 ```typescript
 interface FormatHandler {
   name: string;
@@ -41,6 +42,7 @@ interface FormatHandler {
 ```
 
 **Example:**
+
 ```typescript
 // server/formats/rar-handler.ts
 import { FormatHandler } from '../lib/format-handler';
@@ -63,7 +65,7 @@ export class RarFormatHandler implements FormatHandler {
       compression: 'normal',
       fileCount: 0,
       totalSize: buffer.length,
-      files: []
+      files: [],
     };
   }
 
@@ -75,6 +77,7 @@ export class RarFormatHandler implements FormatHandler {
 ```
 
 **Registration:**
+
 ```typescript
 // server/index.ts
 import { RarFormatHandler } from './formats/rar-handler';
@@ -90,6 +93,7 @@ app.use('/api', (req, res, next) => {
 Implement custom security scanning logic.
 
 **Interface:**
+
 ```typescript
 interface VulnerabilityScanner {
   name: string;
@@ -105,6 +109,7 @@ interface ScanResult {
 ```
 
 **Example:**
+
 ```typescript
 // server/scanners/malware-scanner.ts
 export class MalwareScanner implements VulnerabilityScanner {
@@ -113,7 +118,7 @@ export class MalwareScanner implements VulnerabilityScanner {
 
   private signatures: Map<string, string> = new Map([
     ['deadbeef', 'Known malware signature'],
-    ['cafebabe', 'Suspicious executable pattern']
+    ['cafebabe', 'Suspicious executable pattern'],
   ]);
 
   async scan(file: FileEntry): Promise<ScanResult> {
@@ -128,7 +133,7 @@ export class MalwareScanner implements VulnerabilityScanner {
           severity: 'critical',
           description,
           location: file.path,
-          cve: null
+          cve: null,
         });
       }
     }
@@ -136,9 +141,8 @@ export class MalwareScanner implements VulnerabilityScanner {
     return {
       threats,
       severity: threats.length > 0 ? 'critical' : 'none',
-      recommendations: threats.length > 0 
-        ? ['Quarantine this file immediately', 'Run full system scan']
-        : []
+      recommendations:
+        threats.length > 0 ? ['Quarantine this file immediately', 'Run full system scan'] : [],
     };
   }
 }
@@ -149,6 +153,7 @@ export class MalwareScanner implements VulnerabilityScanner {
 Create specialized AI-powered analysis tools.
 
 **Interface:**
+
 ```typescript
 interface AIAnalyzer {
   name: string;
@@ -165,6 +170,7 @@ interface Insights {
 ```
 
 **Example:**
+
 ```typescript
 // server/ai/code-quality-analyzer.ts
 export class CodeQualityAnalyzer implements AIAnalyzer {
@@ -172,9 +178,7 @@ export class CodeQualityAnalyzer implements AIAnalyzer {
   supportedFileTypes = ['.js', '.ts', '.py', '.java'];
 
   async analyze(files: FileEntry[]): Promise<Insights> {
-    const codeFiles = files.filter(f => 
-      this.supportedFileTypes.some(ext => f.name.endsWith(ext))
-    );
+    const codeFiles = files.filter(f => this.supportedFileTypes.some(ext => f.name.endsWith(ext)));
 
     const patterns: Pattern[] = [];
     let totalComplexity = 0;
@@ -189,7 +193,7 @@ export class CodeQualityAnalyzer implements AIAnalyzer {
           type: 'high-complexity',
           file: file.path,
           severity: 'warning',
-          description: `High cyclomatic complexity: ${complexity}`
+          description: `High cyclomatic complexity: ${complexity}`,
         });
       }
     }
@@ -199,10 +203,11 @@ export class CodeQualityAnalyzer implements AIAnalyzer {
     return {
       summary: `Analyzed ${codeFiles.length} code files. Average complexity: ${avgComplexity.toFixed(2)}`,
       patterns,
-      recommendations: avgComplexity > 10 
-        ? ['Consider refactoring complex functions', 'Add unit tests for high-complexity code']
-        : ['Code quality is good'],
-      confidence: 0.85
+      recommendations:
+        avgComplexity > 10
+          ? ['Consider refactoring complex functions', 'Add unit tests for high-complexity code']
+          : ['Code quality is good'],
+      confidence: 0.85,
     };
   }
 
@@ -220,6 +225,7 @@ export class CodeQualityAnalyzer implements AIAnalyzer {
 Add custom views and components to the UI.
 
 **Example:**
+
 ```typescript
 // client/src/plugins/custom-view.tsx
 import { ViewDefinition } from '@/types';
@@ -243,6 +249,7 @@ function CustomAnalyticsView() {
 ```
 
 **Registration:**
+
 ```typescript
 // client/src/main.tsx
 import { registerView } from './lib/view-registry';
@@ -256,6 +263,7 @@ registerView(customView);
 ### Performance
 
 1. **Use streaming for large files**
+
    ```typescript
    async parse(stream: ReadableStream): Promise<Metadata> {
      // Process in chunks
@@ -263,6 +271,7 @@ registerView(customView);
    ```
 
 2. **Implement cancellation**
+
    ```typescript
    async scan(file: FileEntry, signal: AbortSignal): Promise<ScanResult> {
      if (signal.aborted) throw new Error('Cancelled');
@@ -271,9 +280,10 @@ registerView(customView);
    ```
 
 3. **Cache expensive operations**
+
    ```typescript
    private cache = new Map<string, ScanResult>();
-   
+
    async scan(file: FileEntry): Promise<ScanResult> {
      const cacheKey = file.hash;
      if (this.cache.has(cacheKey)) {
@@ -286,6 +296,7 @@ registerView(customView);
 ### Security
 
 1. **Validate all inputs**
+
    ```typescript
    canHandle(buffer: Buffer): boolean {
      if (buffer.length < 4) return false;
@@ -294,6 +305,7 @@ registerView(customView);
    ```
 
 2. **Handle errors gracefully**
+
    ```typescript
    async parse(buffer: Buffer): Promise<ArchiveMetadata> {
      try {
@@ -387,11 +399,13 @@ interface ViewDefinition {
 ## Publishing Your Plugin
 
 1. Create a package:
+
    ```bash
    npm init @zipwizard/plugin-<name>
    ```
 
 2. Add plugin metadata:
+
    ```json
    {
      "name": "@zipwizard/plugin-rar",
@@ -404,6 +418,7 @@ interface ViewDefinition {
    ```
 
 3. Publish:
+
    ```bash
    npm publish
    ```
