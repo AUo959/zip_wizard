@@ -19,7 +19,7 @@ export class UndoManager<T> {
 
   /**
    * Create a new UndoManager.
-   * 
+   *
    * @param maxSize - Maximum number of states to keep in history (default: 50)
    */
   constructor(maxSize = 50) {
@@ -29,21 +29,21 @@ export class UndoManager<T> {
   /**
    * Push a new state onto the stack.
    * Clears any redo history after current pointer.
-   * 
+   *
    * @param state - The state to save
    * @param description - Optional description of the action
    */
   push(state: T, description = 'Action'): void {
     // Remove any redo history
     this.stack = this.stack.slice(0, this.pointer + 1);
-    
+
     // Add new state
     this.stack.push({
       state,
       description,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
-    
+
     // Maintain max size
     if (this.stack.length > this.maxSize) {
       this.stack.shift();
@@ -54,7 +54,7 @@ export class UndoManager<T> {
 
   /**
    * Undo to previous state.
-   * 
+   *
    * @returns Previous state or undefined if at beginning
    */
   undo(): T | undefined {
@@ -67,7 +67,7 @@ export class UndoManager<T> {
 
   /**
    * Redo to next state.
-   * 
+   *
    * @returns Next state or undefined if at end
    */
   redo(): T | undefined {
@@ -80,7 +80,7 @@ export class UndoManager<T> {
 
   /**
    * Get current state without changing pointer.
-   * 
+   *
    * @returns Current state or undefined if stack is empty
    */
   current(): T | undefined {
@@ -148,7 +148,7 @@ export class UndoManager<T> {
 
   /**
    * Jump to specific point in history.
-   * 
+   *
    * @param index - Index to jump to
    * @returns State at that index or undefined if invalid
    */
@@ -173,10 +173,10 @@ export class UndoManager<T> {
  */
 export function createUndoManager<T>(initialState?: T, maxSize = 50): UndoManager<T> {
   const manager = new UndoManager<T>(maxSize);
-  
+
   if (initialState !== undefined) {
     manager.push(initialState, 'Initial state');
   }
-  
+
   return manager;
 }

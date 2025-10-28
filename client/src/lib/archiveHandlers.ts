@@ -1,7 +1,7 @@
 /**
  * Registry for all archive formats (zip, tar, rar, etc.).
  * Each handler processes streaming chunks and emits indexed files.
- * 
+ *
  * This plugin-based architecture allows infinite extensibility
  * and format support without modifying core logic.
  */
@@ -62,7 +62,7 @@ class ArchiveHandlerRegistry {
 
   /**
    * Register a handler for a specific archive format.
-   * 
+   *
    * @param format - Format identifier (e.g., 'zip', 'tar', 'rar')
    * @param handler - Handler function to process the format
    */
@@ -72,7 +72,7 @@ class ArchiveHandlerRegistry {
 
   /**
    * Get a handler for a specific format.
-   * 
+   *
    * @param format - Format identifier
    * @returns Handler function or undefined if not found
    */
@@ -82,7 +82,7 @@ class ArchiveHandlerRegistry {
 
   /**
    * Check if a handler exists for a format.
-   * 
+   *
    * @param format - Format identifier
    * @returns True if handler exists
    */
@@ -92,7 +92,7 @@ class ArchiveHandlerRegistry {
 
   /**
    * Get all registered format names.
-   * 
+   *
    * @returns Array of format identifiers
    */
   getSupportedFormats(): string[] {
@@ -101,7 +101,7 @@ class ArchiveHandlerRegistry {
 
   /**
    * Detect format from file extension or magic bytes.
-   * 
+   *
    * @param filename - Name of the file
    * @param firstChunk - Optional first chunk for magic byte detection
    * @returns Detected format or undefined
@@ -119,7 +119,7 @@ class ArchiveHandlerRegistry {
       const magic = view.getUint32(0, false);
 
       // ZIP magic: 0x504B0304 or 0x504B0506
-      if (magic === 0x504B0304 || magic === 0x504B0506) {
+      if (magic === 0x504b0304 || magic === 0x504b0506) {
         return 'zip';
       }
 
@@ -130,21 +130,27 @@ class ArchiveHandlerRegistry {
 
       // 7z magic: 0x377ABCAF27
       const magic7z = view.getUint32(0, true);
-      if (magic7z === 0x7A37AFBC) {
+      if (magic7z === 0x7a37afbc) {
         return '7z';
       }
 
       // TAR (check for ustar signature at offset 257)
       if (firstChunk.byteLength >= 262) {
         const tarView = new Uint8Array(firstChunk, 257, 5);
-        const ustar = String.fromCharCode(tarView[0], tarView[1], tarView[2], tarView[3], tarView[4]);
+        const ustar = String.fromCharCode(
+          tarView[0],
+          tarView[1],
+          tarView[2],
+          tarView[3],
+          tarView[4]
+        );
         if (ustar === 'ustar') {
           return 'tar';
         }
       }
 
       // GZIP magic: 0x1F8B
-      if ((magic >> 16) === 0x1F8B) {
+      if (magic >> 16 === 0x1f8b) {
         return 'gz';
       }
     }
@@ -158,7 +164,7 @@ const registry = new ArchiveHandlerRegistry();
 
 /**
  * Register a handler for a specific archive format.
- * 
+ *
  * @param format - Format identifier (e.g., 'zip', 'tar', 'rar')
  * @param handler - Handler function to process the format
  */
@@ -168,7 +174,7 @@ export function registerHandler(format: string, handler: Handler): void {
 
 /**
  * Parse an archive using the appropriate handler.
- * 
+ *
  * @param format - Format identifier or filename for auto-detection
  * @param stream - Async iterable of ArrayBuffer chunks
  * @param options - Parsing options
@@ -198,7 +204,7 @@ export async function parseWithHandler(
 
 /**
  * Get all supported archive formats.
- * 
+ *
  * @returns Array of format identifiers
  */
 export function getSupportedFormats(): string[] {
@@ -207,18 +213,21 @@ export function getSupportedFormats(): string[] {
 
 /**
  * Detect archive format from filename or magic bytes.
- * 
+ *
  * @param filename - Name of the file
  * @param firstChunk - Optional first chunk for magic byte detection
  * @returns Detected format or undefined
  */
-export function detectArchiveFormat(filename: string, firstChunk?: ArrayBuffer): string | undefined {
+export function detectArchiveFormat(
+  filename: string,
+  firstChunk?: ArrayBuffer
+): string | undefined {
   return registry.detectFormat(filename, firstChunk);
 }
 
 /**
  * Check if a format is supported.
- * 
+ *
  * @param format - Format identifier
  * @returns True if format is supported
  */

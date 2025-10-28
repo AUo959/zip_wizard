@@ -2,23 +2,23 @@
  * Shows multi-user audit log and in-app notifications for collaboration.
  */
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { 
-  User, 
-  Clock, 
-  FileEdit, 
-  Trash2, 
-  Download, 
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import {
+  User,
+  Clock,
+  FileEdit,
+  Trash2,
+  Download,
   Upload,
   Info,
   AlertTriangle,
-  CheckCircle
-} from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+  CheckCircle,
+} from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
 export interface ChangeLog {
   id: string;
@@ -49,12 +49,12 @@ export interface CollaborationPanelProps {
 export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
   changes,
   notifications,
-  className
+  className,
 }) => {
   // Get icon for action type
   const getActionIcon = (action: string): React.ReactNode => {
-    const iconClass = "h-3 w-3";
-    
+    const iconClass = 'h-3 w-3';
+
     if (action.includes('edit') || action.includes('modify')) {
       return <FileEdit className={iconClass} />;
     }
@@ -67,14 +67,14 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
     if (action.includes('upload') || action.includes('add')) {
       return <Upload className={iconClass} />;
     }
-    
+
     return <Clock className={iconClass} />;
   };
 
   // Get icon for notification type
   const getNotificationIcon = (type: Notification['type']): React.ReactNode => {
-    const iconClass = "h-4 w-4";
-    
+    const iconClass = 'h-4 w-4';
+
     switch (type) {
       case 'info':
         return <Info className={`${iconClass} text-blue-500`} />;
@@ -95,9 +95,7 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
   );
 
   // Sort changes by timestamp (newest first)
-  const sortedChanges = [...changes].sort(
-    (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
-  );
+  const sortedChanges = [...changes].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
   // Count unread notifications
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -125,13 +123,11 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {sortedNotifications.map((notification) => (
+                  {sortedNotifications.map(notification => (
                     <div
                       key={notification.id}
                       className={`flex gap-2 p-2 rounded-md transition-colors ${
-                        !notification.read 
-                          ? 'bg-accent' 
-                          : 'hover:bg-accent/50'
+                        !notification.read ? 'bg-accent' : 'hover:bg-accent/50'
                       }`}
                     >
                       {getNotificationIcon(notification.type)}
@@ -166,9 +162,7 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
                     <React.Fragment key={change.id}>
                       <div className="flex gap-3">
                         {/* Icon */}
-                        <div className="flex items-start pt-1">
-                          {getActionIcon(change.action)}
-                        </div>
+                        <div className="flex items-start pt-1">{getActionIcon(change.action)}</div>
 
                         {/* Content */}
                         <div className="flex-1 min-w-0">
@@ -181,9 +175,7 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
                               <p className="text-sm text-muted-foreground mt-0.5">
                                 {change.action}
                                 {change.target && (
-                                  <span className="font-mono text-xs ml-1">
-                                    {change.target}
-                                  </span>
+                                  <span className="font-mono text-xs ml-1">{change.target}</span>
                                 )}
                               </p>
                               {change.details && (
@@ -198,10 +190,8 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
                           </div>
                         </div>
                       </div>
-                      
-                      {index < sortedChanges.length - 1 && (
-                        <Separator className="my-2" />
-                      )}
+
+                      {index < sortedChanges.length - 1 && <Separator className="my-2" />}
                     </React.Fragment>
                   ))}
                 </div>

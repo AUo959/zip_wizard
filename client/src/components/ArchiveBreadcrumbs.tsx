@@ -3,10 +3,10 @@
  * Each breadcrumb is clickable to jump to that level.
  */
 
-import React from "react";
-import { ChevronRight, Home } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { ChevronRight, Home } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export interface ArchiveBreadcrumbsProps {
   stack: string[];
@@ -21,12 +21,12 @@ export interface ArchiveBreadcrumbsProps {
 export const ArchiveBreadcrumbs: React.FC<ArchiveBreadcrumbsProps> = ({
   stack,
   onJump,
-  className
+  className,
 }) => {
   return (
     <nav
       aria-label="Archive breadcrumbs"
-      className={cn("flex items-center gap-1 flex-wrap", className)}
+      className={cn('flex items-center gap-1 flex-wrap', className)}
     >
       {/* Home button */}
       <Button
@@ -44,12 +44,12 @@ export const ArchiveBreadcrumbs: React.FC<ArchiveBreadcrumbsProps> = ({
         <React.Fragment key={i}>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
           <Button
-            variant={i === stack.length - 1 ? "secondary" : "ghost"}
+            variant={i === stack.length - 1 ? 'secondary' : 'ghost'}
             size="sm"
             onClick={() => onJump(i)}
             className={cn(
-              "h-8 px-2 max-w-[200px] truncate",
-              i === stack.length - 1 && "font-semibold"
+              'h-8 px-2 max-w-[200px] truncate',
+              i === stack.length - 1 && 'font-semibold'
             )}
             title={name}
           >

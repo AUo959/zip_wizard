@@ -3,18 +3,11 @@
  * Updates in real time as archives are parsed/extracted/repaired.
  */
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { 
-  FileText, 
-  AlertTriangle, 
-  CheckCircle, 
-  RefreshCw,
-  Clock,
-  TrendingUp
-} from "lucide-react";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { FileText, AlertTriangle, CheckCircle, RefreshCw, Clock, TrendingUp } from 'lucide-react';
 
 export interface ArchiveStats {
   total: number;
@@ -38,10 +31,7 @@ export interface ArchiveDashboardProps {
 /**
  * Dashboard component showing real-time archive processing statistics.
  */
-export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
-  stats,
-  className
-}) => {
+export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({ stats, className }) => {
   const progressPercentage = Math.min(100, Math.max(0, stats.progress));
   const hasErrors = stats.errors > 0;
   const hasRecovered = stats.recovered > 0;
@@ -49,10 +39,10 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
   // Calculate processing speed
   const getProcessingSpeed = (): string => {
     if (!stats.bytesProcessed || !stats.startTime) return 'N/A';
-    
+
     const elapsedSeconds = (Date.now() - stats.startTime.getTime()) / 1000;
     if (elapsedSeconds === 0) return 'N/A';
-    
+
     const bytesPerSecond = stats.bytesProcessed / elapsedSeconds;
     return formatBytes(bytesPerSecond) + '/s';
   };
@@ -60,20 +50,23 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
   // Format time remaining
   const formatTimeRemaining = (seconds?: number): string => {
     if (!seconds || seconds < 0) return 'Unknown';
-    
+
     if (seconds < 60) return `${Math.round(seconds)}s`;
     if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
     return `${Math.round(seconds / 3600)}h`;
   };
 
   // Get status badge variant
-  const getStatusVariant = (): "default" | "secondary" | "destructive" | "outline" => {
+  const getStatusVariant = (): 'default' | 'secondary' | 'destructive' | 'outline' => {
     switch (stats.operationStatus) {
-      case 'complete': return 'default';
+      case 'complete':
+        return 'default';
       case 'parsing':
       case 'extracting':
-      case 'repairing': return 'secondary';
-      default: return 'outline';
+      case 'repairing':
+        return 'secondary';
+      default:
+        return 'outline';
     }
   };
 
@@ -85,7 +78,9 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
             <CardTitle className="text-base">Archive Processing Status</CardTitle>
             {stats.operationStatus && (
               <Badge variant={getStatusVariant()}>
-                {stats.operationStatus === 'parsing' && <RefreshCw className="h-3 w-3 mr-1 animate-spin" />}
+                {stats.operationStatus === 'parsing' && (
+                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                )}
                 {stats.operationStatus}
               </Badge>
             )}
@@ -105,9 +100,7 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
           {stats.currentFile && (
             <div className="text-sm">
               <span className="text-muted-foreground">Current: </span>
-              <span className="font-mono text-xs truncate block mt-1">
-                {stats.currentFile}
-              </span>
+              <span className="font-mono text-xs truncate block mt-1">{stats.currentFile}</span>
             </div>
           )}
 
@@ -133,7 +126,9 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
 
             {/* Errors */}
             <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md">
-              <AlertTriangle className={`h-4 w-4 ${hasErrors ? 'text-red-500' : 'text-gray-400'}`} />
+              <AlertTriangle
+                className={`h-4 w-4 ${hasErrors ? 'text-red-500' : 'text-gray-400'}`}
+              />
               <div className="flex-1 min-w-0">
                 <div className="text-xs text-muted-foreground">Errors</div>
                 <div className={`text-lg font-semibold ${hasErrors ? 'text-red-600' : ''}`}>
@@ -144,7 +139,9 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
 
             {/* Recovered */}
             <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md">
-              <RefreshCw className={`h-4 w-4 ${hasRecovered ? 'text-green-500' : 'text-gray-400'}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${hasRecovered ? 'text-green-500' : 'text-gray-400'}`}
+              />
               <div className="flex-1 min-w-0">
                 <div className="text-xs text-muted-foreground">Recovered</div>
                 <div className={`text-lg font-semibold ${hasRecovered ? 'text-green-600' : ''}`}>
@@ -166,16 +163,19 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
                   <span className="font-medium">{getProcessingSpeed()}</span>
                 </div>
               )}
-              
-              {stats.estimatedTimeRemaining !== undefined && stats.operationStatus !== 'complete' && (
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    Est. Time Remaining
-                  </span>
-                  <span className="font-medium">{formatTimeRemaining(stats.estimatedTimeRemaining)}</span>
-                </div>
-              )}
+
+              {stats.estimatedTimeRemaining !== undefined &&
+                stats.operationStatus !== 'complete' && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      Est. Time Remaining
+                    </span>
+                    <span className="font-medium">
+                      {formatTimeRemaining(stats.estimatedTimeRemaining)}
+                    </span>
+                  </div>
+                )}
             </div>
           )}
         </CardContent>
