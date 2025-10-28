@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -52,12 +52,7 @@ export function AIExplorationPanel({
   const [smartClusters, setSmartClusters] = useState<SmartCluster[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  useEffect(() => {
-    generateAIInsights();
-    generateSmartClusters();
-  }, [files]);
-
-  const generateAIInsights = () => {
+  const generateAIInsights = useCallback(() => {
     const newInsights: ExplorationInsight[] = [];
 
     // Security-related insights
@@ -120,9 +115,9 @@ export function AIExplorationPanel({
     }
 
     setInsights(newInsights);
-  };
+  }, [files]);
 
-  const generateSmartClusters = () => {
+  const generateSmartClusters = useCallback(() => {
     const clusters: SmartCluster[] = [];
 
     // Security cluster
@@ -202,7 +197,12 @@ export function AIExplorationPanel({
     }
 
     setSmartClusters(clusters);
-  };
+  }, [files]);
+
+  useEffect(() => {
+    generateAIInsights();
+    generateSmartClusters();
+  }, [files, generateAIInsights, generateSmartClusters]);
 
   const handleExportArchive = async () => {
     setIsAnalyzing(true);

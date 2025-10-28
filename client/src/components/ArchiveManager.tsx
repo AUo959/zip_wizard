@@ -122,6 +122,18 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
     setFilteredFiles(filtered);
   }, [files, searchQuery, searchFilters]);
 
+  // Add change log entry
+  const addChangeLog = useCallback((action: string, target?: string) => {
+    const change: ChangeLog = {
+      id: `${Date.now()}-${Math.random()}`,
+      user: 'Current User', // Would come from auth in real app
+      action,
+      target,
+      timestamp: new Date(),
+    };
+    setChanges(prev => [change, ...prev].slice(0, 100)); // Keep last 100
+  }, []);
+
   // Handle file click
   const handleFileClick = useCallback(
     (file: FileNode) => {
@@ -138,7 +150,7 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
         }
       }
     },
-    [onFileSelect, enableCollaboration]
+    [onFileSelect, enableCollaboration, addChangeLog]
   );
 
   // Handle breadcrumb navigation
@@ -151,7 +163,7 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
         addChangeLog('navigated', `to ${newStack[newStack.length - 1]}`);
       }
     },
-    [archiveStack, enableCollaboration]
+    [archiveStack, enableCollaboration, addChangeLog]
   );
 
   // Handle search
@@ -162,18 +174,6 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
   // Handle filter change
   const handleFilterChange = useCallback((filters: SearchFilters) => {
     setSearchFilters(filters);
-  }, []);
-
-  // Add change log entry
-  const addChangeLog = useCallback((action: string, target?: string) => {
-    const change: ChangeLog = {
-      id: `${Date.now()}-${Math.random()}`,
-      user: 'Current User', // Would come from auth in real app
-      action,
-      target,
-      timestamp: new Date(),
-    };
-    setChanges(prev => [change, ...prev].slice(0, 100)); // Keep last 100
   }, []);
 
   // Add notification
