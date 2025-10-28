@@ -6,19 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Zap, 
-  Shield, 
-  Eye, 
-  Anchor, 
-  Command, 
-  Sparkles, 
-  Lock, 
+import {
+  Zap,
+  Shield,
+  Eye,
+  Anchor,
+  Command,
+  Sparkles,
+  Lock,
   Activity,
   Hash,
   Triangle,
   Circle,
-  Square
+  Square,
 } from 'lucide-react';
 
 interface SymbolicCommand {
@@ -35,7 +35,11 @@ interface SymbolicInterfaceProps {
   onDreamModeToggle: () => void;
 }
 
-export function SymbolicInterface({ onCommandExecute, dreamMode = false, onDreamModeToggle }: SymbolicInterfaceProps) {
+export function SymbolicInterface({
+  onCommandExecute,
+  dreamMode = false,
+  onDreamModeToggle,
+}: SymbolicInterfaceProps) {
   const [commandInput, setCommandInput] = useState('');
   const [activeSymbols, setActiveSymbols] = useState<string[]>(['T1']);
   const [continuityAnchor, setContinuityAnchor] = useState('SN1-AS3-TRUSTED');
@@ -51,69 +55,69 @@ export function SymbolicInterface({ onCommandExecute, dreamMode = false, onDream
       name: 'Quantum Archive Analysis',
       description: 'Deep quantum-enhanced archive structure analysis',
       glyph: <Triangle className="w-4 h-4 text-purple-500" />,
-      status: 'available'
+      status: 'available',
     },
     {
       symbol: 'T1',
       name: 'Symbolic Threading',
       description: 'Initialize symbolic continuity thread',
       glyph: <Hash className="w-4 h-4 text-blue-500" />,
-      status: 'active'
+      status: 'active',
     },
     {
       symbol: 'REM//',
       name: 'Memory Anchor',
       description: 'Set persistent memory anchoring point',
       glyph: <Anchor className="w-4 h-4 text-cyan-500" />,
-      status: 'available'
+      status: 'available',
     },
     {
       symbol: 'SYNCANCHORS',
       name: 'Anchor Synchronization',
       description: 'Synchronize all continuity anchors',
       glyph: <Circle className="w-4 h-4 text-green-500" />,
-      status: 'available'
+      status: 'available',
     },
     {
       symbol: 'WU-WEI',
       name: 'Wu Wei Flow State',
       description: 'Activate effortless action mode for natural interface flow',
       glyph: <Sparkles className="w-4 h-4 text-emerald-500" />,
-      status: 'available'
+      status: 'available',
     },
     {
       symbol: 'MUSHIN',
       name: 'No-Mind State',
       description: 'Clear mind for spontaneous responses and heightened awareness',
       glyph: <Circle className="w-4 h-4 text-violet-500" />,
-      status: 'available'
+      status: 'available',
     },
     {
       symbol: 'COMPRESS',
       name: 'Memory Compression',
       description: 'Advanced symbolic memory compression and pattern recognition',
       glyph: <Square className="w-4 h-4 text-amber-500" />,
-      status: 'available'
+      status: 'available',
     },
     {
       symbol: 'DREAMCAST',
       name: 'Dream Mode Interface',
       description: 'Activate immersive visualization overlay',
       glyph: <Sparkles className="w-4 h-4 text-pink-500" />,
-      status: dreamMode ? 'active' : 'available'
+      status: dreamMode ? 'active' : 'available',
     },
     {
       symbol: 'PRIVGUARD',
       name: 'Privacy Shield',
       description: 'Enhanced privacy protection mode',
       glyph: <Shield className="w-4 h-4 text-orange-500" />,
-      status: privacyMode ? 'active' : 'available'
-    }
+      status: privacyMode ? 'active' : 'available',
+    },
   ];
 
   const handleSymbolicCommand = (symbol: string) => {
     setActiveSymbols(prev => [...prev, symbol]);
-    
+
     switch (symbol) {
       case '999':
         setProcessingProgress(0);
@@ -181,12 +185,14 @@ export function SymbolicInterface({ onCommandExecute, dreamMode = false, onDream
       )}
 
       {/* Symbolic Command Header */}
-      <Card className={`border-2 ${dreamMode ? 'border-purple-500/50 bg-purple-900/10' : 'border-border'}`}>
+      <Card
+        className={`border-2 ${dreamMode ? 'border-purple-500/50 bg-purple-900/10' : 'border-border'}`}
+      >
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Command className="w-5 h-5 text-primary" />
             <span>Aurora Symbolic Interface</span>
-            <Badge variant={dreamMode ? "default" : "secondary"} className="ml-auto">
+            <Badge variant={dreamMode ? 'default' : 'secondary'} className="ml-auto">
               {dreamMode ? 'DREAM MODE' : 'STANDARD'}
             </Badge>
           </CardTitle>
@@ -207,10 +213,13 @@ export function SymbolicInterface({ onCommandExecute, dreamMode = false, onDream
                   <span className="text-xs">{cognitiveLoad}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-1.5">
-                  <div 
+                  <div
                     className={`h-1.5 rounded-full transition-all duration-300 ${
-                      cognitiveLoad < 20 ? 'bg-green-500' :
-                      cognitiveLoad < 50 ? 'bg-yellow-500' : 'bg-red-500'
+                      cognitiveLoad < 20
+                        ? 'bg-green-500'
+                        : cognitiveLoad < 50
+                          ? 'bg-yellow-500'
+                          : 'bg-red-500'
                     }`}
                     style={{ width: `${cognitiveLoad}%` }}
                   />
@@ -230,7 +239,7 @@ export function SymbolicInterface({ onCommandExecute, dreamMode = false, onDream
             <div className="flex items-center space-x-2">
               <Shield className="w-4 h-4 text-orange-500" />
               <span className="text-sm font-medium">Privacy:</span>
-              <Badge variant={privacyMode ? "default" : "secondary"}>
+              <Badge variant={privacyMode ? 'default' : 'secondary'}>
                 {privacyMode ? 'PROTECTED' : 'STANDARD'}
               </Badge>
             </div>
@@ -260,15 +269,15 @@ export function SymbolicInterface({ onCommandExecute, dreamMode = false, onDream
 
         <TabsContent value="symbols" className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            {symbolicCommands.map((cmd) => (
-              <Card 
+            {symbolicCommands.map(cmd => (
+              <Card
                 key={cmd.symbol}
                 className={`cursor-pointer transition-all hover:shadow-lg ${
-                  cmd.status === 'active' 
-                    ? 'border-primary bg-primary/5' 
+                  cmd.status === 'active'
+                    ? 'border-primary bg-primary/5'
                     : cmd.status === 'locked'
-                    ? 'border-muted bg-muted/20 opacity-50'
-                    : 'border-border hover:border-primary/50'
+                      ? 'border-muted bg-muted/20 opacity-50'
+                      : 'border-border hover:border-primary/50'
                 } ${dreamMode ? 'hover:bg-purple-500/10' : ''}`}
                 onClick={() => cmd.status !== 'locked' && handleSymbolicCommand(cmd.symbol)}
               >
@@ -282,9 +291,7 @@ export function SymbolicInterface({ onCommandExecute, dreamMode = false, onDream
                     {cmd.status === 'active' && (
                       <Activity className="w-4 h-4 text-primary animate-pulse" />
                     )}
-                    {cmd.status === 'locked' && (
-                      <Lock className="w-4 h-4 text-muted-foreground" />
-                    )}
+                    {cmd.status === 'locked' && <Lock className="w-4 h-4 text-muted-foreground" />}
                   </div>
                   <p className="text-xs text-muted-foreground">{cmd.description}</p>
                 </CardContent>
@@ -300,13 +307,13 @@ export function SymbolicInterface({ onCommandExecute, dreamMode = false, onDream
                 <Input
                   placeholder="Enter symbolic command..."
                   value={commandInput}
-                  onChange={(e) => setCommandInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleTextCommand()}
+                  onChange={e => setCommandInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleTextCommand()}
                   className={`flex-1 ${dreamMode ? 'border-purple-500/50' : ''}`}
                 />
                 <Button onClick={handleTextCommand}>Execute</Button>
               </div>
-              
+
               {/* Command History */}
               <div className="mt-4 space-y-2">
                 <div className="text-sm font-medium">Recent Commands:</div>
@@ -336,7 +343,7 @@ export function SymbolicInterface({ onCommandExecute, dreamMode = false, onDream
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Privacy Shield</span>
-                    <Badge variant={privacyMode ? "default" : "secondary"}>
+                    <Badge variant={privacyMode ? 'default' : 'secondary'}>
                       {privacyMode ? 'ACTIVE' : 'INACTIVE'}
                     </Badge>
                   </div>
@@ -356,13 +363,13 @@ export function SymbolicInterface({ onCommandExecute, dreamMode = false, onDream
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Quantum Analysis</span>
-                    <Badge variant={processingProgress > 0 ? "default" : "secondary"}>
+                    <Badge variant={processingProgress > 0 ? 'default' : 'secondary'}>
                       {processingProgress > 0 ? 'RUNNING' : 'IDLE'}
                     </Badge>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Dream Interface</span>
-                    <Badge variant={dreamMode ? "default" : "secondary"}>
+                    <Badge variant={dreamMode ? 'default' : 'secondary'}>
                       {dreamMode ? 'ACTIVE' : 'STANDBY'}
                     </Badge>
                   </div>

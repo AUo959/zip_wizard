@@ -6,15 +6,21 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Archive, 
-  FileText, 
-  Zap, 
-  TrendingUp, 
-  Shield, 
-  Copy, 
-  Merge, 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Archive,
+  FileText,
+  Zap,
+  TrendingUp,
+  Shield,
+  Copy,
+  Merge,
   Filter,
   Search,
   BarChart3,
@@ -23,7 +29,7 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle,
-  Settings
+  Settings,
 } from 'lucide-react';
 
 interface ArchiveAnalysis {
@@ -45,14 +51,18 @@ interface EnhancedArchiveManagerProps {
   onBatchOperation: (archiveIds: string[], operation: string) => void;
 }
 
-export function EnhancedArchiveManager({ archives, onArchiveProcess, onBatchOperation }: EnhancedArchiveManagerProps) {
+export function EnhancedArchiveManager({
+  archives,
+  onArchiveProcess,
+  onBatchOperation,
+}: EnhancedArchiveManagerProps) {
   const [selectedArchives, setSelectedArchives] = useState<string[]>([]);
   const [analysisResults, setAnalysisResults] = useState<ArchiveAnalysis[]>([]);
   const [processingStatus, setProcessingStatus] = useState<Record<string, number>>({});
   const [filterCriteria, setFilterCriteria] = useState({
     minHealthScore: 0,
     maxSize: '',
-    hasIssues: false
+    hasIssues: false,
   });
   const [optimizationMode, setOptimizationMode] = useState('balanced');
 
@@ -69,14 +79,17 @@ export function EnhancedArchiveManager({ archives, onArchiveProcess, onBatchOper
         recommendations: [
           'Remove duplicate files to save space',
           'Consider higher compression for text files',
-          'Archive contains large media files'
+          'Archive contains large media files',
         ].slice(0, Math.floor(Math.random() * 3) + 1),
         largeFiles: [
           { name: 'video.mp4', size: 50000000 },
-          { name: 'dataset.csv', size: 25000000 }
+          { name: 'dataset.csv', size: 25000000 },
         ],
         nestedArchives: Math.floor(Math.random() * 5),
-        lastOptimized: Math.random() > 0.5 ? new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000) : undefined
+        lastOptimized:
+          Math.random() > 0.5
+            ? new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
+            : undefined,
       }));
       setAnalysisResults(mockAnalysis);
     }
@@ -98,15 +111,13 @@ export function EnhancedArchiveManager({ archives, onArchiveProcess, onBatchOper
 
   const handleArchiveSelect = (archiveId: string) => {
     setSelectedArchives(prev =>
-      prev.includes(archiveId)
-        ? prev.filter(id => id !== archiveId)
-        : [...prev, archiveId]
+      prev.includes(archiveId) ? prev.filter(id => id !== archiveId) : [...prev, archiveId]
     );
   };
 
   const handleOptimization = (archiveId: string) => {
     setProcessingStatus(prev => ({ ...prev, [archiveId]: 0 }));
-    
+
     // Simulate processing
     const interval = setInterval(() => {
       setProcessingStatus(prev => {
@@ -176,7 +187,7 @@ export function EnhancedArchiveManager({ archives, onArchiveProcess, onBatchOper
                 Remove Duplicates
               </Button>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <Select value={optimizationMode} onValueChange={setOptimizationMode}>
                 <SelectTrigger className="w-40">
@@ -214,19 +225,26 @@ export function EnhancedArchiveManager({ archives, onArchiveProcess, onBatchOper
                   placeholder="Min Health Score"
                   type="number"
                   value={filterCriteria.minHealthScore}
-                  onChange={(e) => setFilterCriteria(prev => ({ ...prev, minHealthScore: parseInt(e.target.value) || 0 }))}
+                  onChange={e =>
+                    setFilterCriteria(prev => ({
+                      ...prev,
+                      minHealthScore: parseInt(e.target.value) || 0,
+                    }))
+                  }
                   className="w-32"
                 />
                 <Input
                   placeholder="Max Size (bytes)"
                   value={filterCriteria.maxSize}
-                  onChange={(e) => setFilterCriteria(prev => ({ ...prev, maxSize: e.target.value }))}
+                  onChange={e => setFilterCriteria(prev => ({ ...prev, maxSize: e.target.value }))}
                   className="w-32"
                 />
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setFilterCriteria({ minHealthScore: 0, maxSize: '', hasIssues: false })}
+                  onClick={() =>
+                    setFilterCriteria({ minHealthScore: 0, maxSize: '', hasIssues: false })
+                  }
                 >
                   Clear
                 </Button>
@@ -236,7 +254,7 @@ export function EnhancedArchiveManager({ archives, onArchiveProcess, onBatchOper
 
           {/* Archive List */}
           <div className="space-y-4">
-            {filteredAnalysis.map((analysis) => (
+            {filteredAnalysis.map(analysis => (
               <Card key={analysis.id} className="border-l-4 border-l-primary">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-4">
@@ -251,7 +269,8 @@ export function EnhancedArchiveManager({ archives, onArchiveProcess, onBatchOper
                       <div>
                         <h3 className="font-semibold">{analysis.name}</h3>
                         <p className="text-sm text-muted-foreground">
-                          {formatFileSize(analysis.size)} • {Math.round(analysis.compressionRatio * 100)}% compressed
+                          {formatFileSize(analysis.size)} •{' '}
+                          {Math.round(analysis.compressionRatio * 100)}% compressed
                         </p>
                       </div>
                     </div>
@@ -297,10 +316,9 @@ export function EnhancedArchiveManager({ archives, onArchiveProcess, onBatchOper
                     <div className="flex items-center space-x-2">
                       <Clock className="w-4 h-4 text-purple-500" />
                       <span className="text-sm">
-                        {analysis.lastOptimized 
+                        {analysis.lastOptimized
                           ? `Optimized ${Math.floor((Date.now() - analysis.lastOptimized.getTime()) / (1000 * 60 * 60 * 24))}d ago`
-                          : 'Never optimized'
-                        }
+                          : 'Never optimized'}
                       </span>
                     </div>
                   </div>
@@ -312,7 +330,9 @@ export function EnhancedArchiveManager({ archives, onArchiveProcess, onBatchOper
                         <div className="space-y-1">
                           <div className="font-medium">Recommendations:</div>
                           {analysis.recommendations.map((rec, index) => (
-                            <div key={index} className="text-sm">• {rec}</div>
+                            <div key={index} className="text-sm">
+                              • {rec}
+                            </div>
                           ))}
                         </div>
                       </AlertDescription>
@@ -391,13 +411,23 @@ export function EnhancedArchiveManager({ archives, onArchiveProcess, onBatchOper
                   <div className="flex justify-between items-center">
                     <span>Potential Savings</span>
                     <span className="font-semibold text-green-600">
-                      ~{formatFileSize(analysisResults.reduce((acc, a) => acc + (a.size * (1 - a.compressionRatio)), 0))}
+                      ~
+                      {formatFileSize(
+                        analysisResults.reduce(
+                          (acc, a) => acc + a.size * (1 - a.compressionRatio),
+                          0
+                        )
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>Average Health Score</span>
                     <span className="font-semibold">
-                      {Math.round(analysisResults.reduce((acc, a) => acc + a.healthScore, 0) / analysisResults.length)}%
+                      {Math.round(
+                        analysisResults.reduce((acc, a) => acc + a.healthScore, 0) /
+                          analysisResults.length
+                      )}
+                      %
                     </span>
                   </div>
                 </div>
@@ -450,7 +480,9 @@ export function EnhancedArchiveManager({ archives, onArchiveProcess, onBatchOper
                     <SelectContent>
                       <SelectItem value="aggressive">Aggressive - Maximum compression</SelectItem>
                       <SelectItem value="balanced">Balanced - Performance vs. size</SelectItem>
-                      <SelectItem value="conservative">Conservative - Preserve compatibility</SelectItem>
+                      <SelectItem value="conservative">
+                        Conservative - Preserve compatibility
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -460,7 +492,9 @@ export function EnhancedArchiveManager({ archives, onArchiveProcess, onBatchOper
                   <div className="space-y-2">
                     <label className="flex items-center space-x-2">
                       <input type="checkbox" defaultChecked />
-                      <span className="text-sm">Auto-detect file types for optimal compression</span>
+                      <span className="text-sm">
+                        Auto-detect file types for optimal compression
+                      </span>
                     </label>
                     <label className="flex items-center space-x-2">
                       <input type="checkbox" defaultChecked />

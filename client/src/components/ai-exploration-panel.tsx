@@ -1,24 +1,24 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Brain, 
-  Search, 
-  Zap, 
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Brain,
+  Search,
+  Zap,
   Download,
   FileCode,
   Lock,
   Network,
   TrendingUp,
   GitBranch,
-  Layers
-} from "lucide-react";
-import type { Archive, File } from "@shared/schema";
-import { cn } from "@/lib/utils";
+  Layers,
+} from 'lucide-react';
+import type { Archive, File } from '@shared/schema';
+import { cn } from '@/lib/utils';
 
 interface AIExplorationPanelProps {
   archive: Archive;
@@ -44,11 +44,11 @@ interface SmartCluster {
   category: 'security' | 'architecture' | 'data' | 'ui' | 'logic';
 }
 
-export function AIExplorationPanel({ 
-  archive, 
-  files, 
-  onFileSelect, 
-  selectedFile 
+export function AIExplorationPanel({
+  archive,
+  files,
+  onFileSelect,
+  selectedFile,
 }: AIExplorationPanelProps) {
   const [insights, setInsights] = useState<ExplorationInsight[]>([]);
   const [smartClusters, setSmartClusters] = useState<SmartCluster[]>([]);
@@ -63,19 +63,20 @@ export function AIExplorationPanel({
     const newInsights: ExplorationInsight[] = [];
 
     // Security-related insights
-    const cryptoFiles = files.filter(f => 
-      f.name.toLowerCase().includes('crypto') || 
-      f.name.toLowerCase().includes('encrypt') ||
-      f.content?.toLowerCase().includes('encryption')
+    const cryptoFiles = files.filter(
+      f =>
+        f.name.toLowerCase().includes('crypto') ||
+        f.name.toLowerCase().includes('encrypt') ||
+        f.content?.toLowerCase().includes('encryption')
     );
-    
+
     if (cryptoFiles.length > 0) {
       newInsights.push({
         type: 'critical',
         title: 'Encryption Implementation Detected',
         description: `Found ${cryptoFiles.length} files containing cryptographic logic. Review for security best practices.`,
         files: cryptoFiles,
-        action: 'security_review'
+        action: 'security_review',
       });
     }
 
@@ -87,29 +88,28 @@ export function AIExplorationPanel({
         title: 'Complex Logic Components',
         description: `${complexFiles.length} files marked as high complexity. These likely contain core business logic.`,
         files: complexFiles,
-        action: 'deep_dive'
+        action: 'deep_dive',
       });
     }
 
     // JavaScript modules pattern
-    const jsModules = files.filter(f => 
-      f.language === 'JavaScript' && f.tags?.includes('module')
-    );
+    const jsModules = files.filter(f => f.language === 'JavaScript' && f.tags?.includes('module'));
     if (jsModules.length > 0) {
       newInsights.push({
         type: 'pattern',
         title: 'Modular JavaScript Architecture',
         description: `Detected ${jsModules.length} JavaScript modules with export patterns.`,
         files: jsModules,
-        action: 'architecture_review'
+        action: 'architecture_review',
       });
     }
 
     // Configuration files
-    const configFiles = files.filter(f => 
-      f.tags?.includes('config') || 
-      f.name.toLowerCase().includes('config') ||
-      f.extension === '.json'
+    const configFiles = files.filter(
+      f =>
+        f.tags?.includes('config') ||
+        f.name.toLowerCase().includes('config') ||
+        f.extension === '.json'
     );
     if (configFiles.length > 5) {
       newInsights.push({
@@ -117,7 +117,7 @@ export function AIExplorationPanel({
         title: 'Configuration Management',
         description: `Multiple configuration files detected. Consider consolidation strategies.`,
         files: configFiles.slice(0, 5),
-        action: 'config_audit'
+        action: 'config_audit',
       });
     }
 
@@ -128,14 +128,15 @@ export function AIExplorationPanel({
     const clusters: SmartCluster[] = [];
 
     // Security cluster
-    const securityFiles = files.filter(f => 
-      f.name.toLowerCase().includes('crypto') ||
-      f.name.toLowerCase().includes('encrypt') ||
-      f.name.toLowerCase().includes('auth') ||
-      f.name.toLowerCase().includes('security') ||
-      f.name.toLowerCase().includes('seal')
+    const securityFiles = files.filter(
+      f =>
+        f.name.toLowerCase().includes('crypto') ||
+        f.name.toLowerCase().includes('encrypt') ||
+        f.name.toLowerCase().includes('auth') ||
+        f.name.toLowerCase().includes('security') ||
+        f.name.toLowerCase().includes('seal')
     );
-    
+
     if (securityFiles.length > 0) {
       clusters.push({
         id: 'security',
@@ -143,17 +144,15 @@ export function AIExplorationPanel({
         files: securityFiles,
         insight: 'Critical security implementations requiring careful review',
         priority: 'high',
-        category: 'security'
+        category: 'security',
       });
     }
 
-    // Core logic cluster  
-    const coreFiles = files.filter(f => 
-      f.complexity === 'High' || 
-      f.tags?.includes('module') ||
-      f.language === 'JavaScript'
+    // Core logic cluster
+    const coreFiles = files.filter(
+      f => f.complexity === 'High' || f.tags?.includes('module') || f.language === 'JavaScript'
     );
-    
+
     if (coreFiles.length > 0) {
       clusters.push({
         id: 'core',
@@ -161,18 +160,19 @@ export function AIExplorationPanel({
         files: coreFiles,
         insight: 'Main application logic and business rules',
         priority: 'high',
-        category: 'logic'
+        category: 'logic',
       });
     }
 
     // Data structures cluster
-    const dataFiles = files.filter(f => 
-      f.extension === '.json' ||
-      f.name.toLowerCase().includes('data') ||
-      f.name.toLowerCase().includes('schema') ||
-      f.name.toLowerCase().includes('registry')
+    const dataFiles = files.filter(
+      f =>
+        f.extension === '.json' ||
+        f.name.toLowerCase().includes('data') ||
+        f.name.toLowerCase().includes('schema') ||
+        f.name.toLowerCase().includes('registry')
     );
-    
+
     if (dataFiles.length > 0) {
       clusters.push({
         id: 'data',
@@ -180,17 +180,18 @@ export function AIExplorationPanel({
         files: dataFiles,
         insight: 'Configuration and data definition files',
         priority: 'medium',
-        category: 'data'
+        category: 'data',
       });
     }
 
     // Bundle cluster
-    const bundleFiles = files.filter(f => 
-      f.name.toLowerCase().includes('bundle') ||
-      f.name.toLowerCase().includes('repo') ||
-      f.name.toLowerCase().includes('export')
+    const bundleFiles = files.filter(
+      f =>
+        f.name.toLowerCase().includes('bundle') ||
+        f.name.toLowerCase().includes('repo') ||
+        f.name.toLowerCase().includes('export')
     );
-    
+
     if (bundleFiles.length > 0) {
       clusters.push({
         id: 'bundles',
@@ -198,7 +199,7 @@ export function AIExplorationPanel({
         files: bundleFiles,
         insight: 'Nested archives and repository exports',
         priority: 'low',
-        category: 'architecture'
+        category: 'architecture',
       });
     }
 
@@ -227,20 +228,29 @@ export function AIExplorationPanel({
 
   const getCategoryIcon = (category: SmartCluster['category']) => {
     switch (category) {
-      case 'security': return Lock;
-      case 'architecture': return Network;
-      case 'data': return Layers;
-      case 'ui': return FileCode;
-      case 'logic': return GitBranch;
-      default: return FileCode;
+      case 'security':
+        return Lock;
+      case 'architecture':
+        return Network;
+      case 'data':
+        return Layers;
+      case 'ui':
+        return FileCode;
+      case 'logic':
+        return GitBranch;
+      default:
+        return FileCode;
     }
   };
 
   const getPriorityColor = (priority: SmartCluster['priority']) => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      case 'high':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low':
+        return 'bg-green-100 text-green-800 border-green-200';
     }
   };
 
@@ -250,7 +260,9 @@ export function AIExplorationPanel({
         <div className="flex items-center space-x-2">
           <Brain className="w-5 h-5" />
           <h3 className="font-semibold">AI Exploration</h3>
-          <Badge variant="secondary" className="bg-white/20 text-white">v2.2.6b</Badge>
+          <Badge variant="secondary" className="bg-white/20 text-white">
+            v2.2.6b
+          </Badge>
         </div>
         <p className="text-sm text-purple-100 mt-1">
           Quantum-enhanced analysis for {files.length} files
@@ -277,13 +289,16 @@ export function AIExplorationPanel({
           <ScrollArea className="h-full">
             <div className="space-y-3">
               {insights.map((insight, index) => (
-                <Card key={index} className={cn(
-                  "cursor-pointer transition-all hover:shadow-md",
-                  insight.type === 'critical' && "border-red-200 bg-red-50",
-                  insight.type === 'interesting' && "border-blue-200 bg-blue-50",
-                  insight.type === 'pattern' && "border-purple-200 bg-purple-50",
-                  insight.type === 'suggestion' && "border-green-200 bg-green-50"
-                )}>
+                <Card
+                  key={index}
+                  className={cn(
+                    'cursor-pointer transition-all hover:shadow-md',
+                    insight.type === 'critical' && 'border-red-200 bg-red-50',
+                    insight.type === 'interesting' && 'border-blue-200 bg-blue-50',
+                    insight.type === 'pattern' && 'border-purple-200 bg-purple-50',
+                    insight.type === 'suggestion' && 'border-green-200 bg-green-50'
+                  )}
+                >
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center space-x-2">
                       <TrendingUp className="w-4 h-4" />
@@ -323,7 +338,7 @@ export function AIExplorationPanel({
         <TabsContent value="clusters" className="flex-1 m-2">
           <ScrollArea className="h-full">
             <div className="space-y-3">
-              {smartClusters.map((cluster) => {
+              {smartClusters.map(cluster => {
                 const Icon = getCategoryIcon(cluster.category);
                 return (
                   <Card key={cluster.id} className="cursor-pointer hover:shadow-md transition-all">
@@ -379,9 +394,10 @@ export function AIExplorationPanel({
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-gray-600 mb-4">
-                  Export includes analysis results, quantum features, and AI exploration paths optimized for both human and AI consumption.
+                  Export includes analysis results, quantum features, and AI exploration paths
+                  optimized for both human and AI consumption.
                 </p>
-                <Button 
+                <Button
                   onClick={handleExportArchive}
                   disabled={isAnalyzing}
                   className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"

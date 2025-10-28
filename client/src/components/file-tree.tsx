@@ -1,11 +1,19 @@
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Search, Folder, FolderOpen, File as FileIcon, Package, Wrench, TestTube } from "lucide-react";
-import type { Archive, File, FileTreeNode, AnalysisResult } from "@shared/schema";
-import { buildFileTree } from "@/lib/file-analyzer";
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import {
+  Search,
+  Folder,
+  FolderOpen,
+  File as FileIcon,
+  Package,
+  Wrench,
+  TestTube,
+} from 'lucide-react';
+import type { Archive, File, FileTreeNode, AnalysisResult } from '@shared/schema';
+import { buildFileTree } from '@/lib/file-analyzer';
 
 interface FileTreeProps {
   files: File[];
@@ -16,27 +24,29 @@ interface FileTreeProps {
   onArchiveSelect: (archive: Archive) => void;
 }
 
-export default function FileTree({ 
-  files, 
-  selectedFile, 
-  onFileSelect, 
+export default function FileTree({
+  files,
+  selectedFile,
+  onFileSelect,
   archive,
   archives,
-  onArchiveSelect 
+  onArchiveSelect,
 }: FileTreeProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
-  const [selectedFilter, setSelectedFilter] = useState("All");
+  const [selectedFilter, setSelectedFilter] = useState('All');
 
   const fileTree = buildFileTree(files);
   const analysis = analyzeFiles(files);
 
   const filteredFiles = files.filter(file => {
-    const matchesSearch = !searchQuery || 
+    const matchesSearch =
+      !searchQuery ||
       file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       file.path.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesFilter = selectedFilter === "All" || 
+
+    const matchesFilter =
+      selectedFilter === 'All' ||
       file.language === selectedFilter ||
       file.tags?.includes(selectedFilter.toLowerCase());
 
@@ -54,7 +64,7 @@ export default function FileTree({
   };
 
   const getFileIcon = (file: File) => {
-    if (file.isDirectory === "true") {
+    if (file.isDirectory === 'true') {
       return expandedPaths.has(file.path) ? FolderOpen : Folder;
     }
 
@@ -64,20 +74,35 @@ export default function FileTree({
       case '.jsx':
       case '.ts':
       case '.tsx':
-        return () => <div className="w-4 h-4 bg-yellow-500 rounded text-white text-xs flex items-center justify-center font-bold">JS</div>;
+        return () => (
+          <div className="w-4 h-4 bg-yellow-500 rounded text-white text-xs flex items-center justify-center font-bold">
+            JS
+          </div>
+        );
       case '.py':
-        return () => <div className="w-4 h-4 bg-blue-500 rounded text-white text-xs flex items-center justify-center font-bold">PY</div>;
+        return () => (
+          <div className="w-4 h-4 bg-blue-500 rounded text-white text-xs flex items-center justify-center font-bold">
+            PY
+          </div>
+        );
       case '.java':
-        return () => <div className="w-4 h-4 bg-red-500 rounded text-white text-xs flex items-center justify-center font-bold">JA</div>;
+        return () => (
+          <div className="w-4 h-4 bg-red-500 rounded text-white text-xs flex items-center justify-center font-bold">
+            JA
+          </div>
+        );
       default:
         return FileIcon;
     }
   };
 
   const getLanguageBadge = (file: File) => {
-    if (file.tags?.includes('component')) return <Badge className="bg-purple-600 text-white text-xs">React</Badge>;
-    if (file.tags?.includes('utility')) return <Badge className="bg-green-600 text-white text-xs">Utilities</Badge>;
-    if (file.tags?.includes('test')) return <Badge className="bg-orange-600 text-white text-xs">Test</Badge>;
+    if (file.tags?.includes('component'))
+      return <Badge className="bg-purple-600 text-white text-xs">React</Badge>;
+    if (file.tags?.includes('utility'))
+      return <Badge className="bg-green-600 text-white text-xs">Utilities</Badge>;
+    if (file.tags?.includes('test'))
+      return <Badge className="bg-orange-600 text-white text-xs">Test</Badge>;
     return null;
   };
 
@@ -94,11 +119,11 @@ export default function FileTree({
       <div key={node.path}>
         <div
           className={`tree-item flex items-center space-x-2 p-2 cursor-pointer rounded text-sm ${
-            isSelected ? "selected bg-blue-50 border-l-2 border-blue-600" : "hover:bg-gray-100"
+            isSelected ? 'selected bg-blue-50 border-l-2 border-blue-600' : 'hover:bg-gray-100'
           }`}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
           onClick={() => {
-            if (file.isDirectory === "true") {
+            if (file.isDirectory === 'true') {
               toggleExpanded(node.path);
             } else {
               onFileSelect(file);
@@ -109,16 +134,12 @@ export default function FileTree({
           <span className="flex-1 truncate">{node.name}</span>
           {badge}
           {file.size && file.size > 0 && (
-            <span className="text-xs text-gray-500">
-              {(file.size / 1024).toFixed(1)}KB
-            </span>
+            <span className="text-xs text-gray-500">{(file.size / 1024).toFixed(1)}KB</span>
           )}
         </div>
-        
+
         {node.children && isExpanded && (
-          <div>
-            {node.children.map(child => renderTreeNode(child, depth + 1))}
-          </div>
+          <div>{node.children.map(child => renderTreeNode(child, depth + 1))}</div>
         )}
       </div>
     );
@@ -130,8 +151,8 @@ export default function FileTree({
       {archives.length > 1 && (
         <div className="p-4 border-b border-gray-200">
           <select
-            value={archive?.id || ""}
-            onChange={(e) => {
+            value={archive?.id || ''}
+            onChange={e => {
               const selectedArchive = archives.find(a => a.id === e.target.value);
               if (selectedArchive) onArchiveSelect(selectedArchive);
             }}
@@ -154,16 +175,16 @@ export default function FileTree({
             type="text"
             placeholder="Search files and components..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             className="pl-10 text-sm"
           />
         </div>
-        
+
         <div className="flex flex-wrap gap-2">
-          {["All", "JavaScript", "React", "Python", "component", "utility"].map(filter => (
+          {['All', 'JavaScript', 'React', 'Python', 'component', 'utility'].map(filter => (
             <Button
               key={filter}
-              variant={selectedFilter === filter ? "default" : "outline"}
+              variant={selectedFilter === filter ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedFilter(filter)}
               className="text-xs"
@@ -184,21 +205,23 @@ export default function FileTree({
               <span className="text-xs text-gray-500 ml-auto">{files.length} files</span>
             </div>
           )}
-          
+
           {searchQuery ? (
             <div className="space-y-1">
               {filteredFiles.map(file => {
                 const Icon = getFileIcon(file);
                 const badge = getLanguageBadge(file);
                 const isSelected = selectedFile?.id === file.id;
-                
+
                 return (
                   <div
                     key={file.id}
                     className={`tree-item flex items-center space-x-2 p-2 cursor-pointer rounded text-sm ${
-                      isSelected ? "selected bg-blue-50 border-l-2 border-blue-600" : "hover:bg-gray-100"
+                      isSelected
+                        ? 'selected bg-blue-50 border-l-2 border-blue-600'
+                        : 'hover:bg-gray-100'
                     }`}
-                    onClick={() => file.isDirectory !== "true" && onFileSelect(file)}
+                    onClick={() => file.isDirectory !== 'true' && onFileSelect(file)}
                   >
                     <Icon className="w-4 h-4 text-blue-600" />
                     <span className="flex-1 truncate">{file.path}</span>
@@ -213,9 +236,7 @@ export default function FileTree({
               })}
             </div>
           ) : (
-            <div className="space-y-1">
-              {fileTree.map(node => renderTreeNode(node))}
-            </div>
+            <div className="space-y-1">{fileTree.map(node => renderTreeNode(node))}</div>
           )}
         </div>
       </div>
@@ -247,11 +268,11 @@ export default function FileTree({
 }
 
 function analyzeFiles(files: File[]): AnalysisResult {
-  const totalFiles = files.filter(f => f.isDirectory !== "true").length;
+  const totalFiles = files.filter(f => f.isDirectory !== 'true').length;
   const components = files.filter(f => f.tags?.includes('component')).length;
   const modules = files.filter(f => f.tags?.includes('module')).length;
   const utilities = files.filter(f => f.tags?.includes('utility')).length;
-  
+
   const languages: Record<string, number> = {};
   files.forEach(file => {
     if (file.language) {

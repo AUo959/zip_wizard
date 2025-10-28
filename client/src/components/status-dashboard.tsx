@@ -1,9 +1,9 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { AlertCircle, CheckCircle2, Clock, Lock, Shield, Activity } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { AlertCircle, CheckCircle2, Clock, Lock, Shield, Activity } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 interface StatusDashboardProps {
   archiveId: string;
@@ -54,7 +54,15 @@ export function StatusDashboard({ archiveId }: StatusDashboardProps) {
 
   if (!response?.data) return null;
 
-  const { symbolicChain, threadTag, ethicsLock, trustAnchor, deploymentStatus, replayState, activitySummary } = response.data;
+  const {
+    symbolicChain,
+    threadTag,
+    ethicsLock,
+    trustAnchor,
+    deploymentStatus,
+    replayState,
+    activitySummary,
+  } = response.data;
 
   return (
     <Card className="border-purple-300 bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50 shadow-xl">
@@ -62,7 +70,9 @@ export function StatusDashboard({ archiveId }: StatusDashboardProps) {
         <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
           ZIP Wizard v2.2.6b Status Dashboard
         </CardTitle>
-        <CardDescription className="text-purple-700">Quantum-Enhanced Archive Analysis</CardDescription>
+        <CardDescription className="text-purple-700">
+          Quantum-Enhanced Archive Analysis
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Symbolic Chain Section */}
@@ -117,10 +127,10 @@ export function StatusDashboard({ archiveId }: StatusDashboardProps) {
             <StatusItem label="GUI Habitat" status={deploymentStatus.guiHabitat} />
             <StatusItem label="Glyphcard Export" status={deploymentStatus.glyphcardExport} />
             <StatusItem label="ZIP Bundle" value={deploymentStatus.zipBundle} />
-            <StatusItem 
-              label="Monitoring" 
-              value={deploymentStatus.monitoring} 
-              status={deploymentStatus.monitoring === "Active"} 
+            <StatusItem
+              label="Monitoring"
+              value={deploymentStatus.monitoring}
+              status={deploymentStatus.monitoring === 'Active'}
               icon={<Clock className="h-4 w-4" />}
             />
             <StatusItem label="Acknowledgment" status={deploymentStatus.acknowledgment} pending />
@@ -147,14 +157,18 @@ export function StatusDashboard({ archiveId }: StatusDashboardProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <p className="text-xs text-purple-600">Total Events</p>
-                  <p className="text-2xl font-bold text-purple-800">{activitySummary.totalEvents}</p>
+                  <p className="text-2xl font-bold text-purple-800">
+                    {activitySummary.totalEvents}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs text-purple-600">Critical Events</p>
-                  <p className="text-2xl font-bold text-red-600">{activitySummary.recentCritical?.length || 0}</p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {activitySummary.recentCritical?.length || 0}
+                  </p>
                 </div>
               </div>
-              
+
               {/* Event Type Distribution */}
               <div className="space-y-2">
                 <p className="text-xs text-purple-600">Event Distribution</p>
@@ -162,8 +176,8 @@ export function StatusDashboard({ archiveId }: StatusDashboardProps) {
                   <div key={type} className="flex items-center justify-between">
                     <span className="text-xs text-purple-700 capitalize">{type}</span>
                     <div className="flex items-center gap-2">
-                      <Progress 
-                        value={(count / activitySummary.totalEvents) * 100} 
+                      <Progress
+                        value={(count / activitySummary.totalEvents) * 100}
                         className="w-24 h-2"
                       />
                       <span className="text-xs text-purple-600 w-8 text-right">{count}</span>

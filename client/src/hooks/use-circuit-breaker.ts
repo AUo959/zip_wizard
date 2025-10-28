@@ -23,13 +23,13 @@ export function useCircuitBreaker(options: UseCircuitBreakerOptions) {
         if (newState) {
           setState(newState);
           onStateChange?.(newState);
-          
+
           // Show toast for state transitions
           if (event.detail.to === 'open') {
             toast({
               title: 'Circuit Breaker Opened',
               description: `Service '${name}' is temporarily unavailable due to failures.`,
-              variant: 'destructive'
+              variant: 'destructive',
             });
           } else if (event.detail.to === 'closed' && event.detail.from === 'open') {
             toast({
@@ -42,7 +42,7 @@ export function useCircuitBreaker(options: UseCircuitBreakerOptions) {
     };
 
     window.addEventListener('circuit-breaker-state-change', handleStateChange as any);
-    
+
     // Get initial state
     const initialState = circuitBreaker.getState(name);
     if (initialState) {
@@ -55,35 +55,39 @@ export function useCircuitBreaker(options: UseCircuitBreakerOptions) {
   }, [name, onStateChange, toast]);
 
   // Execute with circuit breaker protection
-  const execute = useCallback(async <T,>(
-    fn: () => Promise<T>
-  ): Promise<T> => {
-    setIsExecuting(true);
-    try {
-      const result = await circuitBreaker.execute(name, fn, {
-        failureThreshold,
-        timeout
-      });
-      return result;
-    } catch (error) {
-      // Re-throw the error after circuit breaker handles it
-      throw error;
-    } finally {
-      setIsExecuting(false);
-      // Update state after execution
-      const newState = circuitBreaker.getState(name);
-      if (newState) {
-        setState(newState);
+  const execute = useCallback(
+    async <T>(fn: () => Promise<T>): Promise<T> => {
+      setIsExecuting(true);
+      try {
+        const result = await circuitBreaker.execute(name, fn, {
+          failureThreshold,
+          timeout,
+        });
+        return result;
+      } catch (error) {
+        // Re-throw the error after circuit breaker handles it
+        throw error;
+      } finally {
+        setIsExecuting(false);
+        // Update state after execution
+        const newState = circuitBreaker.getState(name);
+        if (newState) {
+          setState(newState);
+        }
       }
-    }
-  }, [name, failureThreshold, timeout]);
+    },
+    [name, failureThreshold, timeout]
+  );
 
   // Force open the circuit
-  const forceOpen = useCallback((duration?: number) => {
-    circuitBreaker.forceOpen(name, duration);
-    const newState = circuitBreaker.getState(name);
-    if (newState) setState(newState);
-  }, [name]);
+  const forceOpen = useCallback(
+    (duration?: number) => {
+      circuitBreaker.forceOpen(name, duration);
+      const newState = circuitBreaker.getState(name);
+      if (newState) setState(newState);
+    },
+    [name]
+  );
 
   // Force close the circuit
   const forceClose = useCallback(() => {
@@ -111,6 +115,6 @@ export function useCircuitBreaker(options: UseCircuitBreakerOptions) {
     isClosed: state?.state === 'closed',
     isQuantum: state?.state === 'quantum',
     healthScore: state?.healthScore || 100,
-    errorRate: state ? (state.failures / Math.max(state.totalRequests, 1)) * 100 : 0
+    errorRate: state ? (state.failures / Math.max(state.totalRequests, 1)) * 100 : 0,
   };
 }

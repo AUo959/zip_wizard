@@ -43,7 +43,7 @@ export function MemoryCompression({ files = [], onCompressionApplied }: MemoryCo
       description: 'Compress through symbolic pattern recognition and threading',
       icon: <Network className="w-4 h-4" />,
       efficiency: 94,
-      cognitive_load: 15
+      cognitive_load: 15,
     },
     {
       id: 'hierarchical-chunking',
@@ -51,7 +51,7 @@ export function MemoryCompression({ files = [], onCompressionApplied }: MemoryCo
       description: 'Organize information in nested, contextual chunks',
       icon: <Layers className="w-4 h-4" />,
       efficiency: 87,
-      cognitive_load: 25
+      cognitive_load: 25,
     },
     {
       id: 'semantic-hashing',
@@ -59,7 +59,7 @@ export function MemoryCompression({ files = [], onCompressionApplied }: MemoryCo
       description: 'Hash similar semantic content for efficient retrieval',
       icon: <Hash className="w-4 h-4" />,
       efficiency: 91,
-      cognitive_load: 20
+      cognitive_load: 20,
     },
     {
       id: 'contextual-binding',
@@ -67,11 +67,12 @@ export function MemoryCompression({ files = [], onCompressionApplied }: MemoryCo
       description: 'Bind related information through contextual associations',
       icon: <Brain className="w-4 h-4" />,
       efficiency: 89,
-      cognitive_load: 30
-    }
+      cognitive_load: 30,
+    },
   ];
 
-  const currentTechnique = compressionTechniques.find(t => t.id === activeMethod) || compressionTechniques[0];
+  const currentTechnique =
+    compressionTechniques.find(t => t.id === activeMethod) || compressionTechniques[0];
 
   const simulateCompression = useCallback(async () => {
     setIsProcessing(true);
@@ -94,7 +95,7 @@ export function MemoryCompression({ files = [], onCompressionApplied }: MemoryCo
       compression_ratio: compressionRatio,
       patterns_identified: Math.floor(files.length * 1.5),
       symbolic_mappings: Math.floor(files.length * 0.8),
-      processing_time: 2.4
+      processing_time: 2.4,
     };
 
     setCompressionResults(result);
@@ -106,23 +107,23 @@ export function MemoryCompression({ files = [], onCompressionApplied }: MemoryCo
       {
         type: 'Repetitive Structures',
         frequency: Math.floor(Math.random() * 50) + 20,
-        savings: '24%'
+        savings: '24%',
       },
       {
         type: 'Semantic Clusters',
         frequency: Math.floor(Math.random() * 30) + 15,
-        savings: '18%'
+        savings: '18%',
       },
       {
         type: 'Contextual Threads',
         frequency: Math.floor(Math.random() * 40) + 10,
-        savings: '31%'
+        savings: '31%',
       },
       {
         type: 'Symbolic Mappings',
         frequency: Math.floor(Math.random() * 25) + 8,
-        savings: '15%'
-      }
+        savings: '15%',
+      },
     ];
 
     setMemoryPatterns(patterns);
@@ -164,12 +165,12 @@ export function MemoryCompression({ files = [], onCompressionApplied }: MemoryCo
 
             <TabsContent value="techniques" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {compressionTechniques.map((technique) => (
-                  <Card 
+                {compressionTechniques.map(technique => (
+                  <Card
                     key={technique.id}
                     className={`cursor-pointer transition-all ${
-                      activeMethod === technique.id 
-                        ? 'ring-2 ring-primary border-primary' 
+                      activeMethod === technique.id
+                        ? 'ring-2 ring-primary border-primary'
                         : 'hover:border-primary/50'
                     }`}
                     onClick={() => setActiveMethod(technique.id)}
@@ -185,7 +186,9 @@ export function MemoryCompression({ files = [], onCompressionApplied }: MemoryCo
                             {technique.description}
                           </p>
                           <div className="flex items-center gap-3 mt-3">
-                            <Badge className={`text-xs ${getEfficiencyColor(technique.efficiency)}`}>
+                            <Badge
+                              className={`text-xs ${getEfficiencyColor(technique.efficiency)}`}
+                            >
                               {technique.efficiency}% Efficient
                             </Badge>
                             <span className="text-xs text-muted-foreground">
@@ -204,9 +207,7 @@ export function MemoryCompression({ files = [], onCompressionApplied }: MemoryCo
                   {currentTechnique.icon}
                   <h4 className="font-medium">{currentTechnique.name}</h4>
                 </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {currentTechnique.description}
-                </p>
+                <p className="text-sm text-muted-foreground mb-4">{currentTechnique.description}</p>
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
@@ -215,7 +216,7 @@ export function MemoryCompression({ files = [], onCompressionApplied }: MemoryCo
                     </div>
                     <Progress value={currentTechnique.efficiency} className="h-2" />
                   </div>
-                  <Button 
+                  <Button
                     onClick={simulateCompression}
                     disabled={isProcessing}
                     className="shrink-0"
@@ -272,7 +273,10 @@ export function MemoryCompression({ files = [], onCompressionApplied }: MemoryCo
                 <div className="space-y-3">
                   <h3 className="text-sm font-medium">Identified Patterns</h3>
                   {memoryPatterns.map((pattern, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
+                    >
                       <div>
                         <div className="font-medium text-sm">{pattern.type}</div>
                         <div className="text-xs text-muted-foreground">
@@ -329,15 +333,22 @@ export function MemoryCompression({ files = [], onCompressionApplied }: MemoryCo
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-green-700">Patterns Identified:</span>
-                        <span className="font-medium ml-2">{compressionResults.patterns_identified}</span>
+                        <span className="font-medium ml-2">
+                          {compressionResults.patterns_identified}
+                        </span>
                       </div>
                       <div>
                         <span className="text-green-700">Symbolic Mappings:</span>
-                        <span className="font-medium ml-2">{compressionResults.symbolic_mappings}</span>
+                        <span className="font-medium ml-2">
+                          {compressionResults.symbolic_mappings}
+                        </span>
                       </div>
                     </div>
                     <div className="mt-3 text-xs text-green-700">
-                      Space saved: {formatBytes(compressionResults.original_size - compressionResults.compressed_size)} 
+                      Space saved:{' '}
+                      {formatBytes(
+                        compressionResults.original_size - compressionResults.compressed_size
+                      )}
                       ({Math.round((1 - compressionResults.compression_ratio) * 100)}% reduction)
                     </div>
                   </div>

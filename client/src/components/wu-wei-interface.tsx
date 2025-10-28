@@ -36,9 +36,9 @@ export function WuWeiInterface({ onAction, currentFlow = 0 }: WuWeiInterfaceProp
       guidance: [
         'Flow around resistance rather than through it',
         'Seek the path of least resistance',
-        'Maintain persistent, gentle pressure'
+        'Maintain persistent, gentle pressure',
       ],
-      efficiency: 95
+      efficiency: 95,
     },
     {
       id: 'wind',
@@ -48,9 +48,9 @@ export function WuWeiInterface({ onAction, currentFlow = 0 }: WuWeiInterfaceProp
       guidance: [
         'Read the currents of the system',
         'Respond to natural rhythms and cycles',
-        'Apply force at optimal moments'
+        'Apply force at optimal moments',
       ],
-      efficiency: 88
+      efficiency: 88,
     },
     {
       id: 'mountain',
@@ -60,9 +60,9 @@ export function WuWeiInterface({ onAction, currentFlow = 0 }: WuWeiInterfaceProp
       guidance: [
         'Maintain inner stillness amid external activity',
         'Provide stable foundation for others',
-        'Respond from deep centeredness'
+        'Respond from deep centeredness',
       ],
-      efficiency: 92
+      efficiency: 92,
     },
     {
       id: 'leaf',
@@ -72,10 +72,10 @@ export function WuWeiInterface({ onAction, currentFlow = 0 }: WuWeiInterfaceProp
       guidance: [
         'Follow natural rhythms and seasons',
         'Bend without breaking under pressure',
-        'Trust the wisdom of natural timing'
+        'Trust the wisdom of natural timing',
       ],
-      efficiency: 87
-    }
+      efficiency: 87,
+    },
   ];
 
   const currentPattern = naturalPatterns.find(p => p.id === selectedPattern) || naturalPatterns[0];
@@ -98,25 +98,28 @@ export function WuWeiInterface({ onAction, currentFlow = 0 }: WuWeiInterfaceProp
     }
   }, [isFlowing, currentPattern.efficiency]);
 
-  const processNaturalAction = useCallback((action: string) => {
-    // Apply wu wei principles to the action
-    const isNatural = effortLevel < 30 && naturalAlignment > 70;
-    
-    if (isNatural) {
-      setActionQueue(prev => [...prev, `✓ ${action} (wu wei)`]);
-      onAction?.(action, true);
-    } else {
-      setActionQueue(prev => [...prev, `○ ${action} (effort: ${effortLevel}%)`]);
-      onAction?.(action, false);
-    }
+  const processNaturalAction = useCallback(
+    (action: string) => {
+      // Apply wu wei principles to the action
+      const isNatural = effortLevel < 30 && naturalAlignment > 70;
 
-    // Natural actions reduce effort
-    if (isNatural) {
-      setEffortLevel(prev => Math.max(0, prev - 5));
-    } else {
-      setEffortLevel(prev => Math.min(100, prev + 10));
-    }
-  }, [effortLevel, naturalAlignment, onAction]);
+      if (isNatural) {
+        setActionQueue(prev => [...prev, `✓ ${action} (wu wei)`]);
+        onAction?.(action, true);
+      } else {
+        setActionQueue(prev => [...prev, `○ ${action} (effort: ${effortLevel}%)`]);
+        onAction?.(action, false);
+      }
+
+      // Natural actions reduce effort
+      if (isNatural) {
+        setEffortLevel(prev => Math.max(0, prev - 5));
+      } else {
+        setEffortLevel(prev => Math.min(100, prev + 10));
+      }
+    },
+    [effortLevel, naturalAlignment, onAction]
+  );
 
   const getEffortColor = (effort: number) => {
     if (effort < 20) return 'text-green-600 bg-green-50';
@@ -147,7 +150,7 @@ export function WuWeiInterface({ onAction, currentFlow = 0 }: WuWeiInterfaceProp
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Natural Pattern</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {naturalPatterns.map((pattern) => (
+              {naturalPatterns.map(pattern => (
                 <Button
                   key={pattern.id}
                   variant={selectedPattern === pattern.id ? 'default' : 'outline'}
@@ -170,9 +173,7 @@ export function WuWeiInterface({ onAction, currentFlow = 0 }: WuWeiInterfaceProp
               {currentPattern.icon}
               <h4 className="font-medium">{currentPattern.name}</h4>
             </div>
-            <p className="text-sm text-muted-foreground mb-3">
-              {currentPattern.description}
-            </p>
+            <p className="text-sm text-muted-foreground mb-3">{currentPattern.description}</p>
             <div className="space-y-1">
               {currentPattern.guidance.map((guide, index) => (
                 <div key={index} className="flex items-start gap-2 text-xs">
@@ -188,12 +189,10 @@ export function WuWeiInterface({ onAction, currentFlow = 0 }: WuWeiInterfaceProp
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm">Effort Level</span>
-                <Badge className={`text-xs ${getEffortColor(effortLevel)}`}>
-                  {effortLevel}%
-                </Badge>
+                <Badge className={`text-xs ${getEffortColor(effortLevel)}`}>{effortLevel}%</Badge>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
+                <div
                   className="bg-gradient-to-r from-green-500 to-red-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${effortLevel}%` }}
                 />
@@ -207,7 +206,7 @@ export function WuWeiInterface({ onAction, currentFlow = 0 }: WuWeiInterfaceProp
                 </Badge>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
+                <div
                   className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${naturalAlignment}%` }}
                 />
@@ -221,7 +220,7 @@ export function WuWeiInterface({ onAction, currentFlow = 0 }: WuWeiInterfaceProp
             <div className="flex gap-2">
               <Input
                 placeholder="Describe your intended action..."
-                onKeyPress={(e) => {
+                onKeyPress={e => {
                   if (e.key === 'Enter') {
                     processNaturalAction(e.currentTarget.value);
                     e.currentTarget.value = '';
@@ -229,7 +228,7 @@ export function WuWeiInterface({ onAction, currentFlow = 0 }: WuWeiInterfaceProp
                 }}
                 className="flex-1"
               />
-              <Button 
+              <Button
                 onClick={() => setIsFlowing(!isFlowing)}
                 variant={isFlowing ? 'default' : 'outline'}
                 className="shrink-0"
@@ -245,7 +244,10 @@ export function WuWeiInterface({ onAction, currentFlow = 0 }: WuWeiInterfaceProp
               <h3 className="text-sm font-medium">Recent Actions</h3>
               <div className="max-h-32 overflow-y-auto space-y-1">
                 {actionQueue.slice(-10).map((action, index) => (
-                  <div key={index} className="text-xs text-muted-foreground p-2 bg-muted/30 rounded">
+                  <div
+                    key={index}
+                    className="text-xs text-muted-foreground p-2 bg-muted/30 rounded"
+                  >
                     {action}
                   </div>
                 ))}
@@ -261,8 +263,8 @@ export function WuWeiInterface({ onAction, currentFlow = 0 }: WuWeiInterfaceProp
                 <span className="text-sm font-medium text-green-800">Wu Wei State Active</span>
               </div>
               <p className="text-xs text-green-700">
-                You are in harmony with natural patterns. Actions flow effortlessly with minimal resistance.
-                Trust your intuitive responses and maintain this centered awareness.
+                You are in harmony with natural patterns. Actions flow effortlessly with minimal
+                resistance. Trust your intuitive responses and maintain this centered awareness.
               </p>
             </div>
           )}

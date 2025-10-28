@@ -4,16 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Upload, 
-  Loader2, 
-  FileArchive, 
-  CheckCircle, 
+import {
+  Upload,
+  Loader2,
+  FileArchive,
+  CheckCircle,
   AlertCircle,
   PlayCircle,
   PauseCircle,
   RotateCw,
-  Zap
+  Zap,
 } from 'lucide-react';
 
 interface IncrementalProcessorProps {
@@ -43,7 +43,11 @@ interface ChunkData {
   endTime?: number;
 }
 
-export function IncrementalProcessor({ file, onProcessComplete, onChunkProcessed }: IncrementalProcessorProps) {
+export function IncrementalProcessor({
+  file,
+  onProcessComplete,
+  onChunkProcessed,
+}: IncrementalProcessorProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [chunks, setChunks] = useState<ChunkData[]>([]);
@@ -62,7 +66,7 @@ export function IncrementalProcessor({ file, onProcessComplete, onChunkProcessed
 
     const fileSize = file.size;
     const numChunks = Math.ceil(fileSize / CHUNK_SIZE);
-    
+
     const newChunks: ChunkData[] = [];
     for (let i = 0; i < numChunks; i++) {
       newChunks.push({
@@ -71,19 +75,19 @@ export function IncrementalProcessor({ file, onProcessComplete, onChunkProcessed
         files: 0, // Will be updated during processing
         size: Math.min(CHUNK_SIZE, fileSize - i * CHUNK_SIZE),
         status: 'pending',
-        progress: 0
+        progress: 0,
       });
     }
-    
+
     setChunks(newChunks);
     return newChunks;
   }, [file, CHUNK_SIZE]);
 
   const processChunk = async (chunk: ChunkData): Promise<ChunkData> => {
     // Update chunk status to processing
-    setChunks(prev => prev.map(c => 
-      c.id === chunk.id ? { ...c, status: 'processing', startTime: Date.now() } : c
-    ));
+    setChunks(prev =>
+      prev.map(c => (c.id === chunk.id ? { ...c, status: 'processing', startTime: Date.now() } : c))
+    );
 
     // Simulate chunk processing with progress updates
     for (let progress = 0; progress <= 100; progress += 10) {
@@ -99,10 +103,8 @@ export function IncrementalProcessor({ file, onProcessComplete, onChunkProcessed
       }
 
       await new Promise(resolve => setTimeout(resolve, 100));
-      
-      setChunks(prev => prev.map(c => 
-        c.id === chunk.id ? { ...c, progress } : c
-      ));
+
+      setChunks(prev => prev.map(c => (c.id === chunk.id ? { ...c, progress } : c)));
     }
 
     // Complete chunk processing
@@ -111,12 +113,10 @@ export function IncrementalProcessor({ file, onProcessComplete, onChunkProcessed
       status: 'completed',
       progress: 100,
       endTime: Date.now(),
-      files: Math.floor(Math.random() * 50) + 10 // Mock file count
+      files: Math.floor(Math.random() * 50) + 10, // Mock file count
     };
 
-    setChunks(prev => prev.map(c => 
-      c.id === chunk.id ? completedChunk : c
-    ));
+    setChunks(prev => prev.map(c => (c.id === chunk.id ? completedChunk : c)));
 
     onChunkProcessed?.(completedChunk);
     return completedChunk;
@@ -129,23 +129,21 @@ export function IncrementalProcessor({ file, onProcessComplete, onChunkProcessed
     setIsPaused(false);
     setErrors([]);
     setStartTime(Date.now());
-    
+
     const chunksToProcess = initializeChunks() || [];
-    
+
     try {
       // Process chunks with concurrency limit
       const processedChunks: ChunkData[] = [];
-      
+
       for (let i = 0; i < chunksToProcess.length; i += MAX_CONCURRENT_CHUNKS) {
         const batch = chunksToProcess.slice(i, i + MAX_CONCURRENT_CHUNKS);
         setCurrentChunk(i);
-        
-        const batchResults = await Promise.all(
-          batch.map(chunk => processChunk(chunk))
-        );
-        
+
+        const batchResults = await Promise.all(batch.map(chunk => processChunk(chunk)));
+
         processedChunks.push(...batchResults);
-        
+
         // Update overall progress
         const progress = ((i + batch.length) / chunksToProcess.length) * 100;
         setOverallProgress(progress);
@@ -159,7 +157,7 @@ export function IncrementalProcessor({ file, onProcessComplete, onChunkProcessed
         processedSize: file.size,
         chunks: processedChunks,
         errors: errors,
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       };
 
       setProcessingResult(result);
@@ -190,9 +188,7 @@ export function IncrementalProcessor({ file, onProcessComplete, onChunkProcessed
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return minutes > 0 
-      ? `${minutes}m ${remainingSeconds}s`
-      : `${remainingSeconds}s`;
+    return minutes > 0 ? `${minutes}m ${remainingSeconds}s` : `${remainingSeconds}s`;
   };
 
   const formatBytes = (bytes: number) => {
@@ -235,7 +231,7 @@ export function IncrementalProcessor({ file, onProcessComplete, onChunkProcessed
           {/* Control Buttons */}
           <div className="flex gap-2">
             {!isProcessing && !processingResult && (
-              <Button 
+              <Button
                 onClick={startProcessing}
                 disabled={!file}
                 className="flex items-center gap-2"
@@ -244,9 +240,9 @@ export function IncrementalProcessor({ file, onProcessComplete, onChunkProcessed
                 Start Processing
               </Button>
             )}
-            
+
             {isProcessing && (
-              <Button 
+              <Button
                 onClick={pauseProcessing}
                 variant="outline"
                 className="flex items-center gap-2"
@@ -264,9 +260,9 @@ export function IncrementalProcessor({ file, onProcessComplete, onChunkProcessed
                 )}
               </Button>
             )}
-            
+
             {processingResult && (
-              <Button 
+              <Button
                 onClick={resetProcessor}
                 variant="outline"
                 className="flex items-center gap-2"
@@ -287,13 +283,11 @@ export function IncrementalProcessor({ file, onProcessComplete, onChunkProcessed
                 </span>
               </div>
               <Progress value={overallProgress} className="h-3" />
-              
+
               {isPaused && (
                 <Alert>
                   <AlertCircle className="w-4 h-4" />
-                  <AlertDescription>
-                    Processing paused. Click Resume to continue.
-                  </AlertDescription>
+                  <AlertDescription>Processing paused. Click Resume to continue.</AlertDescription>
                 </Alert>
               )}
             </div>
@@ -304,14 +298,17 @@ export function IncrementalProcessor({ file, onProcessComplete, onChunkProcessed
             <div className="space-y-3">
               <h3 className="text-sm font-medium">Chunk Processing Status</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                {chunks.map((chunk) => (
-                  <div 
+                {chunks.map(chunk => (
+                  <div
                     key={chunk.id}
                     className={`p-3 rounded-lg border ${
-                      chunk.status === 'completed' ? 'bg-green-50 border-green-200' :
-                      chunk.status === 'processing' ? 'bg-blue-50 border-blue-200' :
-                      chunk.status === 'error' ? 'bg-red-50 border-red-200' :
-                      'bg-muted/30 border-border'
+                      chunk.status === 'completed'
+                        ? 'bg-green-50 border-green-200'
+                        : chunk.status === 'processing'
+                          ? 'bg-blue-50 border-blue-200'
+                          : chunk.status === 'error'
+                            ? 'bg-red-50 border-red-200'
+                            : 'bg-muted/30 border-border'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -340,14 +337,16 @@ export function IncrementalProcessor({ file, onProcessComplete, onChunkProcessed
                 <CheckCircle className="w-5 h-5" />
                 <span className="font-medium">Processing Complete</span>
               </div>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-3 bg-muted/30 rounded-lg">
                   <div className="text-lg font-bold">{processingResult.totalFiles}</div>
                   <div className="text-xs text-muted-foreground">Total Files</div>
                 </div>
                 <div className="text-center p-3 bg-muted/30 rounded-lg">
-                  <div className="text-lg font-bold">{formatBytes(processingResult.processedSize)}</div>
+                  <div className="text-lg font-bold">
+                    {formatBytes(processingResult.processedSize)}
+                  </div>
                   <div className="text-xs text-muted-foreground">Processed</div>
                 </div>
                 <div className="text-center p-3 bg-muted/30 rounded-lg">
@@ -355,7 +354,9 @@ export function IncrementalProcessor({ file, onProcessComplete, onChunkProcessed
                   <div className="text-xs text-muted-foreground">Chunks</div>
                 </div>
                 <div className="text-center p-3 bg-muted/30 rounded-lg">
-                  <div className="text-lg font-bold">{formatDuration(processingResult.duration)}</div>
+                  <div className="text-lg font-bold">
+                    {formatDuration(processingResult.duration)}
+                  </div>
                   <div className="text-xs text-muted-foreground">Duration</div>
                 </div>
               </div>

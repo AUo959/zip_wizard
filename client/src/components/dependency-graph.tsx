@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Network, 
-  GitBranch, 
-  FileCode, 
+import {
+  Network,
+  GitBranch,
+  FileCode,
   Folder,
   ZoomIn,
   ZoomOut,
@@ -17,7 +17,7 @@ import {
   Eye,
   EyeOff,
   CircleDot,
-  AlertTriangle
+  AlertTriangle,
 } from 'lucide-react';
 
 interface DependencyGraphProps {
@@ -76,13 +76,13 @@ const IMPORT_PATTERNS = [
   // Go
   /import\s+(?:\(\s*)?["']([^"']+)["']/g,
   // Rust
-  /use\s+([\w:]+)/g
+  /use\s+([\w:]+)/g,
 ];
 
-export function DependencyGraph({ 
-  files = [], 
-  onNodeClick, 
-  onAnalysisComplete 
+export function DependencyGraph({
+  files = [],
+  onNodeClick,
+  onAnalysisComplete,
 }: DependencyGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [analysis, setAnalysis] = useState<DependencyAnalysis | null>(null);
@@ -97,7 +97,7 @@ export function DependencyGraph({
   const extractDependencies = useCallback((file: any): string[] => {
     const dependencies: string[] = [];
     const content = file.content || '';
-    
+
     if (!content) return dependencies;
 
     IMPORT_PATTERNS.forEach(pattern => {
@@ -109,7 +109,7 @@ export function DependencyGraph({
             .replace(/^\.\//, '')
             .replace(/^@\//, '')
             .replace(/\.(js|ts|jsx|tsx|py|java|cpp|h|go|rs)$/, '');
-          
+
           // Filter out external dependencies (node_modules, standard library)
           if (!dep.startsWith('.') && !dep.includes('/')) {
             // External dependency
@@ -133,7 +133,7 @@ export function DependencyGraph({
     files.forEach(file => {
       const fileId = file.path || file.name;
       const dependencies = extractDependencies(file);
-      
+
       nodes.set(fileId, {
         id: fileId,
         name: file.name,
@@ -142,7 +142,7 @@ export function DependencyGraph({
         dependents: [],
         size: file.size || 1000,
         complexity: file.complexity,
-        language: file.language
+        language: file.language,
       });
     });
 
@@ -158,18 +158,18 @@ export function DependencyGraph({
               type: 'external',
               dependencies: [],
               dependents: [],
-              size: 500
+              size: 500,
             });
           }
         }
-        
+
         // Create edge
         edges.push({
           source: nodeId,
           target: dep,
-          type: 'import'
+          type: 'import',
         });
-        
+
         // Update dependents
         const targetNode = nodes.get(dep);
         if (targetNode) {
@@ -180,22 +180,25 @@ export function DependencyGraph({
 
     // Detect circular dependencies
     const circularDependencies = detectCircularDependencies(nodes);
-    
+
     // Find orphan files (no dependencies and no dependents)
     const orphanFiles = Array.from(nodes.values())
-      .filter(node => node.type === 'file' && node.dependencies.length === 0 && node.dependents.length === 0)
+      .filter(
+        node =>
+          node.type === 'file' && node.dependencies.length === 0 && node.dependents.length === 0
+      )
       .map(node => node.id);
-    
+
     // Find hub files (many dependents)
     const hubFiles = Array.from(nodes.values())
       .filter(node => node.dependents.length > 5)
       .sort((a, b) => b.dependents.length - a.dependents.length)
       .slice(0, 5)
       .map(node => node.id);
-    
+
     // Create clusters
     const clusters = createClusters(nodes, edges);
-    
+
     // Position nodes using force-directed layout
     positionNodes(nodes, edges);
 
@@ -205,7 +208,7 @@ export function DependencyGraph({
       clusters,
       circularDependencies,
       orphanFiles,
-      hubFiles
+      hubFiles,
     };
 
     setAnalysis(analysisResult);
@@ -220,7 +223,7 @@ export function DependencyGraph({
     const dfs = (nodeId: string, path: string[]): void => {
       visited.add(nodeId);
       recursionStack.add(nodeId);
-      
+
       const node = nodes.get(nodeId);
       if (node) {
         node.dependencies.forEach(dep => {
@@ -235,7 +238,7 @@ export function DependencyGraph({
           }
         });
       }
-      
+
       recursionStack.delete(nodeId);
     };
 
@@ -248,26 +251,29 @@ export function DependencyGraph({
     return circular;
   };
 
-  const createClusters = (nodes: Map<string, GraphNode>, edges: GraphEdge[]): DependencyCluster[] => {
+  const createClusters = (
+    nodes: Map<string, GraphNode>,
+    edges: GraphEdge[]
+  ): DependencyCluster[] => {
     // Simple clustering based on directory structure
     const clusters = new Map<string, DependencyCluster>();
-    
+
     nodes.forEach(node => {
       if (node.type === 'file') {
         const parts = node.id.split('/');
         if (parts.length > 1) {
           const clusterName = parts[0];
-          
+
           if (!clusters.has(clusterName)) {
             clusters.set(clusterName, {
               id: clusterName,
               name: clusterName,
               nodes: [],
               cohesion: 0,
-              coupling: 0
+              coupling: 0,
             });
           }
-          
+
           clusters.get(clusterName)!.nodes.push(node.id);
         }
       }
@@ -278,21 +284,22 @@ export function DependencyGraph({
       const clusterNodes = cluster.nodes;
       let internalEdges = 0;
       let externalEdges = 0;
-      
+
       edges.forEach(edge => {
         const sourceInCluster = clusterNodes.includes(edge.source);
         const targetInCluster = clusterNodes.includes(edge.target);
-        
+
         if (sourceInCluster && targetInCluster) {
           internalEdges++;
         } else if (sourceInCluster || targetInCluster) {
           externalEdges++;
         }
       });
-      
-      cluster.cohesion = clusterNodes.length > 1 
-        ? internalEdges / (clusterNodes.length * (clusterNodes.length - 1)) 
-        : 0;
+
+      cluster.cohesion =
+        clusterNodes.length > 1
+          ? internalEdges / (clusterNodes.length * (clusterNodes.length - 1))
+          : 0;
       cluster.coupling = externalEdges / Math.max(1, internalEdges + externalEdges);
     });
 
@@ -303,7 +310,7 @@ export function DependencyGraph({
     const width = 800;
     const height = 600;
     const nodeArray = Array.from(nodes.values());
-    
+
     // Simple force-directed layout simulation
     nodeArray.forEach((node, i) => {
       const angle = (i / nodeArray.length) * 2 * Math.PI;
@@ -320,13 +327,13 @@ export function DependencyGraph({
           const dx = nodeArray[j].x! - nodeArray[i].x!;
           const dy = nodeArray[j].y! - nodeArray[i].y!;
           const distance = Math.sqrt(dx * dx + dy * dy);
-          
+
           if (distance > 0 && distance < 100) {
             const force = 50 / distance;
-            nodeArray[i].x! -= dx * force / distance;
-            nodeArray[i].y! -= dy * force / distance;
-            nodeArray[j].x! += dx * force / distance;
-            nodeArray[j].y! += dy * force / distance;
+            nodeArray[i].x! -= (dx * force) / distance;
+            nodeArray[i].y! -= (dy * force) / distance;
+            nodeArray[j].x! += (dx * force) / distance;
+            nodeArray[j].y! += (dy * force) / distance;
           }
         }
       }
@@ -335,18 +342,18 @@ export function DependencyGraph({
       edges.forEach(edge => {
         const source = nodes.get(edge.source);
         const target = nodes.get(edge.target);
-        
+
         if (source && target && source.x && source.y && target.x && target.y) {
           const dx = target.x - source.x;
           const dy = target.y - source.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
-          
+
           if (distance > 150) {
             const force = (distance - 150) * 0.01;
-            source.x += dx * force / distance;
-            source.y += dy * force / distance;
-            target.x -= dx * force / distance;
-            target.y -= dy * force / distance;
+            source.x += (dx * force) / distance;
+            source.y += (dy * force) / distance;
+            target.x -= (dx * force) / distance;
+            target.y -= (dy * force) / distance;
           }
         }
       });
@@ -362,7 +369,7 @@ export function DependencyGraph({
 
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     // Apply zoom and offset
     ctx.save();
     ctx.translate(offset.x, offset.y);
@@ -385,14 +392,22 @@ export function DependencyGraph({
     analysis.edges.forEach(edge => {
       const source = analysis.nodes.find(n => n.id === edge.source);
       const target = analysis.nodes.find(n => n.id === edge.target);
-      
-      if (source && target && source.x && source.y && target.x && target.y &&
-          visibleNodes.includes(source) && visibleNodes.includes(target)) {
+
+      if (
+        source &&
+        target &&
+        source.x &&
+        source.y &&
+        target.x &&
+        target.y &&
+        visibleNodes.includes(source) &&
+        visibleNodes.includes(target)
+      ) {
         ctx.beginPath();
         ctx.moveTo(source.x, source.y);
         ctx.lineTo(target.x, target.y);
         ctx.stroke();
-        
+
         // Draw arrow
         const angle = Math.atan2(target.y - source.y, target.x - source.x);
         const arrowSize = 5;
@@ -401,8 +416,8 @@ export function DependencyGraph({
         ctx.rotate(angle);
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.lineTo(-arrowSize, -arrowSize/2);
-        ctx.lineTo(-arrowSize, arrowSize/2);
+        ctx.lineTo(-arrowSize, -arrowSize / 2);
+        ctx.lineTo(-arrowSize, arrowSize / 2);
         ctx.closePath();
         ctx.fillStyle = '#888';
         ctx.fill();
@@ -432,7 +447,7 @@ export function DependencyGraph({
       ctx.beginPath();
       ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
       ctx.fill();
-      
+
       // Highlight selected node
       if (selectedNode?.id === node.id) {
         ctx.strokeStyle = '#000';
@@ -492,7 +507,7 @@ export function DependencyGraph({
     if (isDragging) {
       setOffset({
         x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y
+        y: e.clientY - dragStart.y,
       });
     }
   };
@@ -510,13 +525,13 @@ export function DependencyGraph({
         name: n.name,
         type: n.type,
         dependencies: n.dependencies,
-        dependents: n.dependents
+        dependents: n.dependents,
       })),
       edges: analysis.edges,
       clusters: analysis.clusters,
       circularDependencies: analysis.circularDependencies,
       orphanFiles: analysis.orphanFiles,
-      hubFiles: analysis.hubFiles
+      hubFiles: analysis.hubFiles,
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -561,23 +576,22 @@ export function DependencyGraph({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => { setZoom(1); setOffset({ x: 0, y: 0 }); }}
+                onClick={() => {
+                  setZoom(1);
+                  setOffset({ x: 0, y: 0 });
+                }}
               >
                 <Maximize2 className="w-4 h-4" />
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowLabels(!showLabels)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setShowLabels(!showLabels)}>
                 {showLabels ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </Button>
             </div>
-            
+
             <div className="flex gap-2">
               <select
                 value={filterType}
-                onChange={(e) => setFilterType(e.target.value as any)}
+                onChange={e => setFilterType(e.target.value as any)}
                 className="text-sm border rounded px-2 py-1"
               >
                 <option value="all">All Nodes</option>
@@ -585,13 +599,8 @@ export function DependencyGraph({
                 <option value="orphan">Orphan Files</option>
                 <option value="hub">Hub Files</option>
               </select>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={exportGraph}
-                disabled={!analysis}
-              >
+
+              <Button variant="outline" size="sm" onClick={exportGraph} disabled={!analysis}>
                 <Download className="w-4 h-4" />
               </Button>
             </div>
@@ -735,12 +744,8 @@ export function DependencyGraph({
                         <Badge variant="outline">{cluster.nodes.length} files</Badge>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          Cohesion: {(cluster.cohesion * 100).toFixed(1)}%
-                        </div>
-                        <div>
-                          Coupling: {(cluster.coupling * 100).toFixed(1)}%
-                        </div>
+                        <div>Cohesion: {(cluster.cohesion * 100).toFixed(1)}%</div>
+                        <div>Coupling: {(cluster.coupling * 100).toFixed(1)}%</div>
                       </div>
                     </CardContent>
                   </Card>
@@ -758,12 +763,16 @@ export function DependencyGraph({
                         <div>Type: {selectedNode.type}</div>
                         <div>Size: {selectedNode.size} bytes</div>
                         {selectedNode.language && <div>Language: {selectedNode.language}</div>}
-                        {selectedNode.complexity && <div>Complexity: {selectedNode.complexity}</div>}
+                        {selectedNode.complexity && (
+                          <div>Complexity: {selectedNode.complexity}</div>
+                        )}
                       </div>
-                      
+
                       {selectedNode.dependencies.length > 0 && (
                         <div>
-                          <h4 className="text-sm font-medium mb-1">Dependencies ({selectedNode.dependencies.length})</h4>
+                          <h4 className="text-sm font-medium mb-1">
+                            Dependencies ({selectedNode.dependencies.length})
+                          </h4>
                           <div className="space-x-1">
                             {selectedNode.dependencies.map(dep => (
                               <Badge key={dep} variant="outline" className="text-xs">
@@ -773,10 +782,12 @@ export function DependencyGraph({
                           </div>
                         </div>
                       )}
-                      
+
                       {selectedNode.dependents.length > 0 && (
                         <div>
-                          <h4 className="text-sm font-medium mb-1">Dependents ({selectedNode.dependents.length})</h4>
+                          <h4 className="text-sm font-medium mb-1">
+                            Dependents ({selectedNode.dependents.length})
+                          </h4>
                           <div className="space-x-1">
                             {selectedNode.dependents.map(dep => (
                               <Badge key={dep} variant="outline" className="text-xs">

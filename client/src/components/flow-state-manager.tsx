@@ -28,7 +28,7 @@ export function FlowStateManager({ onStateChange, currentActivity }: FlowStateMa
     focus_level: 0,
     effortlessness: 0,
     awareness: 0,
-    integration: 0
+    integration: 0,
   });
 
   const [isActive, setIsActive] = useState(false);
@@ -39,7 +39,7 @@ export function FlowStateManager({ onStateChange, currentActivity }: FlowStateMa
     if (isActive) {
       const interval = setInterval(() => {
         setSessionDuration(prev => prev + 1);
-        
+
         // Simulate flow state evolution
         setCurrentState(prev => ({
           ...prev,
@@ -47,7 +47,7 @@ export function FlowStateManager({ onStateChange, currentActivity }: FlowStateMa
           focus_level: Math.min(100, prev.focus_level + Math.random() * 1.5),
           effortlessness: Math.min(100, prev.effortlessness + Math.random() * 1.2),
           awareness: Math.min(100, prev.awareness + Math.random() * 1.8),
-          integration: Math.min(100, prev.integration + Math.random() * 1.0)
+          integration: Math.min(100, prev.integration + Math.random() * 1.0),
         }));
       }, 1000);
 
@@ -63,30 +63,30 @@ export function FlowStateManager({ onStateChange, currentActivity }: FlowStateMa
     setCurrentState(prev => ({ ...prev, mode }));
     setIsActive(true);
     setSessionDuration(0);
-    
+
     const modeInsights = {
       'wu-wei': [
         'Release conscious effort, allow natural flow',
         'Act in harmony with the system patterns',
-        'Trust intuitive responses over analytical thought'
+        'Trust intuitive responses over analytical thought',
       ],
-      'mushin': [
+      mushin: [
         'Empty mind of preconceptions and attachments',
         'Respond spontaneously to emerging situations',
-        'Maintain heightened awareness without fixation'
+        'Maintain heightened awareness without fixation',
       ],
-      'samyama': [
+      samyama: [
         'Focus attention on single point of analysis',
         'Sustain unbroken concentration flow',
-        'Allow subject-object boundary to dissolve'
+        'Allow subject-object boundary to dissolve',
       ],
-      'flow': [
+      flow: [
         'Balance challenge with current skill level',
         'Maintain clear goals and immediate feedback',
-        'Let action and awareness merge completely'
-      ]
+        'Let action and awareness merge completely',
+      ],
     };
-    
+
     setInsights(modeInsights[mode]);
   }, []);
 
@@ -99,9 +99,9 @@ export function FlowStateManager({ onStateChange, currentActivity }: FlowStateMa
   const getStateColor = (mode: FlowState['mode']) => {
     const colors = {
       'wu-wei': 'bg-gradient-to-r from-green-500 to-blue-500',
-      'mushin': 'bg-gradient-to-r from-purple-600 to-indigo-600',
-      'samyama': 'bg-gradient-to-r from-orange-500 to-red-500',
-      'flow': 'bg-gradient-to-r from-cyan-500 to-blue-600'
+      mushin: 'bg-gradient-to-r from-purple-600 to-indigo-600',
+      samyama: 'bg-gradient-to-r from-orange-500 to-red-500',
+      flow: 'bg-gradient-to-r from-cyan-500 to-blue-600',
     };
     return colors[mode];
   };
@@ -168,16 +168,20 @@ export function FlowStateManager({ onStateChange, currentActivity }: FlowStateMa
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium">Current State</h3>
                 <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`} />
+                  <div
+                    className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}
+                  />
                   <span className="text-xs text-muted-foreground">
                     {isActive ? formatTime(sessionDuration) : 'Inactive'}
                   </span>
                 </div>
               </div>
-              
+
               <div className={`p-4 rounded-lg text-white ${getStateColor(currentState.mode)}`}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium capitalize">{currentState.mode.replace('-', ' ')}</span>
+                  <span className="font-medium capitalize">
+                    {currentState.mode.replace('-', ' ')}
+                  </span>
                   <Badge variant="secondary" className="text-xs">
                     {Math.round(currentState.intensity)}% Intensity
                   </Badge>
@@ -240,9 +244,7 @@ export function FlowStateManager({ onStateChange, currentActivity }: FlowStateMa
                   <Timer className="w-3 h-3" />
                   Duration
                 </div>
-                <div className="text-sm font-mono">
-                  {formatTime(sessionDuration)}
-                </div>
+                <div className="text-sm font-mono">{formatTime(sessionDuration)}</div>
               </div>
             </div>
           </div>
@@ -264,11 +266,7 @@ export function FlowStateManager({ onStateChange, currentActivity }: FlowStateMa
 
           {isActive && (
             <div className="mt-6 flex justify-center">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsActive(false)}
-                className="text-xs"
-              >
+              <Button variant="outline" onClick={() => setIsActive(false)} className="text-xs">
                 End Flow Session
               </Button>
             </div>

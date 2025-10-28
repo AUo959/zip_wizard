@@ -6,10 +6,10 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  BarChart3, 
-  Code, 
-  FileText, 
+import {
+  BarChart3,
+  Code,
+  FileText,
   GitBranch,
   TrendingUp,
   TrendingDown,
@@ -20,7 +20,7 @@ import {
   Info,
   Hash,
   Clock,
-  Layers
+  Layers,
 } from 'lucide-react';
 
 interface CodeMetricsAnalyzerProps {
@@ -121,10 +121,10 @@ interface DuplicationMetrics {
   duplicationPercentage: number;
 }
 
-export function CodeMetricsAnalyzer({ 
-  files = [], 
-  onAnalysisComplete, 
-  onFileAnalyzed 
+export function CodeMetricsAnalyzer({
+  files = [],
+  onAnalysisComplete,
+  onFileAnalyzed,
 }: CodeMetricsAnalyzerProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
@@ -167,27 +167,27 @@ export function CodeMetricsAnalyzer({
       // Track nesting
       const openBraces = (line.match(/{/g) || []).length;
       const closeBraces = (line.match(/}/g) || []).length;
-      
+
       // Increment for control structures
       if (/\b(if|for|while|switch)\b/.test(line)) {
         complexity += 1 + nestingLevel;
       }
-      
+
       // Increment for else/else if
       if (/\b(else|else\s+if)\b/.test(line)) {
         complexity += 1;
       }
-      
+
       // Increment for catch
       if (/\bcatch\b/.test(line)) {
         complexity += 1;
       }
-      
+
       // Increment for logical operators in conditions
       if (/&&|\|\|/.test(line)) {
         complexity += (line.match(/&&|\|\|/g) || []).length;
       }
-      
+
       nestingLevel += openBraces - closeBraces;
       nestingLevel = Math.max(0, nestingLevel);
     });
@@ -199,12 +199,12 @@ export function CodeMetricsAnalyzer({
     // Simplified Halstead metrics calculation
     const operators = content.match(/[+\-*/%=<>!&|^~?:,;.(){}[\]]/g) || [];
     const operands = content.match(/\b[a-zA-Z_]\w*\b/g) || [];
-    
+
     const uniqueOperators = new Set(operators).size;
     const uniqueOperands = new Set(operands).size;
     const totalOperators = operators.length;
     const totalOperands = operands.length;
-    
+
     const vocabulary = uniqueOperators + uniqueOperands;
     const length = totalOperators + totalOperands;
     const volume = length * Math.log2(vocabulary || 1);
@@ -212,7 +212,7 @@ export function CodeMetricsAnalyzer({
     const effort = volume * difficulty;
     const time = effort / 18; // seconds
     const bugs = volume / 3000;
-    
+
     return {
       vocabulary,
       length,
@@ -220,7 +220,7 @@ export function CodeMetricsAnalyzer({
       difficulty: Math.round(difficulty * 10) / 10,
       effort: Math.round(effort),
       time: Math.round(time),
-      bugs: Math.round(bugs * 100) / 100
+      bugs: Math.round(bugs * 100) / 100,
     };
   };
 
@@ -232,7 +232,8 @@ export function CodeMetricsAnalyzer({
     // Microsoft's Maintainability Index formula
     const mi = Math.max(
       0,
-      ((171 - 5.2 * Math.log(volume) - 0.23 * complexity - 16.2 * Math.log(linesOfCode)) * 100) / 171
+      ((171 - 5.2 * Math.log(volume) - 0.23 * complexity - 16.2 * Math.log(linesOfCode)) * 100) /
+        171
     );
     return Math.round(mi);
   };
@@ -251,7 +252,7 @@ export function CodeMetricsAnalyzer({
           severity: funcLines > 100 ? 'high' : 'medium',
           file: fileName,
           description: `Method has ${funcLines} lines (threshold: 50)`,
-          suggestion: 'Consider breaking this method into smaller, more focused methods'
+          suggestion: 'Consider breaking this method into smaller, more focused methods',
         });
       }
     });
@@ -266,7 +267,7 @@ export function CodeMetricsAnalyzer({
           file: fileName,
           line: index + 1,
           description: `Nesting level: ${Math.floor(indentLevel)}`,
-          suggestion: 'Extract nested logic into separate methods'
+          suggestion: 'Extract nested logic into separate methods',
         });
       }
     });
@@ -278,19 +279,22 @@ export function CodeMetricsAnalyzer({
         severity: lines.length > 1000 ? 'high' : 'medium',
         file: fileName,
         description: `File has ${lines.length} lines`,
-        suggestion: 'Consider splitting into multiple smaller classes'
+        suggestion: 'Consider splitting into multiple smaller classes',
       });
     }
 
     // Duplicate code detection (simplified)
     const codeBlocks = new Map<string, number>();
     for (let i = 0; i < lines.length - 5; i++) {
-      const block = lines.slice(i, i + 5).join('\n').trim();
+      const block = lines
+        .slice(i, i + 5)
+        .join('\n')
+        .trim();
       if (block.length > 50) {
         codeBlocks.set(block, (codeBlocks.get(block) || 0) + 1);
       }
     }
-    
+
     codeBlocks.forEach((count, block) => {
       if (count > 2) {
         smells.push({
@@ -298,7 +302,7 @@ export function CodeMetricsAnalyzer({
           severity: 'medium',
           file: fileName,
           description: `Code block repeated ${count} times`,
-          suggestion: 'Extract duplicate code into a reusable function'
+          suggestion: 'Extract duplicate code into a reusable function',
         });
       }
     });
@@ -311,7 +315,7 @@ export function CodeMetricsAnalyzer({
         severity: 'low',
         file: fileName,
         description: `Found ${magicNumbers.length} hard-coded numbers`,
-        suggestion: 'Replace magic numbers with named constants'
+        suggestion: 'Replace magic numbers with named constants',
       });
     }
 
@@ -320,7 +324,7 @@ export function CodeMetricsAnalyzer({
 
   const analyzeFunctions = (content: string): FunctionMetrics[] => {
     const functions: FunctionMetrics[] = [];
-    
+
     // Simple function detection for JavaScript/TypeScript
     const functionPatterns = [
       /function\s+(\w+)\s*\(([^)]*)\)/g,
@@ -334,7 +338,7 @@ export function CodeMetricsAnalyzer({
         const name = match[1];
         const params = match[2].split(',').filter(p => p.trim()).length;
         const startLine = content.substring(0, match.index).split('\n').length;
-        
+
         functions.push({
           name,
           startLine,
@@ -342,7 +346,7 @@ export function CodeMetricsAnalyzer({
           complexity: Math.floor(Math.random() * 10) + 1,
           parameters: params,
           returns: 1,
-          depth: Math.floor(Math.random() * 3) + 1
+          depth: Math.floor(Math.random() * 3) + 1,
         });
       }
     });
@@ -353,7 +357,9 @@ export function CodeMetricsAnalyzer({
   const analyzeFile = (file: any): FileMetrics => {
     const content = file.content || '';
     const lines = content.split('\n');
-    const codeLines = lines.filter((line: string) => line.trim() && !line.trim().startsWith('//')).length;
+    const codeLines = lines.filter(
+      (line: string) => line.trim() && !line.trim().startsWith('//')
+    ).length;
     const commentLines = lines.filter((line: string) => line.trim().startsWith('//')).length;
     const blankLines = lines.filter((line: string) => !line.trim()).length;
 
@@ -367,9 +373,9 @@ export function CodeMetricsAnalyzer({
     );
 
     const technicalDebtMinutes = Math.round(
-      (cyclomaticComplexity * 5) + 
-      (cognitiveComplexity * 3) + 
-      (lines.length > 500 ? (lines.length - 500) * 0.5 : 0)
+      cyclomaticComplexity * 5 +
+        cognitiveComplexity * 3 +
+        (lines.length > 500 ? (lines.length - 500) * 0.5 : 0)
     );
 
     const codeSmells = detectCodeSmells(content, file.name);
@@ -389,7 +395,7 @@ export function CodeMetricsAnalyzer({
       maintainabilityIndex,
       technicalDebtMinutes,
       codeSmells: codeSmells.map(s => s.type),
-      functions
+      functions,
     };
   };
 
@@ -401,10 +407,13 @@ export function CodeMetricsAnalyzer({
     files.forEach(file => {
       const content = file.content || '';
       const lines = content.split('\n');
-      
+
       // Check for duplicate blocks (5+ lines)
       for (let i = 0; i < lines.length - 5; i++) {
-        const block = lines.slice(i, i + 5).join('\n').trim();
+        const block = lines
+          .slice(i, i + 5)
+          .join('\n')
+          .trim();
         if (block.length > 100) {
           const count = seenBlocks.get(block) || 0;
           if (count > 0) {
@@ -417,7 +426,7 @@ export function CodeMetricsAnalyzer({
     });
 
     const totalLines = files.reduce((sum, f) => sum + (f.content?.split('\n').length || 0), 0);
-    
+
     return {
       duplicatedLines,
       duplicatedBlocks,
@@ -425,7 +434,7 @@ export function CodeMetricsAnalyzer({
         const content = f.content || '';
         return Array.from(seenBlocks.keys()).some(block => content.includes(block));
       }).length,
-      duplicationPercentage: totalLines > 0 ? (duplicatedLines / totalLines) * 100 : 0
+      duplicationPercentage: totalLines > 0 ? (duplicatedLines / totalLines) * 100 : 0,
     };
   };
 
@@ -442,7 +451,7 @@ export function CodeMetricsAnalyzer({
       const file = files[i];
       const metrics = analyzeFile(file);
       fileMetrics.push(metrics);
-      
+
       // Update language statistics
       const lang = metrics.language;
       const langStats = languageStats.get(lang) || {
@@ -450,24 +459,25 @@ export function CodeMetricsAnalyzer({
         lines: 0,
         codeLines: 0,
         commentRatio: 0,
-        averageComplexity: 0
+        averageComplexity: 0,
       };
-      
+
       langStats.files++;
       langStats.lines += metrics.lines;
       langStats.codeLines += metrics.codeLines;
       langStats.commentRatio = metrics.commentLines / (metrics.codeLines || 1);
-      langStats.averageComplexity = 
-        (langStats.averageComplexity * (langStats.files - 1) + metrics.cyclomaticComplexity) / langStats.files;
-      
+      langStats.averageComplexity =
+        (langStats.averageComplexity * (langStats.files - 1) + metrics.cyclomaticComplexity) /
+        langStats.files;
+
       languageStats.set(lang, langStats);
-      
+
       // Collect code smells
       allCodeSmells.push(...detectCodeSmells(file.content || '', file.name));
-      
+
       onFileAnalyzed?.(file.name, metrics);
       setAnalysisProgress(((i + 1) / files.length) * 100);
-      
+
       // Simulate processing delay
       await new Promise(resolve => setTimeout(resolve, 50));
     }
@@ -477,23 +487,34 @@ export function CodeMetricsAnalyzer({
     const codeLines = fileMetrics.reduce((sum, m) => sum + m.codeLines, 0);
     const commentLines = fileMetrics.reduce((sum, m) => sum + m.commentLines, 0);
     const blankLines = fileMetrics.reduce((sum, m) => sum + m.blankLines, 0);
-    
-    const averageComplexity = fileMetrics.length > 0
-      ? fileMetrics.reduce((sum, m) => sum + m.cyclomaticComplexity, 0) / fileMetrics.length
-      : 0;
-    
-    const maintainabilityIndex = fileMetrics.length > 0
-      ? Math.round(fileMetrics.reduce((sum, m) => sum + m.maintainabilityIndex, 0) / fileMetrics.length)
-      : 0;
+
+    const averageComplexity =
+      fileMetrics.length > 0
+        ? fileMetrics.reduce((sum, m) => sum + m.cyclomaticComplexity, 0) / fileMetrics.length
+        : 0;
+
+    const maintainabilityIndex =
+      fileMetrics.length > 0
+        ? Math.round(
+            fileMetrics.reduce((sum, m) => sum + m.maintainabilityIndex, 0) / fileMetrics.length
+          )
+        : 0;
 
     // Calculate technical debt
     const totalDebtMinutes = fileMetrics.reduce((sum, m) => sum + m.technicalDebtMinutes, 0);
     const technicalDebt: TechnicalDebt = {
       totalMinutes: totalDebtMinutes,
-      rating: totalDebtMinutes < 60 ? 'A' : totalDebtMinutes < 240 ? 'B' : totalDebtMinutes < 480 ? 'C' : 'D',
+      rating:
+        totalDebtMinutes < 60
+          ? 'A'
+          : totalDebtMinutes < 240
+            ? 'B'
+            : totalDebtMinutes < 480
+              ? 'C'
+              : 'D',
       ratio: codeLines > 0 ? (totalDebtMinutes / codeLines) * 100 : 0,
       principal: totalDebtMinutes * 0.7, // 70% is principal debt
-      interest: totalDebtMinutes * 0.3  // 30% is interest
+      interest: totalDebtMinutes * 0.3, // 30% is interest
     };
 
     // Calculate complexity distribution
@@ -502,26 +523,28 @@ export function CodeMetricsAnalyzer({
         range: '1-5',
         count: fileMetrics.filter(m => m.cyclomaticComplexity <= 5).length,
         percentage: 0,
-        risk: 'low'
+        risk: 'low',
       },
       {
         range: '6-10',
-        count: fileMetrics.filter(m => m.cyclomaticComplexity > 5 && m.cyclomaticComplexity <= 10).length,
+        count: fileMetrics.filter(m => m.cyclomaticComplexity > 5 && m.cyclomaticComplexity <= 10)
+          .length,
         percentage: 0,
-        risk: 'medium'
+        risk: 'medium',
       },
       {
         range: '11-20',
-        count: fileMetrics.filter(m => m.cyclomaticComplexity > 10 && m.cyclomaticComplexity <= 20).length,
+        count: fileMetrics.filter(m => m.cyclomaticComplexity > 10 && m.cyclomaticComplexity <= 20)
+          .length,
         percentage: 0,
-        risk: 'high'
+        risk: 'high',
       },
       {
         range: '21+',
         count: fileMetrics.filter(m => m.cyclomaticComplexity > 20).length,
         percentage: 0,
-        risk: 'critical'
-      }
+        risk: 'critical',
+      },
     ];
 
     // Calculate percentages
@@ -546,7 +569,7 @@ export function CodeMetricsAnalyzer({
       languageDistribution: Object.fromEntries(languageStats),
       complexityDistribution,
       codeSmells: allCodeSmells,
-      duplication
+      duplication,
     };
 
     setMetrics(codeMetrics);
@@ -593,7 +616,7 @@ export function CodeMetricsAnalyzer({
             <div className="text-sm">
               <span className="font-medium">{files.length}</span> files ready for analysis
             </div>
-            <Button 
+            <Button
               onClick={startAnalysis}
               disabled={isAnalyzing || files.length === 0}
               className="flex items-center gap-2"
@@ -636,7 +659,9 @@ export function CodeMetricsAnalyzer({
                       <Activity className="w-4 h-4 text-indigo-600" />
                       <span className="text-sm font-medium">Maintainability</span>
                     </div>
-                    <div className={`text-2xl font-bold ${getMaintainabilityColor(metrics.maintainabilityIndex)}`}>
+                    <div
+                      className={`text-2xl font-bold ${getMaintainabilityColor(metrics.maintainabilityIndex)}`}
+                    >
                       {metrics.maintainabilityIndex}
                     </div>
                     <div className="text-xs text-muted-foreground">Index Score</div>
@@ -649,9 +674,7 @@ export function CodeMetricsAnalyzer({
                       <GitBranch className="w-4 h-4 text-purple-600" />
                       <span className="text-sm font-medium">Avg Complexity</span>
                     </div>
-                    <div className="text-2xl font-bold">
-                      {metrics.averageComplexity.toFixed(1)}
-                    </div>
+                    <div className="text-2xl font-bold">{metrics.averageComplexity.toFixed(1)}</div>
                     <div className="text-xs text-muted-foreground">Cyclomatic</div>
                   </CardContent>
                 </Card>
@@ -665,12 +688,17 @@ export function CodeMetricsAnalyzer({
                     <div className="text-2xl font-bold">
                       {formatTime(metrics.technicalDebt.totalMinutes)}
                     </div>
-                    <Badge className={`text-xs ${
-                      metrics.technicalDebt.rating === 'A' ? 'bg-green-100' :
-                      metrics.technicalDebt.rating === 'B' ? 'bg-yellow-100' :
-                      metrics.technicalDebt.rating === 'C' ? 'bg-orange-100' :
-                      'bg-red-100'
-                    }`}>
+                    <Badge
+                      className={`text-xs ${
+                        metrics.technicalDebt.rating === 'A'
+                          ? 'bg-green-100'
+                          : metrics.technicalDebt.rating === 'B'
+                            ? 'bg-yellow-100'
+                            : metrics.technicalDebt.rating === 'C'
+                              ? 'bg-orange-100'
+                              : 'bg-red-100'
+                      }`}
+                    >
                       Grade {metrics.technicalDebt.rating}
                     </Badge>
                   </CardContent>
@@ -699,21 +727,36 @@ export function CodeMetricsAnalyzer({
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs">Code Lines</span>
-                      <span className="text-xs font-medium">{metrics.codeLines.toLocaleString()}</span>
+                      <span className="text-xs font-medium">
+                        {metrics.codeLines.toLocaleString()}
+                      </span>
                     </div>
-                    <Progress value={(metrics.codeLines / metrics.totalLines) * 100} className="h-2 bg-blue-100" />
-                    
+                    <Progress
+                      value={(metrics.codeLines / metrics.totalLines) * 100}
+                      className="h-2 bg-blue-100"
+                    />
+
                     <div className="flex items-center justify-between">
                       <span className="text-xs">Comments</span>
-                      <span className="text-xs font-medium">{metrics.commentLines.toLocaleString()}</span>
+                      <span className="text-xs font-medium">
+                        {metrics.commentLines.toLocaleString()}
+                      </span>
                     </div>
-                    <Progress value={(metrics.commentLines / metrics.totalLines) * 100} className="h-2 bg-green-100" />
-                    
+                    <Progress
+                      value={(metrics.commentLines / metrics.totalLines) * 100}
+                      className="h-2 bg-green-100"
+                    />
+
                     <div className="flex items-center justify-between">
                       <span className="text-xs">Blank Lines</span>
-                      <span className="text-xs font-medium">{metrics.blankLines.toLocaleString()}</span>
+                      <span className="text-xs font-medium">
+                        {metrics.blankLines.toLocaleString()}
+                      </span>
                     </div>
-                    <Progress value={(metrics.blankLines / metrics.totalLines) * 100} className="h-2 bg-gray-100" />
+                    <Progress
+                      value={(metrics.blankLines / metrics.totalLines) * 100}
+                      className="h-2 bg-gray-100"
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -730,24 +773,32 @@ export function CodeMetricsAnalyzer({
                 <TabsContent value="complexity" className="space-y-4">
                   <div className="space-y-3">
                     <h3 className="text-sm font-medium">Complexity Distribution</h3>
-                    {metrics.complexityDistribution.map((band) => (
+                    {metrics.complexityDistribution.map(band => (
                       <div key={band.range} className="flex items-center gap-3">
-                        <Badge className={
-                          band.risk === 'low' ? 'bg-green-100 text-green-700' :
-                          band.risk === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                          band.risk === 'high' ? 'bg-orange-100 text-orange-700' :
-                          'bg-red-100 text-red-700'
-                        }>
+                        <Badge
+                          className={
+                            band.risk === 'low'
+                              ? 'bg-green-100 text-green-700'
+                              : band.risk === 'medium'
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : band.risk === 'high'
+                                  ? 'bg-orange-100 text-orange-700'
+                                  : 'bg-red-100 text-red-700'
+                          }
+                        >
                           {band.range}
                         </Badge>
                         <div className="flex-1">
-                          <Progress 
-                            value={band.percentage} 
+                          <Progress
+                            value={band.percentage}
                             className={`h-3 ${
-                              band.risk === 'low' ? 'bg-green-100' :
-                              band.risk === 'medium' ? 'bg-yellow-100' :
-                              band.risk === 'high' ? 'bg-orange-100' :
-                              'bg-red-100'
+                              band.risk === 'low'
+                                ? 'bg-green-100'
+                                : band.risk === 'medium'
+                                  ? 'bg-yellow-100'
+                                  : band.risk === 'high'
+                                    ? 'bg-orange-100'
+                                    : 'bg-red-100'
                             }`}
                           />
                         </div>
@@ -778,8 +829,8 @@ export function CodeMetricsAnalyzer({
                     <div className="space-y-2">
                       {metrics.fileMetrics
                         .sort((a, b) => b.cyclomaticComplexity - a.cyclomaticComplexity)
-                        .map((file) => (
-                          <div 
+                        .map(file => (
+                          <div
                             key={file.path}
                             className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
                             onClick={() => setSelectedFile(file)}
@@ -793,7 +844,10 @@ export function CodeMetricsAnalyzer({
                                 <Badge className={getComplexityColor(file.cyclomaticComplexity)}>
                                   CC: {file.cyclomaticComplexity}
                                 </Badge>
-                                <Badge variant="outline" className={getMaintainabilityColor(file.maintainabilityIndex)}>
+                                <Badge
+                                  variant="outline"
+                                  className={getMaintainabilityColor(file.maintainabilityIndex)}
+                                >
                                   MI: {file.maintainabilityIndex}
                                 </Badge>
                               </div>
@@ -817,12 +871,18 @@ export function CodeMetricsAnalyzer({
                 <TabsContent value="smells" className="space-y-3">
                   <div className="space-y-2">
                     {Object.entries(
-                      metrics.codeSmells.reduce((acc, smell) => {
-                        acc[smell.type] = (acc[smell.type] || 0) + 1;
-                        return acc;
-                      }, {} as Record<string, number>)
+                      metrics.codeSmells.reduce(
+                        (acc, smell) => {
+                          acc[smell.type] = (acc[smell.type] || 0) + 1;
+                          return acc;
+                        },
+                        {} as Record<string, number>
+                      )
                     ).map(([type, count]) => (
-                      <div key={type} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div
+                        key={type}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
                         <div className="flex items-center gap-2">
                           <AlertTriangle className="w-4 h-4 text-yellow-600" />
                           <span className="font-medium text-sm">{type}</span>
@@ -890,7 +950,9 @@ export function CodeMetricsAnalyzer({
 
                 {selectedFile.functions.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-medium mb-2">Functions ({selectedFile.functions.length})</h4>
+                    <h4 className="text-sm font-medium mb-2">
+                      Functions ({selectedFile.functions.length})
+                    </h4>
                     <div className="space-y-1">
                       {selectedFile.functions.slice(0, 5).map((func, i) => (
                         <div key={i} className="flex items-center justify-between text-sm">
