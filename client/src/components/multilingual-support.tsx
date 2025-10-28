@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -117,7 +117,7 @@ export function MultilingualSupport({
     },
   ];
 
-  const culturalContexts: Record<string, CulturalContext> = {
+  const culturalContexts: Record<string, CulturalContext> = useMemo(() => ({
     en: {
       dateFormat: 'MM/DD/YYYY',
       timeFormat: '12-hour',
@@ -153,7 +153,7 @@ export function MultilingualSupport({
       fileNamingConvention: 'Pinyin with characters',
       archiveStructure: 'Thematic grouping',
     },
-  };
+  }), []);
 
   const translations = {
     en: {
@@ -210,7 +210,7 @@ export function MultilingualSupport({
     if (culturalContexts[currentLanguage]) {
       setCulturalPreferences(culturalContexts[currentLanguage]);
     }
-  }, [currentLanguage]);
+  }, [currentLanguage, culturalContexts]);
 
   const handleLanguageSelect = (langCode: string) => {
     onLanguageChange(langCode);

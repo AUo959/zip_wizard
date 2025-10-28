@@ -149,16 +149,16 @@ export function TimingOptimizer({
   }, [config, metrics, throughput, onOptimizationApplied]);
 
   // Exponential backoff retry logic
-  const calculateRetryDelay = (attempt: number): number => {
+  const calculateRetryDelay = useCallback((attempt: number): number => {
     const baseDelay = config.retryDelay;
     const maxDelay = 30000;
     const delay = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
     // Add jitter to prevent thundering herd
     return delay + Math.random() * 1000;
-  };
+  }, [config.retryDelay]);
 
   // Circuit breaker implementation
-  const checkCircuitBreaker = (operationName: string): boolean => {
+  const checkCircuitBreaker = useCallback((operationName: string): boolean => {
     const breaker = circuitBreakers.get(operationName);
     if (!breaker || !config.circuitBreakerEnabled) return true;
 
@@ -176,9 +176,9 @@ export function TimingOptimizer({
     }
 
     return true;
-  };
+  }, [circuitBreakers, config.circuitBreakerEnabled]);
 
-  const updateCircuitBreaker = (operationName: string, success: boolean) => {
+  const updateCircuitBreaker = useCallback((operationName: string, success: boolean) => {
     if (!config.circuitBreakerEnabled) return;
 
     setCircuitBreakers(prev => {
@@ -208,7 +208,7 @@ export function TimingOptimizer({
       updated.set(operationName, breaker);
       return updated;
     });
-  };
+  }, [config.circuitBreakerEnabled]);
 
   // Priority queue implementation
   const addToQueue = (
@@ -238,7 +238,7 @@ export function TimingOptimizer({
   };
 
   // Resource pooling
-  const acquireResource = async (type: string, amount: number = 1): Promise<boolean> => {
+  const acquireResource = useCallback(async (type: string, amount: number = 1): Promise<boolean> => {
     if (!config.resourcePooling) return true;
 
     const pool = resourcePools.find(p => p.type === type);
@@ -275,9 +275,9 @@ export function TimingOptimizer({
     // Wait and retry
     await new Promise(resolve => setTimeout(resolve, 1000));
     return acquireResource(type, amount);
-  };
+  }, [config.resourcePooling, resourcePools]);
 
-  const releaseResource = (type: string, amount: number = 1) => {
+  const releaseResource = useCallback((type: string, amount: number = 1) => {
     if (!config.resourcePooling) return;
 
     setResourcePools(prev =>
@@ -292,7 +292,7 @@ export function TimingOptimizer({
           : p
       )
     );
-  };
+  }, [config.resourcePooling]);
 
   // Process queue with concurrency control
   const processQueue = useCallback(async () => {
@@ -367,9 +367,9 @@ export function TimingOptimizer({
       // Process next item
       processQueue();
     }
-  }, [queue, config, onTimeoutPrevented]);
+  }, [queue, config, onTimeoutPrevented, acquireResource, calculateRetryDelay, checkCircuitBreaker, releaseResource, updateCircuitBreaker, updateMetrics]);
 
-  const updateMetrics = (operationName: string, success: boolean, duration: number) => {
+  const updateMetrics = useCallback((operationName: string, success: boolean, duration: number) => {
     const existing = metricsRef.current.get(operationName) || {
       name: operationName,
       averageTime: 0,
@@ -394,7 +394,7 @@ export function TimingOptimizer({
 
     metricsRef.current.set(operationName, existing);
     setMetrics(Array.from(metricsRef.current.values()));
-  };
+  }, [config.timeout]);
 
   // Monitor system load
   useEffect(() => {

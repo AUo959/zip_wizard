@@ -127,7 +127,7 @@ export function MemoryCompression({ files = [], onCompressionApplied }: MemoryCo
     ];
 
     setMemoryPatterns(patterns);
-  }, [activeMethod, files, currentTechnique.efficiency, onCompressionApplied]);
+  }, [files, currentTechnique.efficiency, onCompressionApplied]);
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 B';
