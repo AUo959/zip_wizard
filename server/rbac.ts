@@ -1,6 +1,6 @@
 /**
  * Role-Based Access Control (RBAC) System
- * 
+ *
  * Implements granular access control for files and archives.
  * Supports roles: Reader, Editor, Owner
  * Logs all access attempts and denials.
@@ -9,12 +9,12 @@
 import { auditLog } from './audit-log';
 
 export type Role = 'reader' | 'editor' | 'owner' | 'admin';
-export type Permission = 
-  | 'read' 
-  | 'write' 
-  | 'delete' 
-  | 'share' 
-  | 'export' 
+export type Permission =
+  | 'read'
+  | 'write'
+  | 'delete'
+  | 'share'
+  | 'export'
   | 'modify_permissions'
   | 'view_audit_logs';
 
@@ -40,7 +40,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   reader: ['read', 'export'],
   editor: ['read', 'write', 'export', 'share'],
   owner: ['read', 'write', 'delete', 'export', 'share', 'modify_permissions', 'view_audit_logs'],
-  admin: ['read', 'write', 'delete', 'export', 'share', 'modify_permissions', 'view_audit_logs']
+  admin: ['read', 'write', 'delete', 'export', 'share', 'modify_permissions', 'view_audit_logs'],
 };
 
 class RBACService {
@@ -107,8 +107,8 @@ class RBACService {
         details: {
           permission,
           role: role || 'none',
-          userAgent: context.userAgent
-        }
+          userAgent: context.userAgent,
+        },
       }
     );
 
@@ -119,12 +119,12 @@ class RBACService {
         ipAddress: context.ipAddress,
         resource: resourceType,
         resourceId,
-        details: { permission }
+        details: { permission },
       });
 
       return {
         allowed: false,
-        reason: 'No role assigned for this resource'
+        reason: 'No role assigned for this resource',
       };
     }
 
@@ -137,12 +137,12 @@ class RBACService {
         ipAddress: context.ipAddress,
         resource: resourceType,
         resourceId,
-        details: { permission, role }
+        details: { permission, role },
       });
 
       return {
         allowed: false,
-        reason: `Role '${role}' does not have permission '${permission}'`
+        reason: `Role '${role}' does not have permission '${permission}'`,
       };
     }
 
@@ -160,7 +160,7 @@ class RBACService {
     context: AccessContext
   ): Promise<void> {
     const result = await this.canAccess(resourceId, resourceType, userId, permission, context);
-    
+
     if (!result.allowed) {
       throw new Error(`Access denied: ${result.reason}`);
     }
@@ -205,8 +205,8 @@ class RBACService {
       resourceId,
       details: {
         targetUserId,
-        role
-      }
+        role,
+      },
     });
   }
 
@@ -254,8 +254,8 @@ class RBACService {
       resourceId,
       details: {
         targetUserId,
-        previousRole
-      }
+        previousRole,
+      },
     });
   }
 
@@ -269,7 +269,7 @@ class RBACService {
 
     const preview = content.substring(0, maxLength);
     const redactedLines = content.split('\n').length - preview.split('\n').length;
-    
+
     return `${preview}\n\n[... ${redactedLines} more lines redacted. Full access requires appropriate permissions ...]`;
   }
 
@@ -284,7 +284,7 @@ class RBACService {
     metadata?: Record<string, any>
   ): Promise<void> {
     const level = operation === 'delete' ? 'warning' : 'info';
-    
+
     await auditLog.log(level, 'access', `File ${operation}`, {
       userId: context.userId,
       sessionId: context.sessionId,
@@ -293,8 +293,8 @@ class RBACService {
       resourceId,
       details: {
         operation,
-        ...metadata
-      }
+        ...metadata,
+      },
     });
   }
 }
@@ -315,16 +315,16 @@ export function requirePermission(permission: Permission) {
       userId,
       sessionId: req.sessionID,
       ipAddress: req.ip || req.connection.remoteAddress,
-      userAgent: req.headers['user-agent']
+      userAgent: req.headers['user-agent'],
     };
 
     try {
       await rbac.requireAccess(resourceId, resourceType, userId, permission, context);
       next();
     } catch (error) {
-      res.status(403).json({ 
-        error: 'Access denied', 
-        message: error instanceof Error ? error.message : 'Insufficient permissions' 
+      res.status(403).json({
+        error: 'Access denied',
+        message: error instanceof Error ? error.message : 'Insufficient permissions',
       });
     }
   };

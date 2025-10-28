@@ -13,6 +13,7 @@ This document describes the comprehensive security and privacy features implemen
 **Purpose**: Provides immutable, append-only logging for all security-critical operations.
 
 **Key Features**:
+
 - HMAC-SHA256 cryptographic signatures for tamper-proof logging
 - Multiple log levels: info, warning, critical
 - Categorized logging: access, security, privacy, authentication, authorization, export, scan, circuit_breaker, system
@@ -22,19 +23,20 @@ This document describes the comprehensive security and privacy features implemen
 - HTTP middleware for automatic request logging
 
 **API**:
+
 ```typescript
 // Log an event
 await auditLog.log('critical', 'security', 'Unauthorized access attempt', {
   userId: 'user123',
   ipAddress: '192.168.1.1',
-  details: { resource: 'sensitive-file.txt' }
+  details: { resource: 'sensitive-file.txt' },
 });
 
 // Query logs
 const logs = await auditLog.query({
   startDate: new Date('2024-01-01'),
   level: 'critical',
-  category: 'security'
+  category: 'security',
 });
 
 // Export logs
@@ -50,12 +52,14 @@ const stats = await auditLog.getStatistics();
 **Purpose**: Implements granular access control for files and archives.
 
 **Roles**:
+
 - **Reader**: Can read and export files
 - **Editor**: Can read, write, export, and share files
 - **Owner**: Full control including permission management
 - **Admin**: System-level access
 
 **Permissions**:
+
 - `read`: View file contents
 - `write`: Modify file contents
 - `delete`: Remove files
@@ -65,15 +69,10 @@ const stats = await auditLog.getStatistics();
 - `view_audit_logs`: Access audit logs
 
 **API**:
+
 ```typescript
 // Check permission
-const result = await rbac.canAccess(
-  fileId,
-  'file',
-  userId,
-  'write',
-  context
-);
+const result = await rbac.canAccess(fileId, 'file', userId, 'write', context);
 
 // Grant role
 await rbac.grantRole(fileId, targetUserId, 'editor', grantedBy);
@@ -90,6 +89,7 @@ const preview = rbac.createMaskedPreview(content, 500);
 **Purpose**: Provides comprehensive notification capabilities across multiple channels.
 
 **Channels**:
+
 - In-app notifications with real-time updates
 - Email notifications
 - Webhook/HTTP POST notifications
@@ -97,6 +97,7 @@ const preview = rbac.createMaskedPreview(content, 500);
 - Browser push notifications
 
 **Features**:
+
 - Priority-based notifications (low, medium, high, critical)
 - Automatic escalation for unacknowledged critical alerts
 - Snooze functionality with configurable duration
@@ -105,6 +106,7 @@ const preview = rbac.createMaskedPreview(content, 500);
 - Statistics and reporting
 
 **API**:
+
 ```typescript
 // Send notification
 await notificationService.send(
@@ -126,7 +128,7 @@ await notificationService.snooze(notificationId, 60, userId);
 notificationService.configure({
   channels: ['in-app', 'email', 'slack'],
   slackWebhookUrl: 'https://hooks.slack.com/...',
-  autoEscalateAfter: 15 // minutes
+  autoEscalateAfter: 15, // minutes
 });
 ```
 
@@ -135,6 +137,7 @@ notificationService.configure({
 **Purpose**: Provides extensible plugin architecture for custom functionality.
 
 **Plugin Types**:
+
 - `scanner`: Security vulnerability scanners
 - `format-handler`: Custom file format parsers
 - `notification-channel`: Additional notification channels
@@ -143,6 +146,7 @@ notificationService.configure({
 - `validator`: Data validators
 
 **Features**:
+
 - Dynamic plugin registration and unregistration
 - Dependency management
 - Priority-based execution
@@ -151,6 +155,7 @@ notificationService.configure({
 - Plugin statistics and monitoring
 
 **API**:
+
 ```typescript
 // Register a scanner plugin
 const plugin: ScannerPlugin = {
@@ -162,18 +167,24 @@ const plugin: ScannerPlugin = {
     description: 'Scans for custom vulnerabilities',
     author: 'Security Team',
     enabled: true,
-    priority: 10
+    priority: 10,
   },
-  initialize: async () => { /* setup */ },
-  execute: async (context) => { /* scan logic */ },
-  scan: async (files) => { /* return scan results */ }
+  initialize: async () => {
+    /* setup */
+  },
+  execute: async context => {
+    /* scan logic */
+  },
+  scan: async files => {
+    /* return scan results */
+  },
 };
 
 await pluginRegistry.register(plugin);
 
 // Execute all scanner plugins
 const results = await pluginRegistry.executeAll('scanner', {
-  files: uploadedFiles
+  files: uploadedFiles,
 });
 
 // Health check
@@ -187,6 +198,7 @@ const health = await pluginRegistry.healthCheck();
 **Purpose**: Unified, accessible badge and alert system.
 
 **Features**:
+
 - Severity levels: info, warning, critical, success
 - Full ARIA compliance
 - Keyboard navigation support
@@ -197,6 +209,7 @@ const health = await pluginRegistry.healthCheck();
 - Badge groups for compact display
 
 **Usage**:
+
 ```tsx
 // Simple badge
 <SecurityBadge
@@ -223,6 +236,7 @@ const health = await pluginRegistry.healthCheck();
 **Purpose**: Real-time notification display and management.
 
 **Features**:
+
 - Real-time notification updates
 - Filter by unread/all
 - Visual indicators for critical alerts
@@ -231,6 +245,7 @@ const health = await pluginRegistry.healthCheck();
 - Badge count on notification bell
 
 **Usage**:
+
 ```tsx
 <SecurityNotificationPanel />
 ```
@@ -280,6 +295,7 @@ const health = await pluginRegistry.healthCheck();
 ### 1. Vulnerability Scanner
 
 **Enhanced Features**:
+
 - Pattern-based detection for common vulnerabilities:
   - SQL Injection
   - Cross-Site Scripting (XSS)
@@ -297,6 +313,7 @@ const health = await pluginRegistry.healthCheck();
 ### 2. Privacy Shield
 
 **Features**:
+
 - Data redaction for sensitive information
 - User anonymization
 - Zero-knowledge mode
@@ -309,6 +326,7 @@ const health = await pluginRegistry.healthCheck();
 ### 3. Circuit Breaker
 
 **Features**:
+
 - Adaptive thresholds based on IP/session/user
 - Automatic state management
 - Health scoring
@@ -331,21 +349,25 @@ All security components follow WCAG 2.1 Level AA guidelines:
 ## Data Flow
 
 ### Audit Logging Flow
+
 ```
 Action → Audit Log → Signature Generation → Database Storage → Query API → Export
 ```
 
 ### RBAC Flow
+
 ```
 User Action → Permission Check → Role Verification → Audit Log → Allow/Deny → Response
 ```
 
 ### Notification Flow
+
 ```
 Event → Notification Creation → Multi-Channel Dispatch → User Display → Acknowledge/Snooze → Audit Log
 ```
 
 ### Plugin Execution Flow
+
 ```
 Register → Initialize → Execute → Health Check → Results → Cleanup
 ```
@@ -381,7 +403,7 @@ notificationService.configure({
   webhookUrl: process.env.WEBHOOK_URL,
   minPriority: 'warning',
   autoEscalateAfter: 15,
-  maxEscalations: 3
+  maxEscalations: 3,
 });
 ```
 
@@ -434,6 +456,7 @@ notificationService.configure({
 ## Support
 
 For questions or issues:
+
 - Check the inline JSDoc documentation in each module
 - Review the API documentation at /api/v1/docs
 - Consult the audit logs for troubleshooting

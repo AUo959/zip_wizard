@@ -1,20 +1,20 @@
 /**
  * Plugin Registry System
- * 
+ *
  * Provides extensible plugin architecture for:
  * - Security scanners
  * - File format handlers
  * - Notification channels
  * - Authentication providers
  * - Policy engines
- * 
+ *
  * Plugins can be registered at runtime and are automatically integrated
  * into the security and processing pipeline.
  */
 
 import { auditLog } from './audit-log';
 
-export type PluginType = 
+export type PluginType =
   | 'scanner'
   | 'format-handler'
   | 'notification-channel'
@@ -137,8 +137,8 @@ class PluginRegistry {
           pluginId: id,
           pluginName: plugin.metadata.name,
           pluginType: type,
-          pluginVersion: plugin.metadata.version
-        }
+          pluginVersion: plugin.metadata.version,
+        },
       });
 
       console.log(`✅ Plugin registered: ${plugin.metadata.name} v${plugin.metadata.version}`);
@@ -150,8 +150,8 @@ class PluginRegistry {
       await auditLog.log('critical', 'system', 'Plugin registration failed', {
         details: {
           pluginId: id,
-          error: formatError(error)
-        }
+          error: formatError(error),
+        },
       });
 
       throw new Error(`Failed to initialize plugin '${id}': ${formatError(error)}`);
@@ -168,14 +168,15 @@ class PluginRegistry {
     }
 
     // Check if other plugins depend on this one
-    const dependents = Array.from(this.plugins.values())
-      .filter(p => p.metadata.dependencies?.includes(pluginId));
+    const dependents = Array.from(this.plugins.values()).filter(p =>
+      p.metadata.dependencies?.includes(pluginId)
+    );
 
     if (dependents.length > 0) {
       throw new Error(
-        `Cannot unregister plugin '${pluginId}'. Other plugins depend on it: ${
-          dependents.map(p => p.metadata.name).join(', ')
-        }`
+        `Cannot unregister plugin '${pluginId}'. Other plugins depend on it: ${dependents
+          .map(p => p.metadata.name)
+          .join(', ')}`
       );
     }
 
@@ -193,8 +194,8 @@ class PluginRegistry {
     await auditLog.log('info', 'system', 'Plugin unregistered', {
       details: {
         pluginId,
-        pluginName: plugin.metadata.name
-      }
+        pluginName: plugin.metadata.name,
+      },
     });
 
     console.log(`❌ Plugin unregistered: ${plugin.metadata.name}`);
@@ -251,7 +252,7 @@ class PluginRegistry {
     plugin.metadata.enabled = true;
 
     await auditLog.log('info', 'system', 'Plugin enabled', {
-      details: { pluginId, pluginName: plugin.metadata.name }
+      details: { pluginId, pluginName: plugin.metadata.name },
     });
   }
 
@@ -267,7 +268,7 @@ class PluginRegistry {
     plugin.metadata.enabled = false;
 
     await auditLog.log('info', 'system', 'Plugin disabled', {
-      details: { pluginId, pluginName: plugin.metadata.name }
+      details: { pluginId, pluginName: plugin.metadata.name },
     });
   }
 
@@ -287,7 +288,7 @@ class PluginRegistry {
 
         if (!healthy) {
           await auditLog.log('warning', 'system', 'Plugin health check failed', {
-            details: { pluginId: id, pluginName: plugin.metadata.name }
+            details: { pluginId: id, pluginName: plugin.metadata.name },
           });
         }
       } catch (error) {
@@ -295,8 +296,8 @@ class PluginRegistry {
         await auditLog.log('critical', 'system', 'Plugin health check error', {
           details: {
             pluginId: id,
-            error: formatError(error)
-          }
+            error: formatError(error),
+          },
         });
       }
     }
@@ -335,8 +336,8 @@ class PluginRegistry {
         name: p.metadata.name,
         type: p.metadata.type,
         version: p.metadata.version,
-        enabled: p.metadata.enabled
-      }))
+        enabled: p.metadata.enabled,
+      })),
     };
   }
 
@@ -358,14 +359,14 @@ class PluginRegistry {
         results.push({
           pluginId: plugin.metadata.id,
           result: null,
-          error: error instanceof Error ? error : new Error('Unknown error')
+          error: error instanceof Error ? error : new Error('Unknown error'),
         });
 
         await auditLog.log('warning', 'system', 'Plugin execution failed', {
           details: {
             pluginId: plugin.metadata.id,
-            error: formatError(error)
-          }
+            error: formatError(error),
+          },
         });
       }
     }
@@ -398,6 +399,6 @@ export function createPlugin<T = unknown>(
     initialize: initializer || (async () => {}),
     execute: executor,
     cleanup: cleaner,
-    healthCheck: async () => true
+    healthCheck: async () => true,
   };
 }

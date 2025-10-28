@@ -1,9 +1,9 @@
 /**
  * Immutable Audit Log Service
- * 
+ *
  * Provides append-only, cryptographically signed audit logging for all security-critical operations.
  * All logs are timestamped, signed, and cannot be edited or deleted.
- * 
+ *
  * Features:
  * - Immutable append-only storage
  * - Cryptographic signing with HMAC-SHA256
@@ -17,11 +17,11 @@ import { db } from './db';
 import { sql } from 'drizzle-orm';
 
 export type AuditLogLevel = 'info' | 'warning' | 'critical';
-export type AuditLogCategory = 
-  | 'access' 
-  | 'modification' 
-  | 'security' 
-  | 'privacy' 
+export type AuditLogCategory =
+  | 'access'
+  | 'modification'
+  | 'security'
+  | 'privacy'
   | 'authentication'
   | 'authorization'
   | 'export'
@@ -78,13 +78,10 @@ class AuditLogService {
       userId: entry.userId,
       resource: entry.resource,
       resourceId: entry.resourceId,
-      details: entry.details
+      details: entry.details,
     });
 
-    return crypto
-      .createHmac('sha256', this.secretKey)
-      .update(data)
-      .digest('hex');
+    return crypto.createHmac('sha256', this.secretKey).update(data).digest('hex');
   }
 
   /**
@@ -128,14 +125,14 @@ class AuditLogService {
       ipAddress: context.ipAddress,
       resource: context.resource,
       resourceId: context.resourceId,
-      details: context.details || {}
+      details: context.details || {},
     };
 
     const signature = this.generateSignature(entryWithoutSignature);
 
     const entry: AuditLogEntry = {
       ...entryWithoutSignature,
-      signature
+      signature,
     };
 
     // Store in database (ensure table exists)
@@ -208,7 +205,7 @@ class AuditLogService {
         resource: row.resource,
         resourceId: row.resource_id,
         details: typeof row.details === 'string' ? JSON.parse(row.details) : row.details,
-        signature: row.signature
+        signature: row.signature,
       }));
     } catch (error) {
       console.error('Error querying audit logs:', error);
@@ -229,12 +226,24 @@ class AuditLogService {
    */
   async exportCSV(filters: AuditLogQuery): Promise<string> {
     const logs = await this.query(filters);
-    
+
     if (logs.length === 0) {
       return 'timestamp,level,category,action,userId,resource,resourceId,signature\n';
     }
 
-    const headers = ['timestamp', 'level', 'category', 'action', 'userId', 'sessionId', 'ipAddress', 'resource', 'resourceId', 'details', 'signature'];
+    const headers = [
+      'timestamp',
+      'level',
+      'category',
+      'action',
+      'userId',
+      'sessionId',
+      'ipAddress',
+      'resource',
+      'resourceId',
+      'details',
+      'signature',
+    ];
     const csvLines = [headers.join(',')];
 
     logs.forEach(log => {
@@ -269,15 +278,13 @@ class AuditLogService {
       byCategory[log.category] = (byCategory[log.category] || 0) + 1;
     });
 
-    const recentCritical = logs
-      .filter(log => log.level === 'critical')
-      .slice(0, 10);
+    const recentCritical = logs.filter(log => log.level === 'critical').slice(0, 10);
 
     return {
       total: logs.length,
       byLevel: byLevel as Record<AuditLogLevel, number>,
       byCategory: byCategory as Record<AuditLogCategory, number>,
-      recentCritical
+      recentCritical,
     };
   }
 }
@@ -293,19 +300,22 @@ export function auditLogMiddleware(req: any, res: any, next: any) {
 
   res.on('finish', () => {
     const duration = Date.now() - start;
-    const level: AuditLogLevel = res.statusCode >= 500 ? 'critical' : res.statusCode >= 400 ? 'warning' : 'info';
+    const level: AuditLogLevel =
+      res.statusCode >= 500 ? 'critical' : res.statusCode >= 400 ? 'warning' : 'info';
 
-    auditLog.log(level, 'access', `${req.method} ${req.path}`, {
-      userId: req.user?.id,
-      sessionId: req.sessionID,
-      ipAddress: req.ip || req.connection.remoteAddress,
-      details: {
-        method: req.method,
-        path: req.path,
-        statusCode: res.statusCode,
-        duration
-      }
-    }).catch(err => console.error('Failed to log audit entry:', err));
+    auditLog
+      .log(level, 'access', `${req.method} ${req.path}`, {
+        userId: req.user?.id,
+        sessionId: req.sessionID,
+        ipAddress: req.ip || req.connection.remoteAddress,
+        details: {
+          method: req.method,
+          path: req.path,
+          statusCode: res.statusCode,
+          duration,
+        },
+      })
+      .catch(err => console.error('Failed to log audit entry:', err));
   });
 
   next();

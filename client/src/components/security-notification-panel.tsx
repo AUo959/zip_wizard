@@ -1,6 +1,6 @@
 /**
  * Security Notification Panel
- * 
+ *
  * Displays real-time security notifications with acknowledgment and snooze capabilities.
  * Integrates with the multi-channel notification system.
  */
@@ -21,7 +21,7 @@ import {
   Shield,
   Zap,
   Lock,
-  Activity
+  Activity,
 } from 'lucide-react';
 
 interface Notification {
@@ -49,7 +49,7 @@ export function SecurityNotificationPanel() {
     const handleNotification = (event: CustomEvent) => {
       const notification = event.detail as Notification;
       setNotifications(prev => [notification, ...prev]);
-      
+
       // Auto-show panel for critical notifications
       if (notification.priority === 'critical') {
         setShowPanel(true);
@@ -64,17 +64,13 @@ export function SecurityNotificationPanel() {
 
   const handleAcknowledge = useCallback(async (id: string) => {
     setNotifications(prev =>
-      prev.map(n =>
-        n.id === id
-          ? { ...n, acknowledged: true, acknowledgedAt: new Date() }
-          : n
-      )
+      prev.map(n => (n.id === id ? { ...n, acknowledged: true, acknowledgedAt: new Date() } : n))
     );
 
     // Call API to acknowledge
     try {
       await fetch(`/api/v1/security/notifications/${id}/acknowledge`, {
-        method: 'POST'
+        method: 'POST',
       });
     } catch (error) {
       console.error('Failed to acknowledge notification:', error);
@@ -83,21 +79,15 @@ export function SecurityNotificationPanel() {
 
   const handleSnooze = useCallback(async (id: string, durationHours: number) => {
     const snoozedUntil = new Date(Date.now() + durationHours * 60 * 60 * 1000);
-    
-    setNotifications(prev =>
-      prev.map(n =>
-        n.id === id
-          ? { ...n, snoozedUntil }
-          : n
-      )
-    );
+
+    setNotifications(prev => prev.map(n => (n.id === id ? { ...n, snoozedUntil } : n)));
 
     // Call API to snooze
     try {
       await fetch(`/api/v1/security/notifications/${id}/snooze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ durationMinutes: durationHours * 60 })
+        body: JSON.stringify({ durationMinutes: durationHours * 60 }),
       });
     } catch (error) {
       console.error('Failed to snooze notification:', error);
@@ -128,12 +118,12 @@ export function SecurityNotificationPanel() {
     return true;
   });
 
-  const unreadCount = notifications.filter(n => 
-    !n.acknowledged && (!n.snoozedUntil || n.snoozedUntil < new Date())
+  const unreadCount = notifications.filter(
+    n => !n.acknowledged && (!n.snoozedUntil || n.snoozedUntil < new Date())
   ).length;
 
-  const criticalCount = notifications.filter(n => 
-    n.priority === 'critical' && !n.acknowledged
+  const criticalCount = notifications.filter(
+    n => n.priority === 'critical' && !n.acknowledged
   ).length;
 
   return (
@@ -180,7 +170,7 @@ export function SecurityNotificationPanel() {
                 </Button>
               </div>
             </div>
-            
+
             {/* Filter Tabs */}
             <div className="flex gap-2 mt-3">
               <Button
@@ -212,14 +202,16 @@ export function SecurityNotificationPanel() {
                 </div>
               ) : (
                 <div className="space-y-2 p-4">
-                  {filteredNotifications.map((notification) => (
+                  {filteredNotifications.map(notification => (
                     <SecurityAlert
                       key={notification.id}
                       id={notification.id}
                       severity={
-                        notification.priority === 'critical' ? 'critical' :
-                        notification.priority === 'high' ? 'warning' :
-                        'info'
+                        notification.priority === 'critical'
+                          ? 'critical'
+                          : notification.priority === 'high'
+                            ? 'warning'
+                            : 'info'
                       }
                       title={
                         <>
@@ -266,10 +258,10 @@ export function SecurityNotificationPanel() {
                     onClick={() => {
                       const exportData = {
                         exportedAt: new Date().toISOString(),
-                        notifications: filteredNotifications
+                        notifications: filteredNotifications,
                       };
-                      const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
-                        type: 'application/json' 
+                      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+                        type: 'application/json',
                       });
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement('a');

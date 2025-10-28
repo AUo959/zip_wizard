@@ -1,6 +1,6 @@
 /**
  * Security and Audit API Routes
- * 
+ *
  * Provides endpoints for:
  * - Audit log querying and export
  * - Notification management
@@ -35,21 +35,21 @@ router.get('/audit-logs', async (req, res) => {
       userId: req.query.userId as string,
       resourceId: req.query.resourceId as string,
       limit: req.query.limit ? parseInt(req.query.limit as string) : 100,
-      offset: req.query.offset ? parseInt(req.query.offset as string) : 0
+      offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
     };
 
     const logs = await auditLog.query(filters);
-    
+
     res.json({
       logs,
       count: logs.length,
-      filters
+      filters,
     });
   } catch (error) {
     console.error('Error querying audit logs:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to query audit logs',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -68,25 +68,31 @@ router.get('/audit-logs/export', async (req, res) => {
       category: req.query.category as any,
       userId: req.query.userId as string,
       resourceId: req.query.resourceId as string,
-      limit: 10000
+      limit: 10000,
     };
 
     if (format === 'csv') {
       const csv = await auditLog.exportCSV(filters);
       res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', `attachment; filename="audit-logs-${new Date().toISOString().split('T')[0]}.csv"`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="audit-logs-${new Date().toISOString().split('T')[0]}.csv"`
+      );
       res.send(csv);
     } else {
       const json = await auditLog.exportJSON(filters);
       res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename="audit-logs-${new Date().toISOString().split('T')[0]}.json"`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="audit-logs-${new Date().toISOString().split('T')[0]}.json"`
+      );
       res.send(json);
     }
   } catch (error) {
     console.error('Error exporting audit logs:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to export audit logs',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -99,17 +105,17 @@ router.get('/audit-logs/statistics', async (req, res) => {
   try {
     const filters = {
       startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
-      endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined
+      endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
     };
 
     const stats = await auditLog.getStatistics(filters);
-    
+
     res.json(stats);
   } catch (error) {
     console.error('Error getting audit log statistics:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get statistics',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -121,20 +127,20 @@ router.get('/audit-logs/statistics', async (req, res) => {
 router.get('/notifications', async (req, res) => {
   try {
     const unacknowledgedOnly = req.query.unacknowledged === 'true';
-    
-    const notifications = unacknowledgedOnly 
+
+    const notifications = unacknowledgedOnly
       ? notificationService.getUnacknowledged()
       : notificationService.getAll();
-    
+
     res.json({
       notifications,
-      statistics: notificationService.getStatistics()
+      statistics: notificationService.getStatistics(),
     });
   } catch (error) {
     console.error('Error getting notifications:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get notifications',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -149,13 +155,13 @@ router.post('/notifications/:id/acknowledge', async (req: AuthRequest, res) => {
     const userId = req.user?.id || 'anonymous';
 
     await notificationService.acknowledge(id, userId);
-    
+
     res.json({ success: true, message: 'Notification acknowledged' });
   } catch (error) {
     console.error('Error acknowledging notification:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to acknowledge notification',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -175,17 +181,17 @@ router.post('/notifications/:id/snooze', async (req: AuthRequest, res) => {
     }
 
     await notificationService.snooze(id, durationMinutes, userId);
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       message: 'Notification snoozed',
-      snoozedUntil: new Date(Date.now() + durationMinutes * 60 * 1000)
+      snoozedUntil: new Date(Date.now() + durationMinutes * 60 * 1000),
     });
   } catch (error) {
     console.error('Error snoozing notification:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to snooze notification',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -207,23 +213,17 @@ router.post('/check-permission', async (req: AuthRequest, res) => {
       userId,
       sessionId: req.sessionID,
       ipAddress: req.ip || req.connection.remoteAddress,
-      userAgent: req.headers['user-agent']
+      userAgent: req.headers['user-agent'],
     };
 
-    const result = await rbac.canAccess(
-      resourceId,
-      resourceType,
-      userId,
-      permission,
-      context
-    );
-    
+    const result = await rbac.canAccess(resourceId, resourceType, userId, permission, context);
+
     res.json(result);
   } catch (error) {
     console.error('Error checking permission:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to check permission',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -245,19 +245,19 @@ router.post('/report-event', async (req: AuthRequest, res) => {
       userId,
       sessionId: req.sessionID,
       ipAddress: req.ip || req.connection.remoteAddress,
-      details
+      details,
     });
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       message: 'Security event logged',
-      logId: logEntry.id
+      logId: logEntry.id,
     });
   } catch (error) {
     console.error('Error reporting security event:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to report security event',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -273,21 +273,23 @@ router.get('/permissions/:resourceId', async (req: AuthRequest, res) => {
 
     const permissions = rbac.getResourcePermissions(resourceId);
     const userRole = rbac.getUserRole(resourceId, userId);
-    
+
     res.json({
       resourceId,
       userRole,
-      permissions: permissions ? {
-        resourceType: permissions.resourceType,
-        ownerId: permissions.ownerId,
-        publicRole: permissions.publicRole
-      } : null
+      permissions: permissions
+        ? {
+            resourceType: permissions.resourceType,
+            ownerId: permissions.ownerId,
+            publicRole: permissions.publicRole,
+          }
+        : null,
     });
   } catch (error) {
     console.error('Error getting permissions:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get permissions',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });

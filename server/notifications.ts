@@ -1,6 +1,6 @@
 /**
  * Multi-Channel Notification System
- * 
+ *
  * Provides notification capabilities for security events, circuit breaker trips,
  * and other critical system events. Supports multiple channels:
  * - In-app notifications
@@ -13,11 +13,11 @@ import { auditLog } from './audit-log';
 
 export type NotificationChannel = 'in-app' | 'email' | 'webhook' | 'slack' | 'browser';
 export type NotificationPriority = 'low' | 'medium' | 'high' | 'critical';
-export type NotificationCategory = 
-  | 'security' 
-  | 'circuit_breaker' 
-  | 'vulnerability' 
-  | 'privacy' 
+export type NotificationCategory =
+  | 'security'
+  | 'circuit_breaker'
+  | 'vulnerability'
+  | 'privacy'
   | 'system'
   | 'audit';
 
@@ -60,7 +60,7 @@ class NotificationService {
       channels: ['in-app'],
       minPriority: 'low',
       autoEscalateAfter: 15, // 15 minutes
-      maxEscalations: 3
+      maxEscalations: 3,
     };
 
     // Request browser notification permission
@@ -100,7 +100,7 @@ class NotificationService {
       userId,
       acknowledged: false,
       escalated: false,
-      escalationCount: 0
+      escalationCount: 0,
     };
 
     // Store notification
@@ -117,8 +117,8 @@ class NotificationService {
           notificationId: id,
           title,
           category,
-          priority
-        }
+          priority,
+        },
       }
     );
 
@@ -128,7 +128,7 @@ class NotificationService {
       this.sendEmail(notification),
       this.sendWebhook(notification),
       this.sendSlack(notification),
-      this.sendBrowser(notification)
+      this.sendBrowser(notification),
     ]);
 
     // Setup auto-escalation if critical or high priority
@@ -150,9 +150,11 @@ class NotificationService {
 
     // Dispatch custom event for UI components to listen to
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('security-notification', {
-        detail: notification
-      }));
+      window.dispatchEvent(
+        new CustomEvent('security-notification', {
+          detail: notification,
+        })
+      );
     }
   }
 
@@ -167,7 +169,7 @@ class NotificationService {
       to: this.config.emailRecipients,
       subject: `[${notification.priority.toUpperCase()}] ${notification.title}`,
       body: notification.message,
-      details: notification.details
+      details: notification.details,
     });
   }
 
@@ -187,8 +189,8 @@ class NotificationService {
           category: notification.category,
           title: notification.title,
           message: notification.message,
-          details: notification.details
-        })
+          details: notification.details,
+        }),
       });
 
       if (!response.ok) {
@@ -209,7 +211,7 @@ class NotificationService {
       low: '#36a64f',
       medium: '#ff9900',
       high: '#ff6600',
-      critical: '#ff0000'
+      critical: '#ff0000',
     };
 
     try {
@@ -217,31 +219,33 @@ class NotificationService {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          attachments: [{
-            color: colorMap[notification.priority],
-            title: notification.title,
-            text: notification.message,
-            fields: [
-              {
-                title: 'Priority',
-                value: notification.priority.toUpperCase(),
-                short: true
-              },
-              {
-                title: 'Category',
-                value: notification.category,
-                short: true
-              },
-              {
-                title: 'Time',
-                value: notification.timestamp.toLocaleString(),
-                short: true
-              }
-            ],
-            footer: 'ZipWiz Security System',
-            ts: Math.floor(notification.timestamp.getTime() / 1000)
-          }]
-        })
+          attachments: [
+            {
+              color: colorMap[notification.priority],
+              title: notification.title,
+              text: notification.message,
+              fields: [
+                {
+                  title: 'Priority',
+                  value: notification.priority.toUpperCase(),
+                  short: true,
+                },
+                {
+                  title: 'Category',
+                  value: notification.category,
+                  short: true,
+                },
+                {
+                  title: 'Time',
+                  value: notification.timestamp.toLocaleString(),
+                  short: true,
+                },
+              ],
+              footer: 'ZipWiz Security System',
+              ts: Math.floor(notification.timestamp.getTime() / 1000),
+            },
+          ],
+        }),
       });
 
       if (!response.ok) {
@@ -265,7 +269,7 @@ class NotificationService {
         body: notification.message,
         icon: '/icon-security.png',
         tag: notification.id,
-        requireInteraction: notification.priority === 'critical'
+        requireInteraction: notification.priority === 'critical',
       });
 
       browserNotif.onclick = () => {
@@ -284,11 +288,14 @@ class NotificationService {
     if (!this.config.autoEscalateAfter || !this.config.maxEscalations) return;
     if (notification.escalationCount >= this.config.maxEscalations) return;
 
-    const timer = setTimeout(async () => {
-      if (!notification.acknowledged && !notification.snoozedUntil) {
-        await this.escalate(notification.id);
-      }
-    }, this.config.autoEscalateAfter * 60 * 1000);
+    const timer = setTimeout(
+      async () => {
+        if (!notification.acknowledged && !notification.snoozedUntil) {
+          await this.escalate(notification.id);
+        }
+      },
+      this.config.autoEscalateAfter * 60 * 1000
+    );
 
     this.escalationTimers.set(notification.id, timer);
   }
@@ -309,8 +316,8 @@ class NotificationService {
       details: {
         notificationId,
         escalationCount: notification.escalationCount,
-        title: notification.title
-      }
+        title: notification.title,
+      },
     });
 
     // Send escalation notification
@@ -322,7 +329,7 @@ class NotificationService {
       {
         ...notification.details,
         originalNotificationId: notificationId,
-        escalationCount: notification.escalationCount
+        escalationCount: notification.escalationCount,
       },
       notification.userId
     );
@@ -356,8 +363,8 @@ class NotificationService {
       userId,
       details: {
         notificationId,
-        title: notification.title
-      }
+        title: notification.title,
+      },
     });
   }
 
@@ -378,12 +385,15 @@ class NotificationService {
     }
 
     // Setup new timer for after snooze period
-    setTimeout(() => {
-      notification.snoozedUntil = undefined;
-      if (!notification.acknowledged) {
-        this.setupAutoEscalation(notification);
-      }
-    }, durationMinutes * 60 * 1000);
+    setTimeout(
+      () => {
+        notification.snoozedUntil = undefined;
+        if (!notification.acknowledged) {
+          this.setupAutoEscalation(notification);
+        }
+      },
+      durationMinutes * 60 * 1000
+    );
 
     // Log snooze
     await auditLog.log('info', 'security', 'Notification snoozed', {
@@ -391,8 +401,8 @@ class NotificationService {
       details: {
         notificationId,
         durationMinutes,
-        title: notification.title
-      }
+        title: notification.title,
+      },
     });
   }
 
@@ -400,8 +410,8 @@ class NotificationService {
    * Get all notifications
    */
   getAll(): Notification[] {
-    return Array.from(this.notifications.values()).sort((a, b) => 
-      b.timestamp.getTime() - a.timestamp.getTime()
+    return Array.from(this.notifications.values()).sort(
+      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
     );
   }
 
@@ -442,7 +452,7 @@ class NotificationService {
       unacknowledged: all.filter(n => !n.acknowledged).length,
       critical: all.filter(n => n.priority === 'critical').length,
       escalated: all.filter(n => n.escalated).length,
-      byCategory
+      byCategory,
     };
   }
 }

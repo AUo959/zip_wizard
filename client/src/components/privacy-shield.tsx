@@ -66,20 +66,20 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
         timestamp: new Date(Date.now() - 1000 * 60 * 5),
         action: 'Privacy Shield Activated',
         user: 'System',
-        details: 'All privacy protection features enabled'
+        details: 'All privacy protection features enabled',
       },
       {
         timestamp: new Date(Date.now() - 1000 * 60 * 15),
         action: 'Security Scan Completed',
         user: 'User',
-        details: '5 files scanned, 2 issues found'
+        details: '5 files scanned, 2 issues found',
       },
       {
         timestamp: new Date(Date.now() - 1000 * 60 * 30),
         action: 'Data Redaction Applied',
         user: 'System',
-        details: 'Sensitive data redacted in processing logs'
-      }
+        details: 'Sensitive data redacted in processing logs',
+      },
     ];
 
     const exportData = {
@@ -87,7 +87,7 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
       privacySettings: settings,
       complianceScore,
       auditLog: auditData,
-      scanResults
+      scanResults,
     };
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });

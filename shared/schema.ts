@@ -84,19 +84,19 @@ export const fileMutations = pgTable('file_mutations', {
 });
 
 // Audit logs table - immutable, append-only
-export const auditLogs = pgTable("audit_logs", {
-  id: varchar("id").primaryKey(),
-  timestamp: timestamp("timestamp").notNull(),
-  level: text("level").notNull(), // 'info' | 'warning' | 'critical'
-  category: text("category").notNull(), // 'access' | 'modification' | 'security' | 'privacy' | etc.
-  action: text("action").notNull(),
-  userId: varchar("user_id"),
-  sessionId: varchar("session_id"),
-  ipAddress: text("ip_address"),
-  resource: text("resource"),
-  resourceId: varchar("resource_id"),
-  details: json("details"),
-  signature: text("signature").notNull(), // HMAC-SHA256 signature for tamper-proof logging
+export const auditLogs = pgTable('audit_logs', {
+  id: varchar('id').primaryKey(),
+  timestamp: timestamp('timestamp').notNull(),
+  level: text('level').notNull(), // 'info' | 'warning' | 'critical'
+  category: text('category').notNull(), // 'access' | 'modification' | 'security' | 'privacy' | etc.
+  action: text('action').notNull(),
+  userId: varchar('user_id'),
+  sessionId: varchar('session_id'),
+  ipAddress: text('ip_address'),
+  resource: text('resource'),
+  resourceId: varchar('resource_id'),
+  details: json('details'),
+  signature: text('signature').notNull(), // HMAC-SHA256 signature for tamper-proof logging
 });
 
 export const insertArchiveSchema = createInsertSchema(archives).omit({

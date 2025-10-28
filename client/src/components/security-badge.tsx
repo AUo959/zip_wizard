@@ -1,6 +1,6 @@
 /**
  * Unified Security Badge Component
- * 
+ *
  * Provides accessible, keyboard-navigable security badges and alerts.
  * Supports Info, Warning, and Critical severity levels.
  * All badges are ARIA-compliant and screen reader compatible.
@@ -10,15 +10,15 @@ import React, { useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { 
-  Info, 
-  AlertTriangle, 
-  AlertCircle, 
-  CheckCircle, 
-  X, 
+import {
+  Info,
+  AlertTriangle,
+  AlertCircle,
+  CheckCircle,
+  X,
   Bell,
   BellOff,
-  ExternalLink 
+  ExternalLink,
 } from 'lucide-react';
 import {
   Dialog,
@@ -72,28 +72,28 @@ function getSeverityColors(severity: SecuritySeverity): {
         bg: 'bg-red-100 dark:bg-red-900/20',
         text: 'text-red-800 dark:text-red-300',
         border: 'border-red-300 dark:border-red-700',
-        icon: 'text-red-600 dark:text-red-400'
+        icon: 'text-red-600 dark:text-red-400',
       };
     case 'warning':
       return {
         bg: 'bg-yellow-100 dark:bg-yellow-900/20',
         text: 'text-yellow-800 dark:text-yellow-300',
         border: 'border-yellow-300 dark:border-yellow-700',
-        icon: 'text-yellow-600 dark:text-yellow-400'
+        icon: 'text-yellow-600 dark:text-yellow-400',
       };
     case 'success':
       return {
         bg: 'bg-green-100 dark:bg-green-900/20',
         text: 'text-green-800 dark:text-green-300',
         border: 'border-green-300 dark:border-green-700',
-        icon: 'text-green-600 dark:text-green-400'
+        icon: 'text-green-600 dark:text-green-400',
       };
     default: // info
       return {
         bg: 'bg-blue-100 dark:bg-blue-900/20',
         text: 'text-blue-800 dark:text-blue-300',
         border: 'border-blue-300 dark:border-blue-700',
-        icon: 'text-blue-600 dark:text-blue-400'
+        icon: 'text-blue-600 dark:text-blue-400',
       };
   }
 }
@@ -103,7 +103,7 @@ function getSeverityColors(severity: SecuritySeverity): {
  */
 function getSeverityIcon(severity: SecuritySeverity): React.ReactNode {
   const iconProps = { className: 'h-4 w-4', 'aria-hidden': true };
-  
+
   switch (severity) {
     case 'critical':
       return <AlertCircle {...iconProps} />;
@@ -127,7 +127,7 @@ export function SecurityBadge({
   onClick,
   className = '',
   showIcon = true,
-  pulse = false
+  pulse = false,
 }: SecurityBadgeProps) {
   const colors = getSeverityColors(severity);
   const icon = getSeverityIcon(severity);
@@ -136,9 +136,7 @@ export function SecurityBadge({
     <>
       {showIcon && <span className="mr-1">{icon}</span>}
       {label || severity.toUpperCase()}
-      {count !== undefined && count > 0 && (
-        <span className="ml-1 font-bold">({count})</span>
-      )}
+      {count !== undefined && count > 0 && <span className="ml-1 font-bold">({count})</span>}
     </>
   );
 
@@ -156,12 +154,16 @@ export function SecurityBadge({
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
-      onKeyDown={onClick ? (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      } : undefined}
+      onKeyDown={
+        onClick
+          ? e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
       aria-label={ariaLabel}
     >
       {badgeContent}
@@ -186,7 +188,7 @@ export function SecurityAlert({
   onDismiss,
   onSnooze,
   details,
-  canExport = true
+  canExport = true,
 }: SecurityAlertProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [showSnoozeDialog, setShowSnoozeDialog] = useState(false);
@@ -199,12 +201,15 @@ export function SecurityAlert({
     }
   }, [id, onDismiss]);
 
-  const handleSnooze = useCallback((hours: number) => {
-    if (onSnooze) {
-      onSnooze(id, hours);
-    }
-    setShowSnoozeDialog(false);
-  }, [id, onSnooze]);
+  const handleSnooze = useCallback(
+    (hours: number) => {
+      if (onSnooze) {
+        onSnooze(id, hours);
+      }
+      setShowSnoozeDialog(false);
+    },
+    [id, onSnooze]
+  );
 
   const handleExport = useCallback(() => {
     const exportData = {
@@ -213,9 +218,9 @@ export function SecurityAlert({
       title,
       description,
       timestamp: timestamp?.toISOString(),
-      details
+      details,
     };
-    
+
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -229,7 +234,7 @@ export function SecurityAlert({
 
   return (
     <>
-      <Alert 
+      <Alert
         className={`${colors.border} ${colors.bg} border-l-4`}
         role="alert"
         aria-live={severity === 'critical' ? 'assertive' : 'polite'}
@@ -238,7 +243,7 @@ export function SecurityAlert({
           <div className={colors.icon} aria-hidden="true">
             {icon}
           </div>
-          
+
           <div className="flex-1">
             <AlertTitle className={`${colors.text} font-semibold`}>
               {title}
@@ -248,9 +253,7 @@ export function SecurityAlert({
                 </span>
               )}
             </AlertTitle>
-            <AlertDescription className={`${colors.text} mt-2`}>
-              {description}
-            </AlertDescription>
+            <AlertDescription className={`${colors.text} mt-2`}>{description}</AlertDescription>
 
             <div className="flex flex-wrap gap-2 mt-4">
               {actionLabel && (
@@ -333,9 +336,7 @@ export function SecurityAlert({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Snooze Alert</DialogTitle>
-            <DialogDescription>
-              How long would you like to snooze this alert?
-            </DialogDescription>
+            <DialogDescription>How long would you like to snooze this alert?</DialogDescription>
           </DialogHeader>
           <div className="grid gap-2">
             <Button onClick={() => handleSnooze(1)}>1 hour</Button>
@@ -367,7 +368,7 @@ export function SecurityBadgeGroup({ badges, className = '' }: SecurityBadgeGrou
   if (badges.length === 0) return null;
 
   return (
-    <div 
+    <div
       className={`flex flex-wrap gap-2 ${className}`}
       role="group"
       aria-label="Security status indicators"

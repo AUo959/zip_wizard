@@ -22,28 +22,28 @@ jobs:
   navigation-tests:
     name: Navigation System Tests
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run navigation hooks tests
         run: npm run test:run -- client/src/__tests__/use-tab-navigation.test.ts
-      
+
       - name: Run enhanced view tabs tests
         run: npm run test:run -- client/src/__tests__/enhanced-view-tabs.test.tsx
-      
+
       - name: Generate coverage report
         run: npm run test:coverage -- client/src/__tests__/
-      
+
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
@@ -52,7 +52,7 @@ jobs:
           name: navigation-coverage
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      
+
       - name: Comment coverage on PR
         if: github.event_name == 'pull_request'
         uses: romeovs/lcov-reporter-action@v0.3.1
@@ -63,40 +63,40 @@ jobs:
   accessibility-check:
     name: Accessibility Tests
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run accessibility tests
         run: npm run test:run -- --grep="Accessibility"
-      
+
       - name: Check ARIA compliance
         run: npm run test:run -- --grep="ARIA"
 
   keyboard-navigation-check:
     name: Keyboard Navigation Tests
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run keyboard navigation tests
         run: npm run test:run -- --grep="Keyboard"
