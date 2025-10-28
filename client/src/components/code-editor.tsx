@@ -45,18 +45,6 @@ export default function CodeEditor({ file }: CodeEditorProps) {
     }
   };
 
-  const highlightCode = (code: string, _language: string) => {
-    // Simple syntax highlighting
-    return code
-      .replace(
-        /(import|export|const|let|var|function|class|if|else|for|while|return|try|catch)/g,
-        '<span class="text-blue-600 font-medium">$1</span>'
-      )
-      .replace(/('[^']*'|"[^"]*")/g, '<span class="text-green-600">$1</span>')
-      .replace(/(\/\/.*$|\/\*[\s\S]*?\*\/)/gm, '<span class="text-gray-500 italic">$1</span>')
-      .replace(/(\d+)/g, '<span class="text-orange-600">$1</span>');
-  };
-
   if (!file.content && file.isDirectory !== 'true') {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-500">
@@ -130,13 +118,7 @@ export default function CodeEditor({ file }: CodeEditorProps) {
           {/* Code Content */}
           <div className="flex-1 font-mono text-sm p-4 overflow-auto leading-6">
             <pre>
-              <code
-                dangerouslySetInnerHTML={{
-                  __html: file.language
-                    ? highlightCode(file.content || '', file.language)
-                    : file.content || '',
-                }}
-              />
+              <code>{file.content || ''}</code>
             </pre>
           </div>
         </div>

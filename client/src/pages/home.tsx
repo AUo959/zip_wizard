@@ -79,8 +79,21 @@ import {
   formatShortcut,
 } from '@/hooks/use-keyboard-shortcuts';
 import type { Archive as ArchiveType, File } from '@shared/schema';
+import type { FileNode } from '@shared/archive-types';
 import { type ViewType, ALL_VIEWS, VIEW_METADATA } from '@shared/views';
 import { EnhancedViewTabs } from '@/components/enhanced-view-tabs';
+
+/**
+ * Convert database File to FileNode format
+ */
+const fileToNode = (file: File): FileNode => ({
+  id: file.id,
+  name: file.name,
+  type: file.isDirectory === 'true' ? 'folder' : 'file',
+  size: file.size,
+  extension: file.extension || undefined,
+  path: file.path,
+});
 
 /**
  * Main application component for ZipWizard.
@@ -175,6 +188,9 @@ export default function Home() {
     queryKey: [`archives/${selectedArchive?.id}/files`],
     enabled: !!selectedArchive,
   });
+
+  // Convert selectedArchive to Archive type for components
+  const convertedArchive = selectedArchive ? convertSchemaArchive(selectedArchive) : undefined;
 
   const handleArchiveUploaded = () => {
     setShowUpload(false);
@@ -376,7 +392,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -400,7 +416,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -418,7 +434,7 @@ export default function Home() {
                   complexity: f.complexity || 'medium',
                 })) || []
               }
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
             />
           </div>
         );
@@ -435,7 +451,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -454,7 +470,7 @@ export default function Home() {
                   size: f.size,
                 })) || []
               }
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
             />
           </div>
         );
@@ -471,7 +487,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -501,7 +517,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -543,7 +559,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -573,7 +589,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -602,7 +618,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -631,7 +647,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -662,7 +678,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -672,7 +688,7 @@ export default function Home() {
             </div>
             <div className="p-6">
               <MemoryCompression
-                files={files}
+                files={files?.map(fileToNode) || []}
                 onCompressionApplied={result => console.log('Compression result:', result)}
               />
             </div>
@@ -691,7 +707,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -720,7 +736,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -730,7 +746,7 @@ export default function Home() {
             </div>
             <div className="p-6">
               <PatternRecognitionEngine
-                files={files}
+                files={files?.map(fileToNode) || []}
                 onPatternsDetected={patterns => console.log('Patterns detected:', patterns)}
                 onOrganizationSuggested={org => console.log('Organization suggested:', org)}
               />
@@ -750,7 +766,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -780,7 +796,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -790,9 +806,9 @@ export default function Home() {
             </div>
             <div className="p-6">
               <ArchiveComparison
-                archive1={selectedArchive}
+                archive1={convertedArchive}
                 archive2={undefined} // Will need a second archive selector
-                files1={files}
+                files1={files?.map(fileToNode) || []}
                 files2={[]}
                 onSelectFile={(file, side) => console.log('File selected:', file, side)}
               />
@@ -812,7 +828,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -842,7 +858,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -872,7 +888,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -882,7 +898,13 @@ export default function Home() {
             </div>
             <div className="p-6">
               <CodeMetricsAnalyzer
-                files={files}
+                files={files?.map(f => ({
+                  name: f.name,
+                  content: f.content || undefined,
+                  language: f.language || undefined,
+                  path: f.path,
+                  size: f.size,
+                }))}
                 onAnalysisComplete={metrics => console.log('Analysis complete:', metrics)}
                 onFileAnalyzed={(file, metrics) => console.log('File analyzed:', file, metrics)}
               />
@@ -902,7 +924,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
@@ -931,7 +953,7 @@ export default function Home() {
               onUploadClick={() => setShowUpload(true)}
               isDarkMode={isDarkMode}
               onDarkModeToggle={() => setIsDarkMode(!isDarkMode)}
-              selectedArchive={selectedArchive}
+              selectedArchive={convertedArchive}
               filesCount={files?.length}
             />
             <div className="flex items-center p-4 border-b">
