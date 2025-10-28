@@ -139,7 +139,7 @@ function analyzeChatContent(filename: string, content: string): any {
       },
     };
   } catch (_error) {
-    console.error('Error analyzing chat content:', error);
+    console.error('Error analyzing chat content:', _error);
     // Return safe defaults on error
     return {
       language: 'Text',
@@ -679,7 +679,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ archive, fileCount: processedFiles.length });
     } catch (_error) {
-      console.error('Upload error:', error);
+      console.error('Upload error:', _error);
       res.status(500).json({ message: 'Failed to process archive' });
     }
   });
@@ -700,7 +700,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         error: 'Failed to fetch archives',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: _error instanceof Error ? _error.message : 'Unknown error',
       });
     }
   });
@@ -882,11 +882,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'Archive deleted successfully',
       });
     } catch (_error) {
-      console.error('Delete archive error:', error);
+      console.error('Delete archive error:', _error);
       res.status(500).json({
         success: false,
         error: 'Failed to delete archive',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        details: _error instanceof Error ? _error.message : 'Unknown error',
       });
     }
   });
@@ -1021,7 +1021,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
       }
     } catch (_error) {
-      console.error('Symbolic command error:', error);
+      console.error('Symbolic command error:', _error);
       res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -1047,7 +1047,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
     } catch (_error) {
-      console.error('Archive optimization error:', error);
+      console.error('Archive optimization error:', _error);
       res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -1082,7 +1082,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
     } catch (_error) {
-      console.error('Privacy scan error:', error);
+      console.error('Privacy scan error:', _error);
       res.status(500).json({
         success: false,
         error: 'Internal server error',

@@ -13,7 +13,6 @@ import { CollaborationPanel, type ChangeLog, type Notification } from './Collabo
 import { ArchiveBreadcrumbs } from './ArchiveBreadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileNode } from '@/lib/archiveHandlers';
 import { UndoManager } from '@/lib/UndoManager';
 import {
@@ -22,7 +21,7 @@ import {
   type ErrorLog,
   type RecoveryLog,
 } from '@/lib/exportErrors';
-import { Undo2, Redo2, Download, FileDown, Settings, Play, Pause, X } from 'lucide-react';
+import { Undo2, Redo2, Download, FileDown, Play, Pause, X } from 'lucide-react';
 
 export interface ArchiveManagerProps {
   // Optional initial data

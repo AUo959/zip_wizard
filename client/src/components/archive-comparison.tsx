@@ -7,14 +7,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   GitCompare,
-  FileText,
   Plus,
   Minus,
   RefreshCw,
   ArrowRight,
   ArrowLeft,
   FileCode,
-  Folder,
   CheckCircle,
   XCircle,
   AlertCircle,

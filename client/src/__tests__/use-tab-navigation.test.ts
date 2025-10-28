@@ -4,7 +4,7 @@
  * Tests for useTabNavigation, useTabBadges, and useViewVisibility hooks
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import {
   useTabNavigation,
@@ -12,7 +12,7 @@ import {
   useViewVisibility,
   normalizeViews,
 } from '../hooks/use-tab-navigation';
-import { ALL_VIEWS, type ViewType } from '@shared/views';
+import { ALL_VIEWS } from '@shared/views';
 
 describe('useTabNavigation', () => {
   it('should initialize with current view', () => {

@@ -29,7 +29,6 @@ import {
   Wrench,
   MoreVertical,
   AlertTriangle,
-  CheckCircle,
   Loader2,
   FileText,
   AlertCircle,

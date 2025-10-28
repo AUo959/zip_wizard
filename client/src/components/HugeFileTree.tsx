@@ -8,7 +8,6 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { FileNode } from '@/lib/archiveHandlers';
 import { File, Folder, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 export interface HugeFileTreeProps {
   files: FileNode[];
