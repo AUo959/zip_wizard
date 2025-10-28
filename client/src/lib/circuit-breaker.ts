@@ -527,7 +527,7 @@ class PatternDetector {
   private historyWindow = 100;
   private patterns: Map<string, FailurePattern[]> = new Map();
 
-  detectPatterns(state: CircuitState, error: any): FailurePattern[] {
+  detectPatterns(state: CircuitState, _error: any): FailurePattern[] {
     const patterns: FailurePattern[] = [];
 
     // Detect periodic failures

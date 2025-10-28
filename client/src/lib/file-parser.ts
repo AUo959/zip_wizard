@@ -580,7 +580,7 @@ class DocxParser implements ParserCapabilities {
           ...metadata,
         },
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         name: 'name' in file ? file.name : 'document.docx',
         path: '',
@@ -878,7 +878,7 @@ class JsonParser implements ParserCapabilities {
 
     try {
       structure = JSON.parse(text);
-    } catch (error) {
+    } catch (_error) {
       isValid = false;
     }
 

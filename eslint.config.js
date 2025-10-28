@@ -58,6 +58,9 @@ export default [
         module: 'readonly',
         exports: 'readonly',
         Buffer: 'readonly',
+        NodeJS: 'readonly',
+        BufferEncoding: 'readonly',
+        crypto: 'readonly',
         // Vitest globals
         describe: 'readonly',
         it: 'readonly',
@@ -106,6 +109,10 @@ export default [
         Audio: 'readonly',
         AbortController: 'readonly',
         AbortSignal: 'readonly',
+        ReadableStream: 'readonly',
+        Performance: 'readonly',
+        performance: 'readonly',
+        Notification: 'readonly',
         // React (when used globally)
         React: 'readonly',
         JSX: 'readonly',

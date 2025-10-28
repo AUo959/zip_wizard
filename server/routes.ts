@@ -138,7 +138,7 @@ function analyzeChatContent(filename: string, content: string): any {
         wordCount: content.split(/\s+/).length,
       },
     };
-  } catch (error) {
+  } catch (_error) {
     console.error('Error analyzing chat content:', error);
     // Return safe defaults on error
     return {
@@ -510,7 +510,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const zip = new JSZip();
           contents = await zip.loadAsync(req.file.buffer);
-        } catch (error) {
+        } catch (_error) {
           // Not a valid ZIP, will process as single file
           console.log('Not a valid ZIP archive, processing as single file');
         }
@@ -678,7 +678,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({ archive, fileCount: processedFiles.length });
-    } catch (error) {
+    } catch (_error) {
       console.error('Upload error:', error);
       res.status(500).json({ message: 'Failed to process archive' });
     }
@@ -696,7 +696,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           version: API_CONFIG.version,
         },
       });
-    } catch (error) {
+    } catch (_error) {
       res.status(500).json({
         success: false,
         error: 'Failed to fetch archives',
@@ -724,7 +724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           analysis: analyzeFiles(files),
         },
       });
-    } catch (error) {
+    } catch (_error) {
       res.status(500).json({
         success: false,
         error: 'Failed to fetch archive',
@@ -766,7 +766,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           filters: { language, tag, complexity, search },
         },
       });
-    } catch (error) {
+    } catch (_error) {
       res.status(500).json({
         success: false,
         error: 'Failed to fetch files',
@@ -843,7 +843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `attachment; filename="${archive.name.replace('.zip', '')}-zipwizard-export.json"`
       );
       res.json(exportData);
-    } catch (error) {
+    } catch (_error) {
       res.status(500).json({
         success: false,
         error: 'Failed to export archive',
@@ -865,7 +865,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         data: file,
       });
-    } catch (error) {
+    } catch (_error) {
       res.status(500).json({
         success: false,
         error: 'Failed to fetch file',
@@ -881,7 +881,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         message: 'Archive deleted successfully',
       });
-    } catch (error) {
+    } catch (_error) {
       console.error('Delete archive error:', error);
       res.status(500).json({
         success: false,
@@ -908,7 +908,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           filters: { archiveId, type },
         },
       });
-    } catch (error) {
+    } catch (_error) {
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve observer events',
@@ -954,7 +954,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           activitySummary,
         },
       });
-    } catch (error) {
+    } catch (_error) {
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve status',
@@ -976,7 +976,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           limit: parseInt(limit as string),
         },
       });
-    } catch (error) {
+    } catch (_error) {
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve mutations',
@@ -1020,7 +1020,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             error: `Unknown symbolic command: ${symbol}`,
           });
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Symbolic command error:', error);
       res.status(500).json({
         success: false,
@@ -1046,7 +1046,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           eta: '2 minutes',
         },
       });
-    } catch (error) {
+    } catch (_error) {
       console.error('Archive optimization error:', error);
       res.status(500).json({
         success: false,
@@ -1081,7 +1081,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ],
         },
       });
-    } catch (error) {
+    } catch (_error) {
       console.error('Privacy scan error:', error);
       res.status(500).json({
         success: false,
