@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
-import { Brain, Zap, Eye, Focus, MinusCircle, Plus } from 'lucide-react';
+import { Brain, Zap, Eye, Focus, MinusCircle } from 'lucide-react';
 
 interface CognitiveLoadReducerProps {
   onLoadChange?: (load: number) => void;

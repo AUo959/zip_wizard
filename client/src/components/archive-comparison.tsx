@@ -14,7 +14,6 @@ import {
   ArrowLeft,
   FileCode,
   CheckCircle,
-  XCircle,
   AlertCircle,
   Download,
 } from 'lucide-react';

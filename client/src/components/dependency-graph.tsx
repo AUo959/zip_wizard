@@ -6,13 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Network,
-  GitBranch,
-  FileCode,
-  Folder,
   ZoomIn,
   ZoomOut,
   Maximize2,
-  Filter,
   Download,
   Eye,
   EyeOff,

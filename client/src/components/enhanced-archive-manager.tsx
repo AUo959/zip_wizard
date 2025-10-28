@@ -15,21 +15,16 @@ import {
 } from '@/components/ui/select';
 import {
   Archive,
-  FileText,
   Zap,
   TrendingUp,
-  Shield,
   Copy,
   Merge,
   Filter,
   Search,
-  BarChart3,
   Layers,
   HardDrive,
   Clock,
   AlertTriangle,
-  CheckCircle,
-  Settings,
 } from 'lucide-react';
 
 interface ArchiveAnalysis {

@@ -2,15 +2,11 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import {
   Search,
   Folder,
   FolderOpen,
   File as FileIcon,
-  Package,
-  Wrench,
-  TestTube,
 } from 'lucide-react';
 import type { Archive, File, FileTreeNode, AnalysisResult } from '@shared/schema';
 import { buildFileTree } from '@/lib/file-analyzer';

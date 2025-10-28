@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,17 +8,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   BarChart3,
-  Code,
   FileText,
   GitBranch,
-  TrendingUp,
-  TrendingDown,
   Activity,
   Zap,
   AlertTriangle,
   CheckCircle,
-  Info,
-  Hash,
   Clock,
   Layers,
 } from 'lucide-react';

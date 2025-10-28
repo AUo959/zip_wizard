@@ -9,12 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Search,
   Folder,
-  FolderOpen,
   File as FileIcon,
-  Filter,
   Code,
   Database,
-  Settings,
   Shield,
   Layers,
   TrendingUp,

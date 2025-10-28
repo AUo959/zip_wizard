@@ -1,4 +1,4 @@
-import { ChevronRight, Home, Archive } from 'lucide-react';
+import { ChevronRight, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { buildBreadcrumbs } from '@/lib/file-utils';
 

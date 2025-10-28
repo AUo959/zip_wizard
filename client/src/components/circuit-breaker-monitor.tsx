@@ -12,12 +12,9 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
-  TrendingUp,
-  TrendingDown,
   RefreshCw,
   Lock,
   Unlock,
-  Zap,
   Brain,
   Atom,
 } from 'lucide-react';
