@@ -125,7 +125,7 @@ export function CodeMetricsAnalyzer({
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [metrics, setMetrics] = useState<CodeMetrics | null>(null);
   const [selectedFile, setSelectedFile] = useState<FileMetrics | null>(null);
-  const [viewMode, setViewMode] = useState<'overview' | 'details' | 'trends'>('overview');
+  const [_viewMode, _setViewMode] = useState<'overview' | 'details' | 'trends'>('overview');
 
   const calculateCyclomaticComplexity = (content: string, _language: string): number => {
     let complexity = 1; // Base complexity

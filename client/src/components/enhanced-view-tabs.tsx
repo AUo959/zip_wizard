@@ -120,19 +120,28 @@ export function EnhancedViewTabs({
     initialVisibility[view] = { ...initialVisibility[view], disabled: true };
   });
 
-  const { badges, setBadge } = useTabBadges(initialBadges);
-  const { visibility, hideView, showView, disableView, enableView, getVisibleViews } =
-    useViewVisibility(initialVisibility);
+  const { badges, setBadge: _setBadge } = useTabBadges(initialBadges);
+  const {
+    visibility,
+    hideView: _hideView,
+    showView: _showView,
+    disableView: _disableView,
+    enableView: _enableView,
+    getVisibleViews: _getVisibleViews,
+  } = useViewVisibility(initialVisibility);
 
   // Get visible views using the normalized function
   const visibleViews = normalizeViews(ALL_VIEWS, visibility);
 
   // Keyboard navigation with view change callback
-  const { handleKeyDown, focusedIndex } = useTabNavigation(currentView, onViewChange, {
-    enableArrowKeys: true,
-    enableNumberKeys: true,
-    enableHomeEnd: true,
-    announceChanges: true,
+  const { handleKeyDown, focusedIndex: _focusedIndex } = useTabNavigation(
+    currentView,
+    onViewChange,
+    {
+      enableArrowKeys: true,
+      enableNumberKeys: true,
+      enableHomeEnd: true,
+      announceChanges: true,
   });
 
   // Detect mobile viewport

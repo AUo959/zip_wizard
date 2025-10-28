@@ -69,7 +69,7 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
   const [isPaused, setIsPaused] = useState(false);
 
   // Statistics
-  const [stats, setStats] = useState<ArchiveStats>({
+  const [stats, _setStats] = useState<ArchiveStats>({
     total: initialFiles.length,
     indexed: initialFiles.length,
     errors: 0,
@@ -83,8 +83,8 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // Error tracking
-  const [errors, setErrors] = useState<ErrorLog[]>([]);
-  const [recoveries, setRecoveries] = useState<RecoveryLog[]>([]);
+  const [errors, _setErrors] = useState<ErrorLog[]>([]);
+  const [recoveries, _setRecoveries] = useState<RecoveryLog[]>([]);
 
   // Undo manager
   const [undoManager] = useState(() => {
@@ -216,7 +216,7 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
   }, [undoManager, addNotification]);
 
   // Save state to undo manager
-  const saveState = useCallback(
+  const _saveState = useCallback(
     (description: string) => {
       if (!undoManager) return;
 
