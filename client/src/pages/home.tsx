@@ -460,12 +460,15 @@ export default function Home() {
 
       case "archive-manager":
         // Convert files to FileNode format for ArchiveManager
+        // Create a map for efficient file lookup
+        const fileMap = new Map(files?.map(f => [`${f.name}-${f.path}`, f]) || []);
+        
         const fileNodes = files?.map(f => ({
           name: f.name,
           path: f.path,
           size: f.size,
           isDirectory: f.isDirectory === "true",
-          modified: f.lastMutated || new Date(),
+          modified: f.lastMutated || undefined,
           error: undefined,
           metadata: {
             language: f.language,
@@ -492,8 +495,8 @@ export default function Home() {
               initialFiles={fileNodes}
               initialArchiveName={selectedArchive?.name || "Archive"}
               onFileSelect={(file) => {
-                // Find matching file in original files array
-                const matchedFile = files?.find(f => f.name === file.name && f.path === file.path);
+                // Use map for O(1) lookup instead of find
+                const matchedFile = fileMap.get(`${file.name}-${file.path}`);
                 if (matchedFile) {
                   setSelectedFile(matchedFile);
                 }
