@@ -1,0 +1,74 @@
+---
+# Codacy Configuration File
+# https://docs.codacy.com/repositories-configure/codacy-configuration-file/
+
+# Exclude patterns
+exclude_paths:
+  - 'node_modules/**'
+  - 'dist/**'
+  - 'coverage/**'
+  - '**/*.test.ts'
+  - '**/*.test.tsx'
+  - '*.config.js'
+  - '*.config.ts'
+  - 'vite.config.ts.*'
+  - 'attached_assets/**'
+
+# Languages to analyze
+languages:
+  typescript:
+    extensions:
+      - '.ts'
+      - '.tsx'
+  javascript:
+    extensions:
+      - '.js'
+      - '.jsx'
+
+# Tools configuration
+engines:
+  eslint:
+    enabled: true
+    exclude_paths:
+      - 'eslint.config.js'
+  
+  stylelint:
+    enabled: true
+    
+  duplication:
+    enabled: true
+    config:
+      languages:
+        - typescript
+        - javascript
+    exclude_paths:
+      - 'client/src/components/ui/**'
+  
+  metrics:
+    enabled: true
+    
+  coverage:
+    enabled: false  # Managed separately by vitest
+
+# Duplication detection
+duplication:
+  enabled: true
+  exclude_paths:
+    - 'client/src/components/ui/**'  # UI components often have similar patterns
+
+# Code complexity thresholds
+complexity:
+  enabled: true
+  threshold: 15  # Max cyclomatic complexity
+
+# File size limits
+file_extensions:
+  enabled: true
+  max_lines: 1000  # Max lines per file
+
+# Issue severity overrides
+issues:
+  # Reduce severity for specific patterns
+  patterns:
+    - pattern: 'console.log'
+      severity: 'info'
