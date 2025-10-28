@@ -13,26 +13,30 @@ function App() {
 
 ## ⌨️ Keyboard Shortcuts
 
-| Key | Action |
-|-----|--------|
-| `1-9` | Jump to tab 1-9 |
+| Key     | Action            |
+| ------- | ----------------- |
+| `1-9`   | Jump to tab 1-9   |
 | `←` `→` | Previous/Next tab |
-| `Home` | First tab |
-| `End` | Last tab |
+| `Home`  | First tab         |
+| `End`   | Last tab          |
 
 ## 📋 Files Created
 
 ### Components
+
 - `client/src/components/enhanced-view-tabs.tsx` - Main navigation component
 - `client/src/components/enhanced-navigation.css` - Styling with animations and themes
 
 ### Hooks
+
 - `client/src/hooks/use-tab-navigation.ts` - Navigation hooks (keyboard, badges, visibility)
 
 ### Tests
+
 - `client/src/__tests__/enhanced-navigation.test.tsx` - Comprehensive test suite
 
 ### Documentation
+
 - `docs/ENHANCED-NAVIGATION.md` - Complete documentation
 - `docs/NAVIGATION-INTEGRATION-EXAMPLES.tsx` - Integration examples
 
@@ -44,7 +48,7 @@ function App() {
 ✅ **Badges** - NEW, BETA, count, warning notifications  
 ✅ **Accessibility** - ARIA labels, screen reader support, focus management  
 ✅ **Themes** - Dark/light mode with CSS variables  
-✅ **Extensible** - Group views, hide/disable, custom badges  
+✅ **Extensible** - Group views, hide/disable, custom badges
 
 ## 📦 Props
 
@@ -52,7 +56,7 @@ function App() {
 interface EnhancedViewTabsProps {
   currentView: ViewType;           // Required: active view
   onViewChange: (view) => void;    // Required: view change handler
-  
+
   // Optional
   showHomeButton?: boolean;        // Show return home button
   onHomeClick?: () => void;        // Home button handler
@@ -100,31 +104,31 @@ badgeConfig={{
 ## 🎯 Integration
 
 ### Option 1: Standalone
+
 ```tsx
-<EnhancedViewTabs 
-  currentView={view} 
-  onViewChange={setView}
-/>
+<EnhancedViewTabs currentView={view} onViewChange={setView} />
 ```
 
 ### Option 2: With Header
+
 ```tsx
 <MainNavigation {...headerProps} />
-<EnhancedViewTabs 
-  currentView={view} 
+<EnhancedViewTabs
+  currentView={view}
   onViewChange={setView}
   showHomeButton
 />
 ```
 
 ### Option 3: Grouped Views
+
 ```tsx
 <EnhancedViewTabs
   currentView={view}
   onViewChange={setView}
   groupedViews={{
-    'Core': ['main', 'status', 'ai'],
-    'Tools': ['analytics', 'archive-manager'],
+    Core: ['main', 'status', 'ai'],
+    Tools: ['analytics', 'archive-manager'],
   }}
 />
 ```
@@ -140,6 +144,7 @@ npm test -- --watch enhanced-navigation.test.tsx
 ```
 
 Test coverage:
+
 - ✅ Keyboard navigation
 - ✅ Badge management
 - ✅ View visibility
@@ -150,6 +155,7 @@ Test coverage:
 ## 🎨 Theming
 
 ### CSS Variables
+
 ```css
 .enhanced-nav {
   --nav-bg: #ffffff;
@@ -161,7 +167,9 @@ Test coverage:
 ```
 
 ### Dark Theme
+
 Add `.dark` class to root element:
+
 ```tsx
 <div className={isDarkMode ? 'dark' : ''}>
   <EnhancedViewTabs {...props} />
@@ -171,15 +179,17 @@ Add `.dark` class to root element:
 ## 🔍 Hooks API
 
 ### useTabNavigation
+
 ```tsx
 const { handleKeyDown, focusedIndex, navigateToIndex } = useTabNavigation({
   viewCount: 10,
-  onNavigate: (index) => {},
+  onNavigate: index => {},
   enableNumberShortcuts: true,
 });
 ```
 
 ### useTabBadges
+
 ```tsx
 const { badges, setBadge, clearBadge, incrementCount } = useTabBadges();
 
@@ -190,19 +200,14 @@ clearBadge('ai');
 ```
 
 ### useViewVisibility
-```tsx
-const { 
-  visibilityMap, 
-  hideView, 
-  showView, 
-  disableView, 
-  enableView 
-} = useViewVisibility();
 
-hideView('ai');        // Remove from navigation
-showView('ai');        // Add back to navigation
-disableView('tools');  // Gray out, not clickable
-enableView('tools');   // Re-enable
+```tsx
+const { visibilityMap, hideView, showView, disableView, enableView } = useViewVisibility();
+
+hideView('ai'); // Remove from navigation
+showView('ai'); // Add back to navigation
+disableView('tools'); // Gray out, not clickable
+enableView('tools'); // Re-enable
 ```
 
 ## 📚 Documentation
@@ -214,16 +219,19 @@ enableView('tools');   // Re-enable
 ## 🐛 Troubleshooting
 
 **Keyboard shortcuts not working?**
+
 - Navigation must have focus
 - Check `enableNumberShortcuts` is true
 - Verify no conflicting shortcuts
 
 **Badges not showing?**
+
 - Check `badgeConfig` structure
 - Verify view names match `ViewType`
 - Check console for errors
 
 **Theme not applying?**
+
 - Confirm `.dark` class on root
 - Verify CSS variables are defined
 - Import `enhanced-navigation.css`

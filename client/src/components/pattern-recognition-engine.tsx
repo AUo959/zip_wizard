@@ -4,17 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Search, 
-  Network, 
-  Layers, 
-  GitBranch, 
-  FileType, 
-  Folder, 
+import {
+  Search,
+  Network,
+  Layers,
+  GitBranch,
+  FileType,
+  Folder,
   Hash,
   Zap,
   Eye,
-  Target
+  Target,
 } from 'lucide-react';
 
 interface PatternRecognitionEngineProps {
@@ -41,15 +41,17 @@ interface OrganizationSuggestion {
   cognitive_load_reduction: number;
 }
 
-export function PatternRecognitionEngine({ 
-  files = [], 
-  onPatternsDetected, 
-  onOrganizationSuggested 
+export function PatternRecognitionEngine({
+  files = [],
+  onPatternsDetected,
+  onOrganizationSuggested,
 }: PatternRecognitionEngineProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [detectedPatterns, setDetectedPatterns] = useState<Pattern[]>([]);
-  const [organizationSuggestions, setOrganizationSuggestions] = useState<OrganizationSuggestion[]>([]);
+  const [organizationSuggestions, setOrganizationSuggestions] = useState<OrganizationSuggestion[]>(
+    []
+  );
   const [selectedPattern, setSelectedPattern] = useState<Pattern | null>(null);
 
   const analyzePatterns = useCallback(async () => {
@@ -62,7 +64,7 @@ export function PatternRecognitionEngine({
       'Identifying semantic clusters...',
       'Analyzing behavioral patterns...',
       'Detecting temporal relationships...',
-      'Generating organization suggestions...'
+      'Generating organization suggestions...',
     ];
 
     for (let i = 0; i < analysisSteps.length; i++) {
@@ -79,7 +81,7 @@ export function PatternRecognitionEngine({
         occurrences: Math.floor(files.length * 0.3),
         description: 'Related components following consistent naming and organization patterns',
         files: files.slice(0, Math.floor(files.length * 0.3)).map(f => f.name || f.path || 'file'),
-        optimization_potential: 85
+        optimization_potential: 85,
       },
       {
         type: 'semantic',
@@ -88,7 +90,7 @@ export function PatternRecognitionEngine({
         occurrences: Math.floor(files.length * 0.4),
         description: 'Files sharing semantic context and business logic relationships',
         files: files.slice(0, Math.floor(files.length * 0.4)).map(f => f.name || f.path || 'file'),
-        optimization_potential: 92
+        optimization_potential: 92,
       },
       {
         type: 'behavioral',
@@ -97,7 +99,7 @@ export function PatternRecognitionEngine({
         occurrences: Math.floor(files.length * 0.25),
         description: 'Files frequently accessed together, suggesting workflow relationships',
         files: files.slice(0, Math.floor(files.length * 0.25)).map(f => f.name || f.path || 'file'),
-        optimization_potential: 78
+        optimization_potential: 78,
       },
       {
         type: 'temporal',
@@ -106,8 +108,8 @@ export function PatternRecognitionEngine({
         occurrences: Math.floor(files.length * 0.2),
         description: 'Files modified in temporal proximity, indicating collaborative development',
         files: files.slice(0, Math.floor(files.length * 0.2)).map(f => f.name || f.path || 'file'),
-        optimization_potential: 71
-      }
+        optimization_potential: 71,
+      },
     ];
 
     const suggestions: OrganizationSuggestion[] = [
@@ -117,14 +119,14 @@ export function PatternRecognitionEngine({
         structure: {
           'Core Components': patterns[0].files.slice(0, 5),
           'Business Logic': patterns[1].files.slice(0, 4),
-          'Utilities': patterns[2].files.slice(0, 3)
+          Utilities: patterns[2].files.slice(0, 3),
         },
         benefits: [
           'Reduce cognitive load by 35%',
           'Improve discoverability',
-          'Enable wu wei navigation patterns'
+          'Enable wu wei navigation patterns',
         ],
-        cognitive_load_reduction: 35
+        cognitive_load_reduction: 35,
       },
       {
         type: 'functional',
@@ -132,21 +134,21 @@ export function PatternRecognitionEngine({
         structure: {
           'Data Layer': patterns[1].files.slice(0, 4),
           'Interface Layer': patterns[0].files.slice(0, 6),
-          'Service Layer': patterns[2].files.slice(0, 3)
+          'Service Layer': patterns[2].files.slice(0, 3),
         },
         benefits: [
           'Align with mental models',
           'Support flow state maintenance',
-          'Enable mushin-like spontaneous navigation'
+          'Enable mushin-like spontaneous navigation',
         ],
-        cognitive_load_reduction: 42
-      }
+        cognitive_load_reduction: 42,
+      },
     ];
 
     setDetectedPatterns(patterns);
     setOrganizationSuggestions(suggestions);
     setIsAnalyzing(false);
-    
+
     onPatternsDetected?.(patterns);
     if (suggestions.length > 0) {
       onOrganizationSuggested?.(suggestions[0]);
@@ -158,7 +160,7 @@ export function PatternRecognitionEngine({
       structural: <Layers className="w-4 h-4" />,
       semantic: <Network className="w-4 h-4" />,
       behavioral: <Eye className="w-4 h-4" />,
-      temporal: <GitBranch className="w-4 h-4" />
+      temporal: <GitBranch className="w-4 h-4" />,
     };
     return icons[type];
   };
@@ -188,7 +190,7 @@ export function PatternRecognitionEngine({
               <div className="text-sm">
                 <span className="font-medium">{files.length}</span> files ready for analysis
               </div>
-              <Button 
+              <Button
                 onClick={analyzePatterns}
                 disabled={isAnalyzing || files.length === 0}
                 className="flex items-center gap-2"
@@ -229,7 +231,7 @@ export function PatternRecognitionEngine({
           <TabsContent value="patterns" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {detectedPatterns.map((pattern, index) => (
-                <Card 
+                <Card
                   key={pattern.name}
                   className={`cursor-pointer transition-all hover:shadow-lg ${
                     selectedPattern?.name === pattern.name ? 'ring-2 ring-primary' : ''
@@ -248,9 +250,7 @@ export function PatternRecognitionEngine({
                             {pattern.confidence}%
                           </Badge>
                         </div>
-                        <p className="text-xs text-muted-foreground mb-3">
-                          {pattern.description}
-                        </p>
+                        <p className="text-xs text-muted-foreground mb-3">{pattern.description}</p>
                         <div className="flex items-center justify-between text-xs">
                           <span>{pattern.occurrences} occurrences</span>
                           <Badge variant="secondary" className="text-xs">
@@ -276,24 +276,33 @@ export function PatternRecognitionEngine({
                   <div className="space-y-4">
                     <div className="grid grid-cols-3 gap-4 text-center">
                       <div>
-                        <div className="text-lg font-bold text-blue-600">{selectedPattern.confidence}%</div>
+                        <div className="text-lg font-bold text-blue-600">
+                          {selectedPattern.confidence}%
+                        </div>
                         <div className="text-xs text-muted-foreground">Confidence</div>
                       </div>
                       <div>
-                        <div className="text-lg font-bold text-green-600">{selectedPattern.occurrences}</div>
+                        <div className="text-lg font-bold text-green-600">
+                          {selectedPattern.occurrences}
+                        </div>
                         <div className="text-xs text-muted-foreground">Occurrences</div>
                       </div>
                       <div>
-                        <div className="text-lg font-bold text-purple-600">{selectedPattern.optimization_potential}%</div>
+                        <div className="text-lg font-bold text-purple-600">
+                          {selectedPattern.optimization_potential}%
+                        </div>
                         <div className="text-xs text-muted-foreground">Optimization</div>
                       </div>
                     </div>
-                    
+
                     <div>
                       <h5 className="text-sm font-medium mb-2">Affected Files</h5>
                       <div className="max-h-32 overflow-y-auto space-y-1">
                         {selectedPattern.files.map((file, index) => (
-                          <div key={index} className="text-xs p-2 bg-muted/30 rounded flex items-center gap-2">
+                          <div
+                            key={index}
+                            className="text-xs p-2 bg-muted/30 rounded flex items-center gap-2"
+                          >
                             <FileType className="w-3 h-3" />
                             {file}
                           </div>
@@ -313,7 +322,8 @@ export function PatternRecognitionEngine({
                   <CardTitle className="text-base flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Folder className="w-4 h-4" />
-                      {suggestion.type.charAt(0).toUpperCase() + suggestion.type.slice(1)} Organization
+                      {suggestion.type.charAt(0).toUpperCase() + suggestion.type.slice(1)}{' '}
+                      Organization
                     </div>
                     <Badge className={`text-xs ${getConfidenceColor(suggestion.confidence)}`}>
                       {suggestion.confidence}% confidence
@@ -360,7 +370,7 @@ export function PatternRecognitionEngine({
                       </div>
                     </div>
 
-                    <Button 
+                    <Button
                       className="w-full"
                       onClick={() => onOrganizationSuggested?.(suggestion)}
                     >

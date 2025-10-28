@@ -1,20 +1,20 @@
-import { 
-  archives, 
-  files, 
+import {
+  archives,
+  files,
   observerEvents,
   fileMutations,
-  type Archive, 
-  type InsertArchive, 
-  type File, 
+  type Archive,
+  type InsertArchive,
+  type File,
   type InsertFile,
   type ObserverEvent,
   type InsertObserverEvent,
   type FileMutation,
-  type InsertFileMutation
-} from "@shared/schema";
-import { normalizeTags, normalizeDependencies } from "@shared/validation";
-import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+  type InsertFileMutation,
+} from '@shared/schema';
+import { normalizeTags, normalizeDependencies } from '@shared/validation';
+import { db } from './db';
+import { eq, and, desc } from 'drizzle-orm';
 
 export interface IStorage {
   // Archive operations
@@ -22,7 +22,7 @@ export interface IStorage {
   getArchive(id: string): Promise<Archive | undefined>;
   getAllArchives(): Promise<Archive[]>;
   deleteArchive(id: string): Promise<void>;
-  
+
   // File operations
   createFile(file: InsertFile): Promise<File>;
   getFilesByArchiveId(archiveId: string): Promise<File[]>;
@@ -46,10 +46,7 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async createArchive(insertArchive: InsertArchive): Promise<Archive> {
-    const [archive] = await db
-      .insert(archives)
-      .values([insertArchive])
-      .returning();
+    const [archive] = await db.insert(archives).values([insertArchive]).returning();
     return archive;
   }
 
@@ -65,18 +62,18 @@ export class DatabaseStorage implements IStorage {
   async deleteArchive(id: string): Promise<void> {
     // First, get all files for this archive to delete their mutations
     const archiveFiles = await this.getFilesByArchiveId(id);
-    
+
     // Delete file mutations for all files in this archive
     for (const file of archiveFiles) {
       await this.deleteFileMutationsByFileId(file.id);
     }
-    
+
     // Delete observer events for this archive
     await this.deleteObserverEventsByArchiveId(id);
-    
+
     // Delete associated files
     await this.deleteFilesByArchiveId(id);
-    
+
     // Finally delete the archive
     await db.delete(archives).where(eq(archives.id, id));
   }
@@ -84,7 +81,7 @@ export class DatabaseStorage implements IStorage {
   /**
    * Creates a new file record in the database.
    * Validates and normalizes array fields before insertion.
-   * 
+   *
    * @param insertFile - File data to insert
    * @returns The created file record
    * @see normalizeTags - For tags array validation
@@ -95,9 +92,9 @@ export class DatabaseStorage implements IStorage {
     const fileToInsert = {
       ...insertFile,
       tags: normalizeTags(insertFile.tags),
-      dependencies: normalizeDependencies(insertFile.dependencies)
+      dependencies: normalizeDependencies(insertFile.dependencies),
     };
-    
+
     const [file] = await db
       .insert(files)
       .values(fileToInsert as any) // Type assertion for Drizzle compatibility
@@ -123,11 +120,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateFile(id: string, updates: Partial<File>): Promise<File | undefined> {
-    const [updatedFile] = await db
-      .update(files)
-      .set(updates)
-      .where(eq(files.id, id))
-      .returning();
+    const [updatedFile] = await db.update(files).set(updates).where(eq(files.id, id)).returning();
     return updatedFile || undefined;
   }
 
@@ -137,10 +130,7 @@ export class DatabaseStorage implements IStorage {
 
   // Observer event operations
   async createObserverEvent(event: InsertObserverEvent): Promise<ObserverEvent> {
-    const [observerEvent] = await db
-      .insert(observerEvents)
-      .values([event])
-      .returning();
+    const [observerEvent] = await db.insert(observerEvents).values([event]).returning();
     return observerEvent;
   }
 
@@ -153,7 +143,7 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(observerEvents.timestamp))
         .limit(limit);
     }
-    
+
     return await db
       .select()
       .from(observerEvents)
@@ -176,10 +166,7 @@ export class DatabaseStorage implements IStorage {
 
   // File mutation operations
   async createFileMutation(mutation: InsertFileMutation): Promise<FileMutation> {
-    const [fileMutation] = await db
-      .insert(fileMutations)
-      .values([mutation])
-      .returning();
+    const [fileMutation] = await db.insert(fileMutations).values([mutation]).returning();
     return fileMutation;
   }
 

@@ -73,12 +73,12 @@ export class EmergentCircuitBreaker {
   private patternDetector: PatternDetector;
   private quantumEngine: QuantumStateEngine;
   private selfHealer: SelfHealingEngine;
-  
+
   constructor(private globalConfig: Partial<CircuitBreakerConfig> = {}) {
     this.patternDetector = new PatternDetector();
     this.quantumEngine = new QuantumStateEngine();
     this.selfHealer = new SelfHealingEngine();
-    
+
     // Start background monitoring
     this.startMonitoring();
   }
@@ -93,12 +93,12 @@ export class EmergentCircuitBreaker {
   ): Promise<T> {
     const breaker = this.getOrCreateBreaker(name, config);
     const state = this.states.get(name)!;
-    
+
     // Check if circuit is open
     if (state.state === 'open' && !this.canAttemptReset(state)) {
       throw new Error(`Circuit breaker '${name}' is OPEN. Service unavailable.`);
     }
-    
+
     // Quantum state - probabilistic execution
     if (state.state === 'quantum') {
       const shouldExecute = await this.quantumEngine.shouldExecute(state);
@@ -106,9 +106,9 @@ export class EmergentCircuitBreaker {
         throw new Error(`Circuit breaker '${name}' in QUANTUM state denied execution.`);
       }
     }
-    
+
     const startTime = Date.now();
-    
+
     try {
       const result = await this.executeWithTimeout(fn, breaker.timeout);
       this.recordSuccess(name, Date.now() - startTime);
@@ -139,15 +139,15 @@ export class EmergentCircuitBreaker {
         quantumMode: true,
         emergentLearning: true,
         ...this.globalConfig,
-        ...config
+        ...config,
       };
-      
+
       this.configs.set(name, defaultConfig);
       this.states.set(name, this.createInitialState(name));
       this.metrics.set(name, this.createInitialMetrics());
       this.responseTimes.set(name, []);
     }
-    
+
     return this.configs.get(name)!;
   }
 
@@ -167,7 +167,7 @@ export class EmergentCircuitBreaker {
       averageResponseTime: 0,
       healthScore: 100,
       stateHistory: [],
-      patterns: []
+      patterns: [],
     };
   }
 
@@ -183,22 +183,19 @@ export class EmergentCircuitBreaker {
       p95ResponseTime: 0,
       p99ResponseTime: 0,
       healthScore: 100,
-      predictedFailureProbability: 0
+      predictedFailureProbability: 0,
     };
   }
 
   /**
    * Execute with timeout protection
    */
-  private async executeWithTimeout<T>(
-    fn: () => Promise<T>,
-    timeout: number
-  ): Promise<T> {
+  private async executeWithTimeout<T>(fn: () => Promise<T>, timeout: number): Promise<T> {
     return Promise.race([
       fn(),
       new Promise<T>((_, reject) =>
         setTimeout(() => reject(new Error('Operation timeout')), timeout)
-      )
+      ),
     ]);
   }
 
@@ -208,20 +205,20 @@ export class EmergentCircuitBreaker {
   private recordSuccess(name: string, responseTime: number) {
     const state = this.states.get(name)!;
     const config = this.configs.get(name)!;
-    
+
     state.successes++;
     state.consecutiveSuccesses++;
     state.consecutiveFailures = 0;
     state.totalRequests++;
-    
+
     // Update response times
     const times = this.responseTimes.get(name)!;
     times.push(responseTime);
     if (times.length > 1000) times.shift(); // Keep last 1000
-    
+
     // Update metrics
     this.updateMetrics(name);
-    
+
     // State transitions
     if (state.state === 'half-open') {
       if (state.consecutiveSuccesses >= config.successThreshold) {
@@ -233,10 +230,10 @@ export class EmergentCircuitBreaker {
         this.transitionTo(name, 'closed', 'Quantum probability threshold reached');
       }
     }
-    
+
     // Update health score
     state.healthScore = this.calculateHealthScore(state);
-    
+
     // Emergent learning
     if (config.emergentLearning) {
       this.patternDetector.recordSuccess(state);
@@ -249,22 +246,22 @@ export class EmergentCircuitBreaker {
   private recordFailure(name: string, responseTime: number, error: any) {
     const state = this.states.get(name)!;
     const config = this.configs.get(name)!;
-    
+
     state.failures++;
     state.consecutiveFailures++;
     state.consecutiveSuccesses = 0;
     state.totalRequests++;
     state.lastFailureTime = new Date();
-    
+
     // Update metrics
     this.updateMetrics(name);
-    
+
     // Detect patterns
     if (config.emergentLearning) {
       const patterns = this.patternDetector.detectPatterns(state, error);
       state.patterns = patterns;
     }
-    
+
     // State transitions based on failure patterns
     if (state.state === 'closed') {
       if (this.shouldOpen(state, config)) {
@@ -282,10 +279,10 @@ export class EmergentCircuitBreaker {
         this.transitionTo(name, 'open', 'Quantum collapse to open state');
       }
     }
-    
+
     // Update health score
     state.healthScore = this.calculateHealthScore(state);
-    
+
     // Trigger self-healing if needed
     if (config.adaptiveScaling && state.healthScore < 30) {
       this.selfHealer.attemptHealing(name, state, config);
@@ -300,7 +297,7 @@ export class EmergentCircuitBreaker {
     if (state.totalRequests < config.volumeThreshold) {
       return state.consecutiveFailures >= config.failureThreshold;
     }
-    
+
     // Percentage-based check
     const errorRate = (state.failures / state.totalRequests) * 100;
     return errorRate >= config.errorThresholdPercentage;
@@ -326,10 +323,14 @@ export class EmergentCircuitBreaker {
   /**
    * Transition to new state
    */
-  private transitionTo(name: string, newState: 'closed' | 'open' | 'half-open' | 'quantum', reason: string) {
+  private transitionTo(
+    name: string,
+    newState: 'closed' | 'open' | 'half-open' | 'quantum',
+    reason: string
+  ) {
     const state = this.states.get(name)!;
     const oldState = state.state;
-    
+
     state.stateHistory.push({
       from: oldState,
       to: newState,
@@ -339,17 +340,17 @@ export class EmergentCircuitBreaker {
         failures: state.failures,
         successes: state.successes,
         errorRate: (state.failures / Math.max(state.totalRequests, 1)) * 100,
-        responseTime: state.averageResponseTime
-      }
+        responseTime: state.averageResponseTime,
+      },
     });
-    
+
     state.state = newState;
-    
+
     // Initialize quantum probability
     if (newState === 'quantum') {
       state.quantumProbability = 0.5;
     }
-    
+
     // Emit event for monitoring
     this.emitStateChange(name, oldState, newState, reason);
   }
@@ -361,11 +362,11 @@ export class EmergentCircuitBreaker {
     const state = this.states.get(name)!;
     const times = this.responseTimes.get(name)!;
     const metrics = this.metrics.get(name)!;
-    
+
     metrics.requestCount = state.totalRequests;
     metrics.errorCount = state.failures;
     metrics.errorRate = (state.failures / Math.max(state.totalRequests, 1)) * 100;
-    
+
     if (times.length > 0) {
       const sorted = [...times].sort((a, b) => a - b);
       metrics.p50ResponseTime = sorted[Math.floor(sorted.length * 0.5)];
@@ -373,7 +374,7 @@ export class EmergentCircuitBreaker {
       metrics.p99ResponseTime = sorted[Math.floor(sorted.length * 0.99)];
       state.averageResponseTime = times.reduce((a, b) => a + b, 0) / times.length;
     }
-    
+
     metrics.healthScore = this.calculateHealthScore(state);
     metrics.predictedFailureProbability = this.predictFailureProbability(state);
   }
@@ -383,11 +384,13 @@ export class EmergentCircuitBreaker {
    */
   private calculateHealthScore(state: CircuitState): number {
     const errorRate = (state.failures / Math.max(state.totalRequests, 1)) * 100;
-    const responseScore = Math.max(0, 100 - (state.averageResponseTime / 100));
+    const responseScore = Math.max(0, 100 - state.averageResponseTime / 100);
     const stateScore = state.state === 'closed' ? 100 : state.state === 'half-open' ? 50 : 0;
-    const patternScore = state.patterns.length === 0 ? 100 : 100 - (state.patterns.length * 20);
-    
-    return Math.round((100 - errorRate) * 0.4 + responseScore * 0.3 + stateScore * 0.2 + patternScore * 0.1);
+    const patternScore = state.patterns.length === 0 ? 100 : 100 - state.patterns.length * 20;
+
+    return Math.round(
+      (100 - errorRate) * 0.4 + responseScore * 0.3 + stateScore * 0.2 + patternScore * 0.1
+    );
   }
 
   /**
@@ -395,13 +398,13 @@ export class EmergentCircuitBreaker {
    */
   private predictFailureProbability(state: CircuitState): number {
     if (state.patterns.length === 0) return 0;
-    
+
     const periodicPattern = state.patterns.find(p => p.type === 'periodic');
     if (periodicPattern && periodicPattern.predictedNextFailure) {
       const timeUntilFailure = periodicPattern.predictedNextFailure.getTime() - Date.now();
       if (timeUntilFailure < 60000) return periodicPattern.confidence; // Within 1 minute
     }
-    
+
     return state.patterns.reduce((max, p) => Math.max(max, p.confidence), 0) * 0.5;
   }
 
@@ -410,9 +413,11 @@ export class EmergentCircuitBreaker {
    */
   private emitStateChange(name: string, from: string, to: string, reason: string) {
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('circuit-breaker-state-change', {
-        detail: { name, from, to, reason, timestamp: new Date() }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('circuit-breaker-state-change', {
+          detail: { name, from, to, reason, timestamp: new Date() },
+        })
+      );
     }
   }
 
@@ -423,17 +428,17 @@ export class EmergentCircuitBreaker {
     setInterval(() => {
       this.states.forEach((state, name) => {
         const config = this.configs.get(name)!;
-        
+
         // Auto-transition from open to half-open
         if (state.state === 'open' && this.canAttemptReset(state)) {
           this.transitionTo(name, 'half-open', 'Sleep window expired');
         }
-        
+
         // Adaptive threshold adjustment
         if (config.adaptiveScaling) {
           this.adjustThresholds(name, state, config);
         }
-        
+
         // Pattern-based predictions
         if (config.emergentLearning) {
           this.patternDetector.updatePredictions(state);
@@ -448,7 +453,7 @@ export class EmergentCircuitBreaker {
   private adjustThresholds(name: string, state: CircuitState, config: CircuitBreakerConfig) {
     const hour = new Date().getHours();
     const isBusinessHours = hour >= 9 && hour <= 17;
-    
+
     // Adjust based on time of day
     if (isBusinessHours) {
       config.failureThreshold = Math.max(3, config.failureThreshold - 1);
@@ -457,7 +462,7 @@ export class EmergentCircuitBreaker {
       config.failureThreshold = Math.min(10, config.failureThreshold + 1);
       config.errorThresholdPercentage = Math.min(70, config.errorThresholdPercentage + 10);
     }
-    
+
     // Adjust based on health score
     if (state.healthScore < 50) {
       config.sleepWindow = Math.min(config.sleepWindow * 1.5, 300000); // Max 5 minutes
@@ -521,92 +526,93 @@ export class EmergentCircuitBreaker {
 class PatternDetector {
   private historyWindow = 100;
   private patterns: Map<string, FailurePattern[]> = new Map();
-  
+
   detectPatterns(state: CircuitState, error: any): FailurePattern[] {
     const patterns: FailurePattern[] = [];
-    
+
     // Detect periodic failures
     if (this.isPeriodicFailure(state)) {
       patterns.push({
         type: 'periodic',
         confidence: 0.8,
         predictedNextFailure: this.predictNextPeriodicFailure(state),
-        suggestedAction: 'Implement scheduled maintenance window'
+        suggestedAction: 'Implement scheduled maintenance window',
       });
     }
-    
+
     // Detect cascade failures
     if (this.isCascadeFailure(state)) {
       patterns.push({
         type: 'cascade',
         confidence: 0.7,
-        suggestedAction: 'Check dependent services'
+        suggestedAction: 'Check dependent services',
       });
     }
-    
+
     // Detect spike failures
     if (this.isSpikeFailure(state)) {
       patterns.push({
         type: 'spike',
         confidence: 0.6,
-        suggestedAction: 'Implement rate limiting'
+        suggestedAction: 'Implement rate limiting',
       });
     }
-    
+
     return patterns;
   }
-  
+
   private isPeriodicFailure(state: CircuitState): boolean {
     if (state.stateHistory.length < 3) return false;
-    
+
     const failureTimes = state.stateHistory
       .filter(t => t.to === 'open')
       .map(t => t.timestamp.getTime());
-    
+
     if (failureTimes.length < 3) return false;
-    
+
     const intervals = [];
     for (let i = 1; i < failureTimes.length; i++) {
       intervals.push(failureTimes[i] - failureTimes[i - 1]);
     }
-    
+
     const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-    const variance = intervals.reduce((sum, i) => sum + Math.pow(i - avgInterval, 2), 0) / intervals.length;
+    const variance =
+      intervals.reduce((sum, i) => sum + Math.pow(i - avgInterval, 2), 0) / intervals.length;
     const stdDev = Math.sqrt(variance);
-    
+
     return stdDev < avgInterval * 0.2; // Low variance indicates periodicity
   }
-  
+
   private isCascadeFailure(state: CircuitState): boolean {
     return state.consecutiveFailures > 5 && state.averageResponseTime < 100;
   }
-  
+
   private isSpikeFailure(state: CircuitState): boolean {
     const recentHistory = state.stateHistory.slice(-10);
     const failures = recentHistory.filter(t => t.to === 'open').length;
     return failures > 3 && state.totalRequests > 100;
   }
-  
+
   private predictNextPeriodicFailure(state: CircuitState): Date {
     const failureTimes = state.stateHistory
       .filter(t => t.to === 'open')
       .map(t => t.timestamp.getTime());
-    
+
     if (failureTimes.length < 2) {
       return new Date(Date.now() + 3600000); // Default 1 hour
     }
-    
+
     const intervals = [];
     for (let i = 1; i < failureTimes.length; i++) {
       intervals.push(failureTimes[i] - failureTimes[i - 1]);
     }
-    
+
     const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
     const lastFailure = failureTimes[failureTimes.length - 1];
-    
+
     return new Date(lastFailure + avgInterval);
   }
-  
+
   recordSuccess(state: CircuitState) {
     // Update pattern confidence based on success
     if (state.patterns) {
@@ -615,7 +621,7 @@ class PatternDetector {
       });
     }
   }
-  
+
   updatePredictions(state: CircuitState) {
     // Update predictions based on current time
     state.patterns?.forEach(pattern => {
@@ -639,26 +645,26 @@ class QuantumStateEngine {
     if (!state.quantumProbability) {
       state.quantumProbability = 0.5;
     }
-    
+
     // Quantum decision with wave function collapse
     const random = Math.random();
     const shouldExecute = random < state.quantumProbability;
-    
+
     // Observe and collapse wave function slightly
     if (shouldExecute) {
       state.quantumProbability = Math.min(1, state.quantumProbability * 1.1);
     } else {
       state.quantumProbability = Math.max(0, state.quantumProbability * 0.9);
     }
-    
+
     return shouldExecute;
   }
-  
+
   updateProbability(state: CircuitState, success: boolean) {
     if (!state.quantumProbability) {
       state.quantumProbability = 0.5;
     }
-    
+
     // Quantum state evolution
     if (success) {
       state.quantumProbability = Math.min(1, state.quantumProbability + 0.1);
@@ -678,12 +684,12 @@ class SelfHealingEngine {
       // Increase timeout for spike patterns
       config.timeout = Math.min(config.timeout * 1.5, 60000);
     }
-    
+
     if (state.patterns.some(p => p.type === 'cascade')) {
       // Reduce concurrency for cascade patterns
       config.halfOpenRequests = Math.max(1, config.halfOpenRequests - 1);
     }
-    
+
     if (state.healthScore < 20) {
       // Emergency mode - increase all protective thresholds
       config.failureThreshold = Math.max(2, config.failureThreshold - 1);
@@ -696,5 +702,5 @@ class SelfHealingEngine {
 export const circuitBreaker = new EmergentCircuitBreaker({
   adaptiveScaling: true,
   quantumMode: true,
-  emergentLearning: true
+  emergentLearning: true,
 });

@@ -1,10 +1,10 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Copy, Download, Share } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { formatFileSize } from "@/lib/file-utils";
-import { cn } from "@/lib/utils";
-import type { File } from "@shared/schema";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Copy, Download, Share } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { formatFileSize } from '@/lib/file-utils';
+import { cn } from '@/lib/utils';
+import type { File } from '@shared/schema';
 
 interface CodeEditorProps {
   file: File;
@@ -17,7 +17,7 @@ export default function CodeEditor({ file }: CodeEditorProps) {
     if (file.content) {
       navigator.clipboard.writeText(file.content);
       toast({
-        title: "Copied to clipboard",
+        title: 'Copied to clipboard',
         description: `Content of ${file.name} copied successfully`,
       });
     }
@@ -28,37 +28,36 @@ export default function CodeEditor({ file }: CodeEditorProps) {
     switch (ext) {
       case '.js':
       case '.jsx':
-        return "🟨";
+        return '🟨';
       case '.ts':
       case '.tsx':
-        return "🟦";
+        return '🟦';
       case '.py':
-        return "🐍";
+        return '🐍';
       case '.java':
-        return "☕";
+        return '☕';
       case '.css':
-        return "🎨";
+        return '🎨';
       case '.html':
-        return "🌐";
+        return '🌐';
       default:
-        return "📄";
+        return '📄';
     }
   };
 
   const highlightCode = (code: string, language: string) => {
     // Simple syntax highlighting
     return code
-      .replace(/(import|export|const|let|var|function|class|if|else|for|while|return|try|catch)/g, 
-        '<span class="text-blue-600 font-medium">$1</span>')
-      .replace(/('[^']*'|"[^"]*")/g, 
-        '<span class="text-green-600">$1</span>')
-      .replace(/(\/\/.*$|\/\*[\s\S]*?\*\/)/gm, 
-        '<span class="text-gray-500 italic">$1</span>')
-      .replace(/(\d+)/g, 
-        '<span class="text-orange-600">$1</span>');
+      .replace(
+        /(import|export|const|let|var|function|class|if|else|for|while|return|try|catch)/g,
+        '<span class="text-blue-600 font-medium">$1</span>'
+      )
+      .replace(/('[^']*'|"[^"]*")/g, '<span class="text-green-600">$1</span>')
+      .replace(/(\/\/.*$|\/\*[\s\S]*?\*\/)/gm, '<span class="text-gray-500 italic">$1</span>')
+      .replace(/(\d+)/g, '<span class="text-orange-600">$1</span>');
   };
 
-  if (!file.content && file.isDirectory !== "true") {
+  if (!file.content && file.isDirectory !== 'true') {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-500">
         <div className="text-center">
@@ -86,13 +85,13 @@ export default function CodeEditor({ file }: CodeEditorProps) {
                 {file.complexity && (
                   <>
                     {' • '}
-                    <Badge 
+                    <Badge
                       variant="outline"
                       className={cn(
-                        "text-xs h-4 px-1 ml-1",
-                        file.complexity === 'High' && "border-red-500 text-red-600",
-                        file.complexity === 'Medium' && "border-yellow-500 text-yellow-600", 
-                        file.complexity === 'Low' && "border-green-500 text-green-600"
+                        'text-xs h-4 px-1 ml-1',
+                        file.complexity === 'High' && 'border-red-500 text-red-600',
+                        file.complexity === 'Medium' && 'border-yellow-500 text-yellow-600',
+                        file.complexity === 'Low' && 'border-green-500 text-green-600'
                       )}
                     >
                       {file.complexity}
@@ -100,9 +99,7 @@ export default function CodeEditor({ file }: CodeEditorProps) {
                   </>
                 )}
               </p>
-              {file.description && (
-                <p className="text-xs text-gray-400 mt-1">{file.description}</p>
-              )}
+              {file.description && <p className="text-xs text-gray-400 mt-1">{file.description}</p>}
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -129,15 +126,15 @@ export default function CodeEditor({ file }: CodeEditorProps) {
               </div>
             ))}
           </div>
-          
+
           {/* Code Content */}
           <div className="flex-1 font-mono text-sm p-4 overflow-auto leading-6">
             <pre>
               <code
                 dangerouslySetInnerHTML={{
-                  __html: file.language ? 
-                    highlightCode(file.content || '', file.language) : 
-                    (file.content || '')
+                  __html: file.language
+                    ? highlightCode(file.content || '', file.language)
+                    : file.content || '',
                 }}
               />
             </pre>

@@ -5,11 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  GitCompare, 
-  FileText, 
-  Plus, 
-  Minus, 
+import {
+  GitCompare,
+  FileText,
+  Plus,
+  Minus,
   RefreshCw,
   ArrowRight,
   ArrowLeft,
@@ -18,7 +18,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  Download
+  Download,
 } from 'lucide-react';
 
 interface ArchiveComparisonProps {
@@ -57,16 +57,18 @@ interface ComparisonStats {
   sizeChangeTotal: number;
 }
 
-export function ArchiveComparison({ 
-  archive1, 
-  archive2, 
-  files1 = [], 
+export function ArchiveComparison({
+  archive1,
+  archive2,
+  files1 = [],
   files2 = [],
-  onSelectFile 
+  onSelectFile,
 }: ArchiveComparisonProps) {
   const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null);
   const [isComparing, setIsComparing] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<'overview' | 'added' | 'removed' | 'modified'>('overview');
+  const [selectedTab, setSelectedTab] = useState<'overview' | 'added' | 'removed' | 'modified'>(
+    'overview'
+  );
   const [filterText, setFilterText] = useState('');
 
   const compareArchives = useCallback(() => {
@@ -86,17 +88,17 @@ export function ArchiveComparison({
     // Find removed and modified files
     leftMap.forEach((leftFile, path) => {
       const rightFile = rightMap.get(path);
-      
+
       if (!rightFile) {
         removed.push({
           path,
           name: leftFile.name,
           status: 'removed',
-          leftFile
+          leftFile,
         });
       } else {
         // Check if file is modified
-        const isModified = 
+        const isModified =
           leftFile.size !== rightFile.size ||
           leftFile.hash !== rightFile.hash ||
           leftFile.content !== rightFile.content;
@@ -107,11 +109,12 @@ export function ArchiveComparison({
             name: leftFile.name,
             status: 'modified',
             sizeChange: (rightFile.size || 0) - (leftFile.size || 0),
-            complexityChange: rightFile.complexity !== leftFile.complexity 
-              ? `${leftFile.complexity} → ${rightFile.complexity}` 
-              : undefined,
+            complexityChange:
+              rightFile.complexity !== leftFile.complexity
+                ? `${leftFile.complexity} → ${rightFile.complexity}`
+                : undefined,
             leftFile,
-            rightFile
+            rightFile,
           });
         } else {
           unchanged.push({
@@ -119,7 +122,7 @@ export function ArchiveComparison({
             name: leftFile.name,
             status: 'unchanged',
             leftFile,
-            rightFile
+            rightFile,
           });
         }
       }
@@ -132,7 +135,7 @@ export function ArchiveComparison({
           path,
           name: rightFile.name,
           status: 'added',
-          rightFile
+          rightFile,
         });
       }
     });
@@ -144,7 +147,7 @@ export function ArchiveComparison({
       removed: removed.length,
       modified: modified.length,
       unchanged: unchanged.length,
-      sizeChangeTotal: modified.reduce((sum, f) => sum + (f.sizeChange || 0), 0)
+      sizeChangeTotal: modified.reduce((sum, f) => sum + (f.sizeChange || 0), 0),
     };
 
     setComparisonResult({
@@ -152,7 +155,7 @@ export function ArchiveComparison({
       removed,
       modified,
       unchanged,
-      statistics
+      statistics,
     });
 
     setIsComparing(false);
@@ -200,16 +203,17 @@ export function ArchiveComparison({
   };
 
   const renderFileList = (files: FileComparison[]) => {
-    const filteredFiles = files.filter(f => 
-      f.name.toLowerCase().includes(filterText.toLowerCase()) ||
-      f.path.toLowerCase().includes(filterText.toLowerCase())
+    const filteredFiles = files.filter(
+      f =>
+        f.name.toLowerCase().includes(filterText.toLowerCase()) ||
+        f.path.toLowerCase().includes(filterText.toLowerCase())
     );
 
     return (
       <ScrollArea className="h-[400px]">
         <div className="space-y-2 p-2">
           {filteredFiles.map((file, index) => (
-            <div 
+            <div
               key={`${file.path}-${index}`}
               className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
               onClick={() => {
@@ -224,15 +228,16 @@ export function ArchiveComparison({
                     <FileCode className="w-4 h-4 text-muted-foreground" />
                     <span className="font-medium text-sm">{file.name}</span>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {file.path}
-                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">{file.path}</div>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 {file.sizeChange !== undefined && file.sizeChange !== 0 && (
-                  <Badge variant="outline" className={file.sizeChange > 0 ? 'text-green-600' : 'text-red-600'}>
+                  <Badge
+                    variant="outline"
+                    className={file.sizeChange > 0 ? 'text-green-600' : 'text-red-600'}
+                  >
                     {formatBytes(file.sizeChange)}
                   </Badge>
                 )}
@@ -241,9 +246,7 @@ export function ArchiveComparison({
                     {file.complexityChange}
                   </Badge>
                 )}
-                <Badge className={getStatusColor(file.status)}>
-                  {file.status}
-                </Badge>
+                <Badge className={getStatusColor(file.status)}>{file.status}</Badge>
               </div>
             </div>
           ))}
@@ -267,9 +270,9 @@ export function ArchiveComparison({
           path: f.path,
           name: f.name,
           sizeChange: f.sizeChange,
-          complexityChange: f.complexityChange
-        }))
-      }
+          complexityChange: f.complexityChange,
+        })),
+      },
     };
 
     const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
@@ -304,9 +307,7 @@ export function ArchiveComparison({
               {archive1 ? (
                 <div>
                   <div className="font-medium">{archive1.name}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {files1.length} files
-                  </div>
+                  <div className="text-sm text-muted-foreground">{files1.length} files</div>
                 </div>
               ) : (
                 <div className="text-sm text-muted-foreground">No archive selected</div>
@@ -321,9 +322,7 @@ export function ArchiveComparison({
               {archive2 ? (
                 <div>
                   <div className="font-medium">{archive2.name}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {files2.length} files
-                  </div>
+                  <div className="text-sm text-muted-foreground">{files2.length} files</div>
                 </div>
               ) : (
                 <div className="text-sm text-muted-foreground">No archive selected</div>
@@ -381,9 +380,7 @@ export function ArchiveComparison({
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="added">
-                  Added ({comparisonResult.statistics.added})
-                </TabsTrigger>
+                <TabsTrigger value="added">Added ({comparisonResult.statistics.added})</TabsTrigger>
                 <TabsTrigger value="removed">
                   Removed ({comparisonResult.statistics.removed})
                 </TabsTrigger>
@@ -397,7 +394,7 @@ export function ArchiveComparison({
                   type="text"
                   placeholder="Filter files..."
                   value={filterText}
-                  onChange={(e) => setFilterText(e.target.value)}
+                  onChange={e => setFilterText(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg text-sm"
                 />
               </div>
@@ -407,9 +404,11 @@ export function ArchiveComparison({
                   <Alert>
                     <AlertCircle className="w-4 h-4" />
                     <AlertDescription>
-                      Comparison complete. Found {comparisonResult.statistics.added + 
-                      comparisonResult.statistics.removed + comparisonResult.statistics.modified} changes
-                      between the archives.
+                      Comparison complete. Found{' '}
+                      {comparisonResult.statistics.added +
+                        comparisonResult.statistics.removed +
+                        comparisonResult.statistics.modified}{' '}
+                      changes between the archives.
                     </AlertDescription>
                   </Alert>
 
@@ -421,11 +420,14 @@ export function ArchiveComparison({
                         <div className="flex items-center gap-2">
                           <div className="w-20 text-xs">Added</div>
                           <div className="flex-1 h-4 bg-gray-200 rounded-full overflow-hidden">
-                            <div 
+                            <div
                               className="h-full bg-green-500"
-                              style={{ 
-                                width: `${(comparisonResult.statistics.added / 
-                                  (files1.length + files2.length)) * 100}%` 
+                              style={{
+                                width: `${
+                                  (comparisonResult.statistics.added /
+                                    (files1.length + files2.length)) *
+                                  100
+                                }%`,
                               }}
                             />
                           </div>
@@ -436,11 +438,14 @@ export function ArchiveComparison({
                         <div className="flex items-center gap-2">
                           <div className="w-20 text-xs">Removed</div>
                           <div className="flex-1 h-4 bg-gray-200 rounded-full overflow-hidden">
-                            <div 
+                            <div
                               className="h-full bg-red-500"
-                              style={{ 
-                                width: `${(comparisonResult.statistics.removed / 
-                                  (files1.length + files2.length)) * 100}%` 
+                              style={{
+                                width: `${
+                                  (comparisonResult.statistics.removed /
+                                    (files1.length + files2.length)) *
+                                  100
+                                }%`,
                               }}
                             />
                           </div>
@@ -451,11 +456,14 @@ export function ArchiveComparison({
                         <div className="flex items-center gap-2">
                           <div className="w-20 text-xs">Modified</div>
                           <div className="flex-1 h-4 bg-gray-200 rounded-full overflow-hidden">
-                            <div 
+                            <div
                               className="h-full bg-yellow-500"
-                              style={{ 
-                                width: `${(comparisonResult.statistics.modified / 
-                                  (files1.length + files2.length)) * 100}%` 
+                              style={{
+                                width: `${
+                                  (comparisonResult.statistics.modified /
+                                    (files1.length + files2.length)) *
+                                  100
+                                }%`,
                               }}
                             />
                           </div>
@@ -472,13 +480,9 @@ export function ArchiveComparison({
                 </div>
               </TabsContent>
 
-              <TabsContent value="added">
-                {renderFileList(comparisonResult.added)}
-              </TabsContent>
+              <TabsContent value="added">{renderFileList(comparisonResult.added)}</TabsContent>
 
-              <TabsContent value="removed">
-                {renderFileList(comparisonResult.removed)}
-              </TabsContent>
+              <TabsContent value="removed">{renderFileList(comparisonResult.removed)}</TabsContent>
 
               <TabsContent value="modified">
                 {renderFileList(comparisonResult.modified)}

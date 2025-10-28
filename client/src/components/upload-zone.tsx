@@ -1,13 +1,13 @@
-import { useState, useCallback } from "react";
-import { useDropzone } from "react-dropzone";
-import { useMutation } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
-import { CloudUpload, CheckCircle, AlertCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useCircuitBreaker } from "@/hooks/use-circuit-breaker";
-import { apiRequest } from "@/lib/queryClient";
+import { useState, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { useMutation } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Card, CardContent } from '@/components/ui/card';
+import { CloudUpload, CheckCircle, AlertCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useCircuitBreaker } from '@/hooks/use-circuit-breaker';
+import { apiRequest } from '@/lib/queryClient';
 
 interface UploadZoneProps {
   onUploadSuccess: () => void;
@@ -16,12 +16,16 @@ interface UploadZoneProps {
 export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const { toast } = useToast();
-  
+
   // Circuit breaker for upload protection
-  const { execute: executeWithBreaker, state: breakerState, healthScore } = useCircuitBreaker({
+  const {
+    execute: executeWithBreaker,
+    state: breakerState,
+    healthScore,
+  } = useCircuitBreaker({
     name: 'archive-upload',
     failureThreshold: 3,
-    timeout: 60000 // 60 seconds for large files
+    timeout: 60000, // 60 seconds for large files
   });
 
   const uploadMutation = useMutation({
@@ -29,15 +33,15 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
       // Use circuit breaker for upload protection
       return executeWithBreaker(async () => {
         const formData = new FormData();
-        formData.append("archive", file);
+        formData.append('archive', file);
 
         // Simulate progress updates
         const progressInterval = setInterval(() => {
-          setUploadProgress((prev) => Math.min(prev + 10, 90));
+          setUploadProgress(prev => Math.min(prev + 10, 90));
         }, 200);
 
         try {
-          const response = await apiRequest("POST", "archives", formData);
+          const response = await apiRequest('POST', 'archives', formData);
           clearInterval(progressInterval);
           setUploadProgress(100);
           return await response.json();
@@ -47,9 +51,9 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
         }
       });
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       toast({
-        title: "Upload successful",
+        title: 'Upload successful',
         description: `Processed ${data.fileCount} files from ${data.archive.name}`,
       });
       setTimeout(() => {
@@ -57,31 +61,34 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
         onUploadSuccess();
       }, 1000);
     },
-    onError: (error) => {
+    onError: error => {
       toast({
-        title: "Upload failed",
+        title: 'Upload failed',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
       setUploadProgress(0);
     },
   });
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    if (file) {
-      // Check if circuit breaker is open
-      if (breakerState?.state === 'open') {
-        toast({
-          title: "Upload Service Unavailable",
-          description: `Circuit breaker is open. Health score: ${healthScore}%. Please try again later.`,
-          variant: "destructive"
-        });
-        return;
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      const file = acceptedFiles[0];
+      if (file) {
+        // Check if circuit breaker is open
+        if (breakerState?.state === 'open') {
+          toast({
+            title: 'Upload Service Unavailable',
+            description: `Circuit breaker is open. Health score: ${healthScore}%. Please try again later.`,
+            variant: 'destructive',
+          });
+          return;
+        }
+        uploadMutation.mutate(file);
       }
-      uploadMutation.mutate(file);
-    }
-  }, [uploadMutation, breakerState, healthScore, toast]);
+    },
+    [uploadMutation, breakerState, healthScore, toast]
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -128,9 +135,7 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">
-          Upload Any File or Archive
-        </h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">Upload Any File or Archive</h2>
         <p className="text-lg text-gray-600">
           Drag and drop any file here - ZIP, PDF, images, documents, code, or any other file type
         </p>
@@ -142,32 +147,24 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
             {...getRootProps()}
             className={`upload-zone border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all ${
               isDragActive
-                ? "border-blue-600 bg-blue-50"
-                : "border-gray-300 hover:border-blue-500 hover:bg-blue-50"
+                ? 'border-blue-600 bg-blue-50'
+                : 'border-gray-300 hover:border-blue-500 hover:bg-blue-50'
             }`}
           >
             <input {...getInputProps()} />
             <CloudUpload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             {isDragActive ? (
               <div>
-                <p className="text-lg font-medium text-blue-600 mb-2">
-                  Drop the archive here
-                </p>
-                <p className="text-sm text-gray-500">
-                  Release to start processing
-                </p>
+                <p className="text-lg font-medium text-blue-600 mb-2">Drop the archive here</p>
+                <p className="text-sm text-gray-500">Release to start processing</p>
               </div>
             ) : (
               <div>
-                <p className="text-lg font-medium text-gray-900 mb-2">
-                  Drop any file here
-                </p>
+                <p className="text-lg font-medium text-gray-900 mb-2">Drop any file here</p>
                 <p className="text-sm text-gray-500 mb-4">
                   Archives, documents, images, code - we handle everything
                 </p>
-                <Button variant="outline">
-                  Choose File
-                </Button>
+                <Button variant="outline">Choose File</Button>
               </div>
             )}
           </div>
