@@ -8,31 +8,31 @@
 /* High Readability Modern Theme */
 :root {
   /* Light gray theme for excellent readability */
-  --background: 210 15% 85%;          /* Light gray background */
-  --foreground: 210 40% 15%;          /* Dark text for contrast */
-  --muted: 210 10% 75%;               /* Lighter surface */
-  --muted-foreground: 210 30% 25%;    /* Dark gray text */
-  --popover: 210 15% 90%;             /* Very light popover */
-  --popover-foreground: 210 40% 15%;  /* Dark popover text */
-  --card: 210 10% 80%;                /* Light card background */
-  --card-foreground: 210 40% 15%;     /* Dark card text */
-  --border: 210 20% 60%;              /* Visible borders */
-  --input: 210 10% 75%;               /* Light input background */
-  --primary: 199 89% 55%;             /* Slightly brighter blue */
-  --primary-foreground: 210 40% 98%;  /* White on primary */
-  --secondary: 142 76% 45%;           /* Brighter green */
+  --background: 210 15% 85%; /* Light gray background */
+  --foreground: 210 40% 15%; /* Dark text for contrast */
+  --muted: 210 10% 75%; /* Lighter surface */
+  --muted-foreground: 210 30% 25%; /* Dark gray text */
+  --popover: 210 15% 90%; /* Very light popover */
+  --popover-foreground: 210 40% 15%; /* Dark popover text */
+  --card: 210 10% 80%; /* Light card background */
+  --card-foreground: 210 40% 15%; /* Dark card text */
+  --border: 210 20% 60%; /* Visible borders */
+  --input: 210 10% 75%; /* Light input background */
+  --primary: 199 89% 55%; /* Slightly brighter blue */
+  --primary-foreground: 210 40% 98%; /* White on primary */
+  --secondary: 142 76% 45%; /* Brighter green */
   --secondary-foreground: 210 40% 98%; /* White on secondary */
-  --accent: 31 81% 65%;               /* Brighter orange */
-  --accent-foreground: 210 40% 98%;   /* White on accent */
-  --destructive: 0 84% 65%;           /* Brighter red */
+  --accent: 31 81% 65%; /* Brighter orange */
+  --accent-foreground: 210 40% 98%; /* White on accent */
+  --destructive: 0 84% 65%; /* Brighter red */
   --destructive-foreground: 210 40% 98%; /* White on destructive */
-  --success: 142 76% 45%;             /* Success green */
-  --warning: 38 92% 60%;              /* Brighter warning yellow */
-  --info: 199 89% 55%;                /* Brighter info blue */
-  --purple: 271 81% 65%;              /* Brighter purple */
-  --cyan: 180 78% 50%;                /* Brighter cyan */
-  --ring: 199 89% 55%;                /* Focus ring */
-  --radius: 8px;                      /* Border radius */
+  --success: 142 76% 45%; /* Success green */
+  --warning: 38 92% 60%; /* Brighter warning yellow */
+  --info: 199 89% 55%; /* Brighter info blue */
+  --purple: 271 81% 65%; /* Brighter purple */
+  --cyan: 180 78% 50%; /* Brighter cyan */
+  --ring: 199 89% 55%; /* Focus ring */
+  --radius: 8px; /* Border radius */
 }
 
 .dark {
@@ -192,8 +192,9 @@
 
 /* Colorful gradient effects with better contrast */
 .quantum-gradient {
-  background: linear-gradient(135deg, 
-    hsl(var(--primary)) 0%, 
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary)) 0%,
     hsl(var(--purple)) 25%,
     hsl(var(--accent)) 50%,
     hsl(var(--secondary)) 75%,
@@ -202,11 +203,7 @@
 }
 
 .quantum-text {
-  background: linear-gradient(135deg, 
-    hsl(var(--primary)), 
-    hsl(var(--purple)),
-    hsl(var(--accent))
-  );
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--purple)), hsl(var(--accent)));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -266,13 +263,23 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideInLeft {
-  from { transform: translateX(-20px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 /* Improved scrollbars */
@@ -314,7 +321,7 @@
   --destructive-foreground: hsl(60, 9%, 98%);
   --ring: hsl(207, 90%, 54%);
   --radius: 0.5rem;
-  
+
   /* GitHub-inspired colors */
   --github-blue: hsl(207, 90%, 54%);
   --github-purple: hsl(269, 58%, 51%);
@@ -355,11 +362,19 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family:
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      sans-serif;
   }
 
-  code, pre {
-    font-family: 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  code,
+  pre {
+    font-family:
+      'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New',
+      monospace;
   }
 }
 
@@ -423,9 +438,21 @@
 }
 
 /* Syntax highlighting */
-.token.comment { color: hsl(120, 100%, 30%); }
-.token.string { color: hsl(32, 100%, 40%); }
-.token.keyword { color: hsl(240, 100%, 50%); }
-.token.function { color: hsl(240, 100%, 65%); }
-.token.number { color: hsl(15, 100%, 50%); }
-.token.operator { color: hsl(210, 11%, 15%); }
+.token.comment {
+  color: hsl(120, 100%, 30%);
+}
+.token.string {
+  color: hsl(32, 100%, 40%);
+}
+.token.keyword {
+  color: hsl(240, 100%, 50%);
+}
+.token.function {
+  color: hsl(240, 100%, 65%);
+}
+.token.number {
+  color: hsl(15, 100%, 50%);
+}
+.token.operator {
+  color: hsl(210, 11%, 15%);
+}

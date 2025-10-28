@@ -1,6 +1,6 @@
-import { storage } from "./storage";
-import { type InsertObserverEvent } from "@shared/schema";
-import { nanoid } from "nanoid";
+import { storage } from './storage';
+import { type InsertObserverEvent } from '@shared/schema';
+import { nanoid } from 'nanoid';
 
 export class ObserverService {
   private static instance: ObserverService;
@@ -35,38 +35,61 @@ export class ObserverService {
       await storage.createObserverEvent(event);
       console.log(`[Observer] Event tracked: ${type} on ${target}`);
     } catch (error) {
-      console.error("[Observer] Failed to track event:", error);
+      console.error('[Observer] Failed to track event:', error);
     }
   }
 
   async trackUpload(archiveId: string, archiveName: string, fileCount: number) {
-    await this.trackEvent('upload', archiveName, {
-      fileCount,
-      timestamp: new Date().toISOString(),
-    }, archiveId);
+    await this.trackEvent(
+      'upload',
+      archiveName,
+      {
+        fileCount,
+        timestamp: new Date().toISOString(),
+      },
+      archiveId
+    );
   }
 
   async trackAnalysis(archiveId: string, fileId: string, fileName: string, analysisResults: any) {
-    await this.trackEvent('analysis', fileName, {
-      language: analysisResults.language,
-      complexity: analysisResults.complexity,
-      tags: analysisResults.tags,
-      dependencies: analysisResults.dependencies,
-    }, archiveId, fileId);
+    await this.trackEvent(
+      'analysis',
+      fileName,
+      {
+        language: analysisResults.language,
+        complexity: analysisResults.complexity,
+        tags: analysisResults.tags,
+        dependencies: analysisResults.dependencies,
+      },
+      archiveId,
+      fileId
+    );
   }
 
   async trackMutation(fileId: string, fileName: string, mutationType: string, description: string) {
-    await this.trackEvent('mutation', fileName, {
-      mutationType,
-      description,
-    }, undefined, fileId, 'warning');
+    await this.trackEvent(
+      'mutation',
+      fileName,
+      {
+        mutationType,
+        description,
+      },
+      undefined,
+      fileId,
+      'warning'
+    );
   }
 
   async trackExport(archiveId: string, archiveName: string, exportFormat: string) {
-    await this.trackEvent('export', archiveName, {
-      format: exportFormat,
-      timestamp: new Date().toISOString(),
-    }, archiveId);
+    await this.trackEvent(
+      'export',
+      archiveName,
+      {
+        format: exportFormat,
+        timestamp: new Date().toISOString(),
+      },
+      archiveId
+    );
   }
 
   async trackAccess(target: string, accessType: string, userId?: string) {
@@ -80,9 +103,9 @@ export class ObserverService {
   async getActivitySummary(archiveId?: string, hoursBack: number = 48) {
     const events = await storage.getObserverEvents(archiveId, 1000);
     const cutoffTime = new Date(Date.now() - hoursBack * 60 * 60 * 1000);
-    
+
     const recentEvents = events.filter(e => new Date(e.timestamp) > cutoffTime);
-    
+
     const summary = {
       totalEvents: recentEvents.length,
       byType: {} as Record<string, number>,
@@ -107,7 +130,7 @@ export class ObserverService {
     const currentTime = Date.now();
     const windowMs = archive.monitoringWindow * 60 * 60 * 1000; // Convert hours to ms
 
-    return (currentTime - uploadTime) < windowMs;
+    return currentTime - uploadTime < windowMs;
   }
 }
 

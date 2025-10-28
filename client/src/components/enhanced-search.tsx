@@ -1,20 +1,19 @@
-import { useState, useMemo, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Search, 
-  Filter, 
-  X, 
-  File as FileIcon,
-  Folder,
-  ArrowRight 
-} from "lucide-react";
-import { formatFileSize } from "@/lib/file-utils";
-import { cn } from "@/lib/utils";
-import type { File } from "@shared/schema";
+import { useState, useMemo, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Search, Filter, X, File as FileIcon, Folder, ArrowRight } from 'lucide-react';
+import { formatFileSize } from '@/lib/file-utils';
+import { cn } from '@/lib/utils';
+import type { File } from '@shared/schema';
 
 interface EnhancedSearchProps {
   files: File[];
@@ -29,7 +28,7 @@ interface SearchFilters {
 }
 
 export function EnhancedSearch({ files, onFileSelect, selectedFile }: EnhancedSearchProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<SearchFilters>({});
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -48,7 +47,7 @@ export function EnhancedSearch({ files, onFileSelect, selectedFile }: EnhancedSe
     return {
       languages: Array.from(languages).sort(),
       complexities: Array.from(complexities).sort(),
-      extensions: Array.from(extensions).sort()
+      extensions: Array.from(extensions).sort(),
     };
   }, [files]);
 
@@ -60,7 +59,8 @@ export function EnhancedSearch({ files, onFileSelect, selectedFile }: EnhancedSe
 
     return files.filter(file => {
       // Text search
-      const matchesSearch = !searchQuery.trim() || 
+      const matchesSearch =
+        !searchQuery.trim() ||
         file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         file.path.toLowerCase().includes(searchQuery.toLowerCase()) ||
         file.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -90,7 +90,7 @@ export function EnhancedSearch({ files, onFileSelect, selectedFile }: EnhancedSe
 
   const clearFilters = () => {
     setFilters({});
-    setSearchQuery("");
+    setSearchQuery('');
   };
 
   const hasActiveFilters = searchQuery.trim() || Object.keys(filters).length > 0;
@@ -108,19 +108,14 @@ export function EnhancedSearch({ files, onFileSelect, selectedFile }: EnhancedSe
               <Badge variant="outline" className="text-xs">
                 {searchResults.length} results
               </Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearFilters}
-                className="h-6 w-6 p-0"
-              >
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-6 w-6 p-0">
                 <X className="w-3 h-3" />
               </Button>
             </div>
           )}
         </CardTitle>
       </CardHeader>
-      
+
       <CardContent className="space-y-3">
         {/* Search Input */}
         <div className="relative">
@@ -129,7 +124,7 @@ export function EnhancedSearch({ files, onFileSelect, selectedFile }: EnhancedSe
             id="enhanced-search-input"
             placeholder="Search files, content, tags... (Ctrl+F)"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             className="pl-10 pr-10"
           />
           <Button
@@ -145,44 +140,65 @@ export function EnhancedSearch({ files, onFileSelect, selectedFile }: EnhancedSe
         {/* Advanced Filters */}
         {isExpanded && (
           <div className="grid grid-cols-3 gap-2">
-            <Select value={filters.language || ""} onValueChange={(value) => 
-              setFilters(prev => value ? {...prev, language: value} : ({...prev, language: undefined}))
-            }>
+            <Select
+              value={filters.language || ''}
+              onValueChange={value =>
+                setFilters(prev =>
+                  value ? { ...prev, language: value } : { ...prev, language: undefined }
+                )
+              }
+            >
               <SelectTrigger className="h-8 text-xs">
                 <SelectValue placeholder="Language" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All Languages</SelectItem>
                 {filterOptions.languages.map(lang => (
-                  <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                  <SelectItem key={lang} value={lang}>
+                    {lang}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={filters.complexity || ""} onValueChange={(value) => 
-              setFilters(prev => value ? {...prev, complexity: value} : ({...prev, complexity: undefined}))
-            }>
+            <Select
+              value={filters.complexity || ''}
+              onValueChange={value =>
+                setFilters(prev =>
+                  value ? { ...prev, complexity: value } : { ...prev, complexity: undefined }
+                )
+              }
+            >
               <SelectTrigger className="h-8 text-xs">
                 <SelectValue placeholder="Complexity" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All Levels</SelectItem>
                 {filterOptions.complexities.map(complexity => (
-                  <SelectItem key={complexity} value={complexity}>{complexity}</SelectItem>
+                  <SelectItem key={complexity} value={complexity}>
+                    {complexity}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={filters.extension || ""} onValueChange={(value) => 
-              setFilters(prev => value ? {...prev, extension: value} : ({...prev, extension: undefined}))
-            }>
+            <Select
+              value={filters.extension || ''}
+              onValueChange={value =>
+                setFilters(prev =>
+                  value ? { ...prev, extension: value } : { ...prev, extension: undefined }
+                )
+              }
+            >
               <SelectTrigger className="h-8 text-xs">
                 <SelectValue placeholder="Extension" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All Types</SelectItem>
                 {filterOptions.extensions.map(ext => (
-                  <SelectItem key={ext} value={ext}>{ext}</SelectItem>
+                  <SelectItem key={ext} value={ext}>
+                    {ext}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -200,16 +216,16 @@ export function EnhancedSearch({ files, onFileSelect, selectedFile }: EnhancedSe
             ) : (
               searchResults.map(file => {
                 const isSelected = selectedFile?.id === file.id;
-                const isDirectory = file.isDirectory === "true";
-                
+                const isDirectory = file.isDirectory === 'true';
+
                 return (
                   <Button
                     key={file.id}
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "w-full justify-start h-auto p-2 text-left",
-                      isSelected && "bg-accent text-accent-foreground"
+                      'w-full justify-start h-auto p-2 text-left',
+                      isSelected && 'bg-accent text-accent-foreground'
                     )}
                     onClick={() => onFileSelect(file)}
                   >
@@ -221,9 +237,7 @@ export function EnhancedSearch({ files, onFileSelect, selectedFile }: EnhancedSe
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium truncate">
-                            {file.name}
-                          </span>
+                          <span className="text-xs font-medium truncate">{file.name}</span>
                           <div className="flex items-center space-x-1 ml-2">
                             {!isDirectory && (
                               <span className="text-xs text-muted-foreground">
@@ -244,13 +258,14 @@ export function EnhancedSearch({ files, onFileSelect, selectedFile }: EnhancedSe
                               </Badge>
                             )}
                             {file.complexity && (
-                              <Badge 
-                                variant="outline" 
+                              <Badge
+                                variant="outline"
                                 className={cn(
-                                  "text-xs h-4 px-1",
-                                  file.complexity === 'High' && "border-red-500 text-red-600",
-                                  file.complexity === 'Medium' && "border-yellow-500 text-yellow-600",
-                                  file.complexity === 'Low' && "border-green-500 text-green-600"
+                                  'text-xs h-4 px-1',
+                                  file.complexity === 'High' && 'border-red-500 text-red-600',
+                                  file.complexity === 'Medium' &&
+                                    'border-yellow-500 text-yellow-600',
+                                  file.complexity === 'Low' && 'border-green-500 text-green-600'
                                 )}
                               >
                                 {file.complexity}

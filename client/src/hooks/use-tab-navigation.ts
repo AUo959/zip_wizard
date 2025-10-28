@@ -1,6 +1,6 @@
 /**
  * NAVIGATION HOOKS AND UTILITIES
- * 
+ *
  * Custom hooks for enhanced tab navigation with keyboard support,
  * accessibility features, and state management.
  */
@@ -27,11 +27,11 @@ export interface TabNavigationConfig {
 /**
  * Custom hook for keyboard-based tab navigation.
  * Provides arrow keys, number shortcuts, and Home/End navigation.
- * 
+ *
  * @param currentView - Currently active view
  * @param setCurrentView - Function to update current view
  * @param config - Navigation configuration options
- * 
+ *
  * @example
  * ```typescript
  * const { handleKeyDown, focusedIndex } = useTabNavigation(
@@ -51,12 +51,10 @@ export function useTabNavigation(
     enableNumberKeys = true,
     enableHomeEnd = true,
     onViewChange,
-    announceChanges = true
+    announceChanges = true,
   } = config;
 
-  const [focusedIndex, setFocusedIndex] = useState<number>(
-    ALL_VIEWS.indexOf(currentView)
-  );
+  const [focusedIndex, setFocusedIndex] = useState<number>(ALL_VIEWS.indexOf(currentView));
 
   // Update focused index when current view changes
   useEffect(() => {
@@ -66,80 +64,89 @@ export function useTabNavigation(
   /**
    * Announces view changes to screen readers
    */
-  const announceViewChange = useCallback((view: ViewType) => {
-    if (!announceChanges) return;
-    
-    const announcement = document.getElementById('view-announcer');
-    if (announcement) {
-      announcement.textContent = `Switched to ${view} view`;
-    }
-  }, [announceChanges]);
+  const announceViewChange = useCallback(
+    (view: ViewType) => {
+      if (!announceChanges) return;
+
+      const announcement = document.getElementById('view-announcer');
+      if (announcement) {
+        announcement.textContent = `Switched to ${view} view`;
+      }
+    },
+    [announceChanges]
+  );
 
   /**
    * Changes to a specific view by index
    */
-  const navigateToIndex = useCallback((index: number) => {
-    if (index >= 0 && index < ALL_VIEWS.length) {
-      const newView = ALL_VIEWS[index];
-      setCurrentView(newView);
-      setFocusedIndex(index);
-      announceViewChange(newView);
-      onViewChange?.(newView);
-    }
-  }, [setCurrentView, announceViewChange, onViewChange]);
+  const navigateToIndex = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < ALL_VIEWS.length) {
+        const newView = ALL_VIEWS[index];
+        setCurrentView(newView);
+        setFocusedIndex(index);
+        announceViewChange(newView);
+        onViewChange?.(newView);
+      }
+    },
+    [setCurrentView, announceViewChange, onViewChange]
+  );
 
   /**
    * Keyboard navigation handler
    */
-  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
-    const currentIndex = ALL_VIEWS.indexOf(currentView);
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      const currentIndex = ALL_VIEWS.indexOf(currentView);
 
-    // Arrow key navigation
-    if (enableArrowKeys) {
-      if (event.key === 'ArrowRight') {
-        event.preventDefault();
-        const nextIndex = (currentIndex + 1) % ALL_VIEWS.length;
-        navigateToIndex(nextIndex);
-        return;
-      }
-      
-      if (event.key === 'ArrowLeft') {
-        event.preventDefault();
-        const prevIndex = (currentIndex - 1 + ALL_VIEWS.length) % ALL_VIEWS.length;
-        navigateToIndex(prevIndex);
-        return;
-      }
-    }
+      // Arrow key navigation
+      if (enableArrowKeys) {
+        if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          const nextIndex = (currentIndex + 1) % ALL_VIEWS.length;
+          navigateToIndex(nextIndex);
+          return;
+        }
 
-    // Home/End navigation
-    if (enableHomeEnd) {
-      if (event.key === 'Home') {
-        event.preventDefault();
-        navigateToIndex(0);
-        return;
+        if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          const prevIndex = (currentIndex - 1 + ALL_VIEWS.length) % ALL_VIEWS.length;
+          navigateToIndex(prevIndex);
+          return;
+        }
       }
-      
-      if (event.key === 'End') {
-        event.preventDefault();
-        navigateToIndex(ALL_VIEWS.length - 1);
-        return;
-      }
-    }
 
-    // Number key shortcuts (1-9)
-    if (enableNumberKeys && /^[1-9]$/.test(event.key)) {
-      const index = parseInt(event.key) - 1;
-      if (index < ALL_VIEWS.length) {
-        event.preventDefault();
-        navigateToIndex(index);
+      // Home/End navigation
+      if (enableHomeEnd) {
+        if (event.key === 'Home') {
+          event.preventDefault();
+          navigateToIndex(0);
+          return;
+        }
+
+        if (event.key === 'End') {
+          event.preventDefault();
+          navigateToIndex(ALL_VIEWS.length - 1);
+          return;
+        }
       }
-    }
-  }, [currentView, enableArrowKeys, enableHomeEnd, enableNumberKeys, navigateToIndex]);
+
+      // Number key shortcuts (1-9)
+      if (enableNumberKeys && /^[1-9]$/.test(event.key)) {
+        const index = parseInt(event.key) - 1;
+        if (index < ALL_VIEWS.length) {
+          event.preventDefault();
+          navigateToIndex(index);
+        }
+      }
+    },
+    [currentView, enableArrowKeys, enableHomeEnd, enableNumberKeys, navigateToIndex]
+  );
 
   return {
     handleKeyDown,
     focusedIndex,
-    navigateToIndex
+    navigateToIndex,
   };
 }
 
@@ -152,9 +159,7 @@ export interface TabBadge {
   label?: string;
 }
 
-export function useTabBadges(
-  initialBadges: Partial<Record<ViewType, TabBadge>> = {}
-) {
+export function useTabBadges(initialBadges: Partial<Record<ViewType, TabBadge>> = {}) {
   const [badges, setBadges] = useState(initialBadges);
 
   const setBadge = useCallback((view: ViewType, badge: TabBadge | null) => {
@@ -167,9 +172,12 @@ export function useTabBadges(
     });
   }, []);
 
-  const clearBadge = useCallback((view: ViewType) => {
-    setBadge(view, null);
-  }, [setBadge]);
+  const clearBadge = useCallback(
+    (view: ViewType) => {
+      setBadge(view, null);
+    },
+    [setBadge]
+  );
 
   const incrementCount = useCallback((view: ViewType) => {
     setBadges(prev => {
@@ -177,7 +185,7 @@ export function useTabBadges(
       if (current?.type === 'count') {
         return {
           ...prev,
-          [view]: { ...current, value: (current.value || 0) + 1 }
+          [view]: { ...current, value: (current.value || 0) + 1 },
         };
       }
       return prev;
@@ -188,7 +196,7 @@ export function useTabBadges(
     badges,
     setBadge,
     clearBadge,
-    incrementCount
+    incrementCount,
   };
 }
 
@@ -206,28 +214,37 @@ export function useViewVisibility(
 ) {
   const [visibility, setVisibility] = useState(initialVisibility);
 
-  const setViewVisibility = useCallback(
-    (view: ViewType, config: ViewVisibility) => {
-      setVisibility(prev => ({ ...prev, [view]: config }));
+  const setViewVisibility = useCallback((view: ViewType, config: ViewVisibility) => {
+    setVisibility(prev => ({ ...prev, [view]: config }));
+  }, []);
+
+  const hideView = useCallback(
+    (view: ViewType, reason?: string) => {
+      setViewVisibility(view, { hidden: true, reason });
     },
-    []
+    [setViewVisibility]
   );
 
-  const hideView = useCallback((view: ViewType, reason?: string) => {
-    setViewVisibility(view, { hidden: true, reason });
-  }, [setViewVisibility]);
+  const showView = useCallback(
+    (view: ViewType) => {
+      setViewVisibility(view, { hidden: false });
+    },
+    [setViewVisibility]
+  );
 
-  const showView = useCallback((view: ViewType) => {
-    setViewVisibility(view, { hidden: false });
-  }, [setViewVisibility]);
+  const disableView = useCallback(
+    (view: ViewType, reason?: string) => {
+      setViewVisibility(view, { disabled: true, reason });
+    },
+    [setViewVisibility]
+  );
 
-  const disableView = useCallback((view: ViewType, reason?: string) => {
-    setViewVisibility(view, { disabled: true, reason });
-  }, [setViewVisibility]);
-
-  const enableView = useCallback((view: ViewType) => {
-    setViewVisibility(view, { disabled: false });
-  }, [setViewVisibility]);
+  const enableView = useCallback(
+    (view: ViewType) => {
+      setViewVisibility(view, { disabled: false });
+    },
+    [setViewVisibility]
+  );
 
   const getVisibleViews = useCallback(() => {
     return ALL_VIEWS.filter(view => !visibility[view]?.hidden);
@@ -240,7 +257,7 @@ export function useViewVisibility(
     showView,
     disableView,
     enableView,
-    getVisibleViews
+    getVisibleViews,
   };
 }
 

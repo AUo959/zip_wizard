@@ -37,13 +37,8 @@ import { useState } from 'react';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('main');
-  
-  return (
-    <EnhancedViewTabs
-      currentView={currentView}
-      onViewChange={setCurrentView}
-    />
-  );
+
+  return <EnhancedViewTabs currentView={currentView} onViewChange={setCurrentView} />;
 }
 ```
 
@@ -77,15 +72,15 @@ Main navigation component with full feature set.
 interface EnhancedViewTabsProps {
   /** Currently active view (required) */
   currentView: ViewType;
-  
+
   /** Callback when view changes (required) */
   onViewChange: (view: ViewType) => void;
-  
+
   /** Optional: Group views by category */
   groupedViews?: {
     [category: string]: ViewType[];
   };
-  
+
   /** Optional: Badge configurations */
   badgeConfig?: {
     [view in ViewType]?: {
@@ -93,22 +88,22 @@ interface EnhancedViewTabsProps {
       value?: number;
     };
   };
-  
+
   /** Optional: Hide specific views */
   hiddenViews?: ViewType[];
-  
+
   /** Optional: Disable specific views */
   disabledViews?: ViewType[];
-  
+
   /** Optional: Show home/back button */
   showHomeButton?: boolean;
-  
+
   /** Optional: Home button click handler */
   onHomeClick?: () => void;
-  
+
   /** Optional: Force mobile mode */
   forceMobileMode?: boolean;
-  
+
   /** Optional: Custom class name */
   className?: string;
 }
@@ -131,13 +126,9 @@ interface EnhancedViewTabsProps {
 Handles keyboard navigation logic.
 
 ```typescript
-const {
-  focusedIndex,
-  handleKeyDown,
-  navigateToIndex
-} = useTabNavigation({
+const { focusedIndex, handleKeyDown, navigateToIndex } = useTabNavigation({
   viewCount: 10,
-  onNavigate: (index) => console.log(`Navigate to ${index}`),
+  onNavigate: index => console.log(`Navigate to ${index}`),
   currentIndex: 0,
   enableArrowKeys: true,
   enableHomeEnd: true,
@@ -167,12 +158,7 @@ const {
 Manages tab badge state.
 
 ```typescript
-const {
-  badges,
-  setBadge,
-  clearBadge,
-  incrementCount
-} = useTabBadges();
+const { badges, setBadge, clearBadge, incrementCount } = useTabBadges();
 
 // Set a badge
 setBadge('ai', 'new');
@@ -199,14 +185,8 @@ clearBadge('ai');
 Controls view visibility and disabled state.
 
 ```typescript
-const {
-  visibilityMap,
-  hideView,
-  showView,
-  disableView,
-  enableView,
-  getVisibleViews
-} = useViewVisibility();
+const { visibilityMap, hideView, showView, disableView, enableView, getVisibleViews } =
+  useViewVisibility();
 
 // Hide a view (removes from navigation)
 hideView('ai');
@@ -233,7 +213,7 @@ const visible = getVisibleViews(['main', 'ai', 'status']);
 Centralized view type from `@shared/views`:
 
 ```typescript
-type ViewType = 
+type ViewType =
   | 'main'
   | 'status'
   | 'ai'
@@ -262,14 +242,17 @@ type ViewType =
 View metadata with labels and icons:
 
 ```typescript
-const VIEW_METADATA: Record<ViewType, {
-  label: string;
-  icon?: string;
-}>;
+const VIEW_METADATA: Record<
+  ViewType,
+  {
+    label: string;
+    icon?: string;
+  }
+>;
 
 // Example
-VIEW_METADATA['ai'].label // "AI Tools"
-VIEW_METADATA['ai'].icon // "🤖"
+VIEW_METADATA['ai'].label; // "AI Tools"
+VIEW_METADATA['ai'].icon; // "🤖"
 ```
 
 ---
@@ -278,24 +261,24 @@ VIEW_METADATA['ai'].icon // "🤖"
 
 ### Global Navigation
 
-| Key | Action |
-|-----|--------|
-| `Arrow Right` / `Arrow Down` | Next tab |
-| `Arrow Left` / `Arrow Up` | Previous tab |
-| `Home` | First tab |
-| `End` | Last tab |
-| `1-9` | Jump to tab by number (1st-9th) |
-| `Tab` | Move focus within navigation |
-| `Enter` / `Space` | Activate focused tab |
+| Key                          | Action                          |
+| ---------------------------- | ------------------------------- |
+| `Arrow Right` / `Arrow Down` | Next tab                        |
+| `Arrow Left` / `Arrow Up`    | Previous tab                    |
+| `Home`                       | First tab                       |
+| `End`                        | Last tab                        |
+| `1-9`                        | Jump to tab by number (1st-9th) |
+| `Tab`                        | Move focus within navigation    |
+| `Enter` / `Space`            | Activate focused tab            |
 
 ### Mobile Dropdown
 
-| Key | Action |
-|-----|--------|
-| `Enter` / `Space` | Open/close dropdown |
-| `Arrow Down` | Next item in dropdown |
-| `Arrow Up` | Previous item in dropdown |
-| `Escape` | Close dropdown |
+| Key               | Action                    |
+| ----------------- | ------------------------- |
+| `Enter` / `Space` | Open/close dropdown       |
+| `Arrow Down`      | Next item in dropdown     |
+| `Arrow Up`        | Previous item in dropdown |
+| `Escape`          | Close dropdown            |
 
 ---
 
@@ -314,11 +297,11 @@ Customize appearance using CSS variables:
   --nav-text-hover: #1f2937;
   --nav-text-active: #2563eb;
   --nav-active-color: #2563eb;
-  
+
   /* Effects */
   --nav-hover-bg: rgba(59, 130, 246, 0.1);
   --nav-focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.5);
-  
+
   /* Tooltips */
   --nav-tooltip-bg: #1f2937;
   --nav-tooltip-text: #ffffff;
@@ -372,6 +355,7 @@ Customize via:
 ### Keyboard Navigation
 
 Full keyboard-only navigation support:
+
 - Tab stops only on active tab (roving tabindex)
 - Arrow key navigation between tabs
 - Home/End for quick navigation
@@ -381,9 +365,7 @@ Full keyboard-only navigation support:
 
 ```html
 <!-- Current view announcement -->
-<div role="status" aria-live="polite" class="sr-only">
-  Current view: AI Tools
-</div>
+<div role="status" aria-live="polite" class="sr-only">Current view: AI Tools</div>
 
 <!-- Keyboard shortcut hints -->
 <span class="sr-only">Press 1 to activate</span>
@@ -409,7 +391,7 @@ Full keyboard-only navigation support:
   groupedViews={{
     'Core Features': ['main', 'status', 'ai'],
     'Advanced Tools': ['analytics', 'vulnerability-scanner'],
-    'Experimental': ['mushin', 'wu-wei', 'symbolic'],
+    Experimental: ['mushin', 'wu-wei', 'symbolic'],
   }}
 />
 ```
@@ -420,16 +402,16 @@ Full keyboard-only navigation support:
 function NotificationSystem() {
   const [currentView, setCurrentView] = useState<ViewType>('main');
   const [warningCount, setWarningCount] = useState(0);
-  
+
   useEffect(() => {
     // Simulate real-time updates
     const interval = setInterval(() => {
       setWarningCount(prev => prev + 1);
     }, 5000);
-    
+
     return () => clearInterval(interval);
   }, []);
-  
+
   return (
     <EnhancedViewTabs
       currentView={currentView}
@@ -450,7 +432,7 @@ function NotificationSystem() {
 ```tsx
 function AdminNavigation({ isAdmin }: { isAdmin: boolean }) {
   const [currentView, setCurrentView] = useState<ViewType>('main');
-  
+
   return (
     <EnhancedViewTabs
       currentView={currentView}
@@ -466,7 +448,7 @@ function AdminNavigation({ isAdmin }: { isAdmin: boolean }) {
 ```tsx
 function AppLayout() {
   const [currentView, setCurrentView] = useState<ViewType>('main');
-  
+
   return (
     <div>
       {/* Existing header */}
@@ -476,7 +458,7 @@ function AppLayout() {
         isDarkMode={false}
         onDarkModeToggle={() => {}}
       />
-      
+
       {/* Enhanced view tabs */}
       <EnhancedViewTabs
         currentView={currentView}
@@ -484,11 +466,9 @@ function AppLayout() {
         showHomeButton
         onHomeClick={() => setCurrentView('main')}
       />
-      
+
       {/* Content area */}
-      <main>
-        {renderView(currentView)}
-      </main>
+      <main>{renderView(currentView)}</main>
     </div>
   );
 }
@@ -523,7 +503,7 @@ The test suite includes:
 ```typescript
 it('should navigate with keyboard and update badges', async () => {
   const onViewChange = vi.fn();
-  
+
   render(
     <EnhancedViewTabs
       currentView="main"
@@ -533,14 +513,14 @@ it('should navigate with keyboard and update badges', async () => {
       }}
     />
   );
-  
+
   // Press "2" to jump to second tab
   fireEvent.keyDown(screen.getByRole('tablist'), { key: '2' });
-  
+
   await waitFor(() => {
     expect(onViewChange).toHaveBeenCalled();
   });
-  
+
   // Verify badge is displayed
   expect(screen.getByText('NEW')).toBeInTheDocument();
 });
@@ -571,21 +551,25 @@ it('should navigate with keyboard and update badges', async () => {
 ### Common Issues
 
 **Q: Keyboard shortcuts not working**
+
 - Ensure the navigation component has focus
 - Check that `enableNumberShortcuts` is true
 - Verify no other shortcuts are conflicting
 
 **Q: Mobile dropdown not showing**
+
 - Check viewport width detection
 - Try `forceMobileMode={true}` to force mobile layout
 - Inspect CSS media queries
 
 **Q: Badges not displaying**
+
 - Verify `badgeConfig` prop structure
 - Check console for type errors
 - Ensure view names match `ViewType` exactly
 
 **Q: Theme not applying**
+
 - Confirm `.dark` class is on root element
 - Check CSS variable declarations
 - Verify `enhanced-navigation.css` is imported

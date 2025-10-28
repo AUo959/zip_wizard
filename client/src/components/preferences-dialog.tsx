@@ -1,38 +1,44 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Settings, 
-  Palette, 
-  Keyboard, 
-  Monitor, 
-  FileText, 
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Settings,
+  Palette,
+  Keyboard,
+  Monitor,
+  FileText,
   Zap,
   Moon,
   Sun,
   Eye,
-  Database
-} from "lucide-react";
+  Database,
+} from 'lucide-react';
 
 interface PreferencesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isDarkMode: boolean;
   onDarkModeChange: (dark: boolean) => void;
-  fileTreeMode: "classic" | "enhanced";
-  onFileTreeModeChange: (mode: "classic" | "enhanced") => void;
+  fileTreeMode: 'classic' | 'enhanced';
+  onFileTreeModeChange: (mode: 'classic' | 'enhanced') => void;
 }
 
 interface PreferenceSettings {
@@ -47,13 +53,13 @@ interface PreferenceSettings {
   observerWindow: number;
 }
 
-export function PreferencesDialog({ 
-  open, 
-  onOpenChange, 
-  isDarkMode, 
+export function PreferencesDialog({
+  open,
+  onOpenChange,
+  isDarkMode,
   onDarkModeChange,
   fileTreeMode,
-  onFileTreeModeChange
+  onFileTreeModeChange,
 }: PreferencesDialogProps) {
   const [settings, setSettings] = useState<PreferenceSettings>({
     autoSave: true,
@@ -64,11 +70,11 @@ export function PreferencesDialog({
     enableAnimations: true,
     compactMode: false,
     monitoringEnabled: true,
-    observerWindow: 48
+    observerWindow: 48,
   });
 
   const updateSetting = <K extends keyof PreferenceSettings>(
-    key: K, 
+    key: K,
     value: PreferenceSettings[K]
   ) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -84,10 +90,10 @@ export function PreferencesDialog({
       enableAnimations: true,
       compactMode: false,
       monitoringEnabled: true,
-      observerWindow: 48
+      observerWindow: 48,
     });
     onDarkModeChange(false);
-    onFileTreeModeChange("enhanced");
+    onFileTreeModeChange('enhanced');
   };
 
   return (
@@ -102,7 +108,7 @@ export function PreferencesDialog({
             Customize ZipWizard's appearance and behavior to match your workflow
           </DialogDescription>
         </DialogHeader>
-        
+
         <Tabs defaultValue="appearance" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="appearance" className="flex items-center space-x-1">
@@ -136,14 +142,13 @@ export function PreferencesDialog({
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Dark Mode</label>
-                    <p className="text-xs text-muted-foreground">Switch between light and dark themes</p>
+                    <p className="text-xs text-muted-foreground">
+                      Switch between light and dark themes
+                    </p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Sun className="w-4 h-4" />
-                    <Switch 
-                      checked={isDarkMode}
-                      onCheckedChange={onDarkModeChange}
-                    />
+                    <Switch checked={isDarkMode} onCheckedChange={onDarkModeChange} />
                     <Moon className="w-4 h-4" />
                   </div>
                 </div>
@@ -153,20 +158,22 @@ export function PreferencesDialog({
                     <label className="text-sm font-medium">Compact Mode</label>
                     <p className="text-xs text-muted-foreground">Reduce spacing for more content</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={settings.compactMode}
-                    onCheckedChange={(checked) => updateSetting('compactMode', checked)}
+                    onCheckedChange={checked => updateSetting('compactMode', checked)}
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Animations</label>
-                    <p className="text-xs text-muted-foreground">Enable smooth transitions and effects</p>
+                    <p className="text-xs text-muted-foreground">
+                      Enable smooth transitions and effects
+                    </p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={settings.enableAnimations}
-                    onCheckedChange={(checked) => updateSetting('enableAnimations', checked)}
+                    onCheckedChange={checked => updateSetting('enableAnimations', checked)}
                   />
                 </div>
               </CardContent>
@@ -186,7 +193,9 @@ export function PreferencesDialog({
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <label className="text-sm font-medium">File Tree Mode</label>
-                    <p className="text-xs text-muted-foreground">Choose between classic and enhanced tree views</p>
+                    <p className="text-xs text-muted-foreground">
+                      Choose between classic and enhanced tree views
+                    </p>
                   </div>
                   <Select value={fileTreeMode} onValueChange={onFileTreeModeChange}>
                     <SelectTrigger className="w-32">
@@ -204,20 +213,22 @@ export function PreferencesDialog({
                     <label className="text-sm font-medium">Show File Sizes</label>
                     <p className="text-xs text-muted-foreground">Display formatted file sizes</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={settings.showFileSize}
-                    onCheckedChange={(checked) => updateSetting('showFileSize', checked)}
+                    onCheckedChange={checked => updateSetting('showFileSize', checked)}
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Show Complexity Badges</label>
-                    <p className="text-xs text-muted-foreground">Display code complexity indicators</p>
+                    <p className="text-xs text-muted-foreground">
+                      Display code complexity indicators
+                    </p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={settings.showComplexity}
-                    onCheckedChange={(checked) => updateSetting('showComplexity', checked)}
+                    onCheckedChange={checked => updateSetting('showComplexity', checked)}
                   />
                 </div>
 
@@ -225,7 +236,9 @@ export function PreferencesDialog({
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <label className="text-sm font-medium">Recent Files Limit</label>
-                      <p className="text-xs text-muted-foreground">Maximum number of recent files to track</p>
+                      <p className="text-xs text-muted-foreground">
+                        Maximum number of recent files to track
+                      </p>
                     </div>
                     <Badge variant="outline">{settings.maxRecentFiles}</Badge>
                   </div>
@@ -255,22 +268,26 @@ export function PreferencesDialog({
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Auto-save Preferences</label>
-                    <p className="text-xs text-muted-foreground">Automatically save your settings</p>
+                    <p className="text-xs text-muted-foreground">
+                      Automatically save your settings
+                    </p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={settings.autoSave}
-                    onCheckedChange={(checked) => updateSetting('autoSave', checked)}
+                    onCheckedChange={checked => updateSetting('autoSave', checked)}
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Search Highlighting</label>
-                    <p className="text-xs text-muted-foreground">Highlight search terms in results</p>
+                    <p className="text-xs text-muted-foreground">
+                      Highlight search terms in results
+                    </p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={settings.searchHighlight}
-                    onCheckedChange={(checked) => updateSetting('searchHighlight', checked)}
+                    onCheckedChange={checked => updateSetting('searchHighlight', checked)}
                   />
                 </div>
               </CardContent>
@@ -290,11 +307,13 @@ export function PreferencesDialog({
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Enable Monitoring</label>
-                    <p className="text-xs text-muted-foreground">Track file operations and system events</p>
+                    <p className="text-xs text-muted-foreground">
+                      Track file operations and system events
+                    </p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={settings.monitoringEnabled}
-                    onCheckedChange={(checked) => updateSetting('monitoringEnabled', checked)}
+                    onCheckedChange={checked => updateSetting('monitoringEnabled', checked)}
                   />
                 </div>
 
@@ -328,9 +347,7 @@ export function PreferencesDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={() => onOpenChange(false)}>
-              Save Changes
-            </Button>
+            <Button onClick={() => onOpenChange(false)}>Save Changes</Button>
           </div>
         </div>
       </DialogContent>

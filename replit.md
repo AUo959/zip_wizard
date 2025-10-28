@@ -11,6 +11,7 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### Frontend Architecture
+
 - **Framework**: React with TypeScript
 - **Bundler**: Vite for development and build
 - **Styling**: Tailwind CSS with shadcn/ui component library
@@ -20,6 +21,7 @@ Preferred communication style: Simple, everyday language.
 - **Configuration**: Centralized config system for cross-platform compatibility
 
 ### Backend Architecture
+
 - **Runtime**: Node.js with Express.js
 - **Language**: TypeScript with ESM modules
 - **File Processing**: Multer for file uploads, JSZip for archive extraction
@@ -27,6 +29,7 @@ Preferred communication style: Simple, everyday language.
 - **Cross-Platform**: Configurable CORS, API versioning, health checks
 
 ### Data Storage Solutions
+
 - **Database**: PostgreSQL with Drizzle ORM (persistent storage)
 - **Connection**: Neon Database serverless PostgreSQL
 - **Schema**: Structured tables for archives and files with metadata
@@ -35,6 +38,7 @@ Preferred communication style: Simple, everyday language.
 ## Key Components
 
 ### Universal File Upload and Processing
+
 - Drag-and-drop upload interface accepting ALL file types
 - Comprehensive file parser system with extensible architecture
 - Support for archives (ZIP, TAR, RAR, 7Z, GZ)
@@ -48,18 +52,21 @@ Preferred communication style: Simple, everyday language.
 - Hash-based mutation tracking for file integrity
 
 ### Code Analysis Engine
+
 - NLP-like analysis for programming languages
 - Automatic tagging and categorization
 - Complexity scoring (Low/Medium/High)
 - Dependency identification from import statements
 
 ### Observer Service (v2.2.6b Enhancement)
+
 - Real-time event tracking (upload, analysis, mutation, export, access)
 - Activity summaries with severity levels
 - Monitoring window support (default 48 hours)
 - Critical event alerts and filtering
 
 ### Quantum-Inspired Status Dashboard
+
 - Symbolic threading visualization (T1_CHAIN format)
 - Ethics lock and trust anchor display
 - Deployment status tracking
@@ -68,12 +75,14 @@ Preferred communication style: Simple, everyday language.
 - Purple/blue gradient quantum-inspired UI design
 
 ### File Explorer
+
 - Hierarchical tree view of uploaded archives
 - Search and filtering capabilities
 - Real-time file selection and preview
 - Tab-based file viewing system
 
 ### Code Viewer
+
 - Syntax highlighting for multiple languages
 - File metadata display (size, language, complexity)
 - Copy and export functionality
@@ -81,12 +90,14 @@ Preferred communication style: Simple, everyday language.
 - Mutation tracking display
 
 ### Security & Trust Features (v2.2.6b)
+
 - **Ethics Lock**: Configurable ethical boundaries (default: Picard_Delta_3)
 - **Trust Anchor**: Security verification system (default: SN1-AS3-TRUSTED)
 - **Symbolic Chain**: Traceable operation history
 - **Thread Tags**: Unique identifiers for operation sequences
 
 ### Cross-Platform Integration Features
+
 - **RESTful API v1**: Versioned API endpoints for stability
 - **CORS Support**: Configurable cross-origin resource sharing
 - **Health Monitoring**: `/api/health` endpoint for system status
@@ -110,13 +121,15 @@ Preferred communication style: Simple, everyday language.
 ## External Dependencies
 
 ### Frontend Dependencies
+
 - **@tanstack/react-query**: Server state management and caching
-- **@radix-ui/***: Accessible UI component primitives
+- **@radix-ui/\***: Accessible UI component primitives
 - **tailwindcss**: Utility-first CSS framework
 - **wouter**: Lightweight React router
 - **react-dropzone**: File upload interface
 
 ### Backend Dependencies
+
 - **express**: Web application framework
 - **drizzle-orm**: Type-safe ORM for PostgreSQL
 - **@neondatabase/serverless**: Neon database driver
@@ -124,6 +137,7 @@ Preferred communication style: Simple, everyday language.
 - **jszip**: ZIP file processing
 
 ### Development Tools
+
 - **vite**: Build tool and development server
 - **typescript**: Type checking and compilation
 - **drizzle-kit**: Database migration tool
@@ -132,21 +146,25 @@ Preferred communication style: Simple, everyday language.
 ## Deployment Strategy
 
 ### Development
+
 - Vite dev server for frontend with HMR
 - tsx for TypeScript execution in development
 - Environment variable configuration for database
 
 ### Production Build
+
 - Vite builds frontend to `dist/public`
 - esbuild bundles server code to `dist/index.js`
 - Single Node.js process serves both static files and API
 
 ### Database Management
+
 - Drizzle migrations for schema updates
 - Environment-based configuration
 - PostgreSQL connection via DATABASE_URL
 
 ### Platform Integration
+
 - Replit-specific configurations and plugins
 - Development banner and cartographer integration
 - Runtime error overlay for debugging
@@ -156,6 +174,7 @@ The application follows a clean separation of concerns with shared types between
 ## Recent Changes
 
 ### January 2, 2025 - Major Performance & Analysis Enhancements
+
 - **Incremental Archive Processing**: Chunked processing for large archives with pause/resume capability
 - **Archive Comparison Tool**: Side-by-side archive comparison with detailed change tracking
 - **Vulnerability Scanner**: OWASP-compliant security scanning with CVE detection
@@ -168,6 +187,7 @@ The application follows a clean separation of concerns with shared types between
 - **Advanced Visualizations**: Zoomable graphs, cluster analysis, orphan file detection, hub file identification
 
 ### August 1, 2025 - Universal File Processing & Circuit Breaker Integration
+
 - **Universal File Parser System**: Comprehensive handling of ALL file types, not just ZIP archives
 - **Extensible Parser Architecture**: Plugin-based system supporting 30+ file formats out of the box
 - **Circuit Breaker Native Integration**: Quantum-inspired protection built directly into upload operations
@@ -179,6 +199,7 @@ The application follows a clean separation of concerns with shared types between
 - **Enhanced Feature Suite**: Maintained all previous features - symbolic interface, privacy shield, multilingual support, archive manager, dream mode interface
 
 ### July 31, 2025 - Redundant Upload Cleanup
+
 - **Issue Resolved**: Frontend timeout causing misleading "failed upload" messages while backend processing succeeded
 - **Action Taken**: Cleaned up 6 duplicate uploads using direct SQL deletion (378 observer events, 517 files, 6 archives)
 - **Technical Enhancement**: Improved DELETE API cascade deletion and error handling for future maintenance

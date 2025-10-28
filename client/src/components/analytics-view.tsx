@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { BarChart3, FileText, Code, Folder, Zap } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { BarChart3, FileText, Code, Folder, Zap } from 'lucide-react';
 
 interface AnalyticsViewProps {
   files?: Array<{
@@ -18,20 +18,26 @@ interface AnalyticsViewProps {
 export function AnalyticsView({ files = [], selectedArchive }: AnalyticsViewProps) {
   const totalFiles = files.length;
   const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-  
+
   // Language distribution
-  const languageStats = files.reduce((acc, file) => {
-    acc[file.language] = (acc[file.language] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const languageStats = files.reduce(
+    (acc, file) => {
+      acc[file.language] = (acc[file.language] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   // Complexity distribution
-  const complexityStats = files.reduce((acc, file) => {
-    if (file.complexity) {
-      acc[file.complexity] = (acc[file.complexity] || 0) + 1;
-    }
-    return acc;
-  }, {} as Record<string, number>);
+  const complexityStats = files.reduce(
+    (acc, file) => {
+      if (file.complexity) {
+        acc[file.complexity] = (acc[file.complexity] || 0) + 1;
+      }
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   // File size distribution
   const sizeBands = {
@@ -53,9 +59,7 @@ export function AnalyticsView({ files = [], selectedArchive }: AnalyticsViewProp
       <div className="flex items-center space-x-2">
         <BarChart3 className="w-6 h-6 text-primary" />
         <h2 className="text-2xl font-bold">Analytics Dashboard</h2>
-        {selectedArchive && (
-          <Badge variant="outline">{selectedArchive.name}</Badge>
-        )}
+        {selectedArchive && <Badge variant="outline">{selectedArchive.name}</Badge>}
       </div>
 
       {/* Overview Stats */}
@@ -118,7 +122,7 @@ export function AnalyticsView({ files = [], selectedArchive }: AnalyticsViewProp
         </CardHeader>
         <CardContent className="space-y-4">
           {Object.entries(languageStats)
-            .sort(([,a], [,b]) => b - a)
+            .sort(([, a], [, b]) => b - a)
             .map(([language, count]) => (
               <div key={language} className="space-y-2">
                 <div className="flex justify-between">
@@ -127,8 +131,7 @@ export function AnalyticsView({ files = [], selectedArchive }: AnalyticsViewProp
                 </div>
                 <Progress value={(count / totalFiles) * 100} className="h-2" />
               </div>
-            ))
-          }
+            ))}
         </CardContent>
       </Card>
 
@@ -138,26 +141,26 @@ export function AnalyticsView({ files = [], selectedArchive }: AnalyticsViewProp
           <CardTitle>Code Complexity</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {Object.entries(complexityStats)
-            .map(([complexity, count]) => (
-              <div key={complexity} className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">{complexity}</span>
-                  <Badge 
-                    variant="outline"
-                    className={
-                      complexity === 'High' ? 'border-red-500 text-red-500' :
-                      complexity === 'Medium' ? 'border-yellow-500 text-yellow-500' :
-                      'border-green-500 text-green-500'
-                    }
-                  >
-                    {count} files
-                  </Badge>
-                </div>
-                <Progress value={(count / totalFiles) * 100} className="h-2" />
+          {Object.entries(complexityStats).map(([complexity, count]) => (
+            <div key={complexity} className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">{complexity}</span>
+                <Badge
+                  variant="outline"
+                  className={
+                    complexity === 'High'
+                      ? 'border-red-500 text-red-500'
+                      : complexity === 'Medium'
+                        ? 'border-yellow-500 text-yellow-500'
+                        : 'border-green-500 text-green-500'
+                  }
+                >
+                  {count} files
+                </Badge>
               </div>
-            ))
-          }
+              <Progress value={(count / totalFiles) * 100} className="h-2" />
+            </div>
+          ))}
         </CardContent>
       </Card>
 
@@ -167,17 +170,15 @@ export function AnalyticsView({ files = [], selectedArchive }: AnalyticsViewProp
           <CardTitle>File Size Distribution</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {Object.entries(sizeBands)
-            .map(([band, count]) => (
-              <div key={band} className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">{band}</span>
-                  <Badge variant="outline">{count} files</Badge>
-                </div>
-                <Progress value={(count / totalFiles) * 100} className="h-2" />
+          {Object.entries(sizeBands).map(([band, count]) => (
+            <div key={band} className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">{band}</span>
+                <Badge variant="outline">{count} files</Badge>
               </div>
-            ))
-          }
+              <Progress value={(count / totalFiles) * 100} className="h-2" />
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>

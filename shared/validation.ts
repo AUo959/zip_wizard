@@ -1,6 +1,6 @@
 /**
  * DATABASE VALIDATION UTILITIES
- * 
+ *
  * Ensures data integrity before database operations.
  * All array/object fields must be validated before Drizzle ORM insertion.
  */
@@ -8,10 +8,10 @@
 /**
  * Normalizes tags input to a valid string array.
  * Handles various input types and ensures database compatibility.
- * 
+ *
  * @param tags - Raw tags input (unknown type)
  * @returns Validated string array safe for database insertion
- * 
+ *
  * @example
  * ```typescript
  * const file = {
@@ -26,12 +26,12 @@ export function normalizeTags(tags: unknown): string[] {
   if (Array.isArray(tags)) {
     return tags.map(tag => String(tag).trim()).filter(Boolean);
   }
-  
+
   // Null or undefined - return empty array
   if (tags === null || tags === undefined) {
     return [];
   }
-  
+
   // Try parsing as JSON
   if (typeof tags === 'string') {
     try {
@@ -46,7 +46,7 @@ export function normalizeTags(tags: unknown): string[] {
       return [tags.trim()].filter(Boolean);
     }
   }
-  
+
   // Object or other type - convert to string
   return [String(tags).trim()].filter(Boolean);
 }
@@ -54,7 +54,7 @@ export function normalizeTags(tags: unknown): string[] {
 /**
  * Normalizes dependencies input to a valid string array.
  * Similar to normalizeTags but with dependency-specific validation.
- * 
+ *
  * @param dependencies - Raw dependencies input
  * @returns Validated string array of dependencies
  */
@@ -65,7 +65,7 @@ export function normalizeDependencies(dependencies: unknown): string[] {
 /**
  * Validates and normalizes any JSON field before database insertion.
  * Ensures the value is serializable and safe for JSONB columns.
- * 
+ *
  * @param value - Raw value to normalize
  * @returns JSON-safe value
  */
@@ -73,7 +73,7 @@ export function normalizeJsonField<T>(value: unknown): T | null {
   if (value === null || value === undefined) {
     return null;
   }
-  
+
   try {
     // Test if value is JSON-serializable
     JSON.stringify(value);
@@ -87,7 +87,7 @@ export function normalizeJsonField<T>(value: unknown): T | null {
 /**
  * Type guard to ensure a value is a non-empty string array.
  * Useful for runtime validation before database operations.
- * 
+ *
  * @param value - Value to check
  * @returns True if value is a valid string array
  */

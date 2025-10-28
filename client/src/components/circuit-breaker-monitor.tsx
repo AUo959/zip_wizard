@@ -6,9 +6,9 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Shield, 
-  Activity, 
+import {
+  Shield,
+  Activity,
   AlertTriangle,
   CheckCircle,
   XCircle,
@@ -19,7 +19,7 @@ import {
   Unlock,
   Zap,
   Brain,
-  Atom
+  Atom,
 } from 'lucide-react';
 import { circuitBreaker, CircuitState } from '@/lib/circuit-breaker';
 
@@ -36,7 +36,7 @@ export function CircuitBreakerMonitor() {
     };
 
     updateStates();
-    
+
     if (autoRefresh) {
       const interval = setInterval(updateStates, 1000);
       return () => clearInterval(interval);
@@ -126,24 +126,18 @@ export function CircuitBreakerMonitor() {
           {/* Controls */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setAutoRefresh(!autoRefresh)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setAutoRefresh(!autoRefresh)}>
                 <RefreshCw className={`w-4 h-4 ${autoRefresh ? 'animate-spin' : ''}`} />
                 {autoRefresh ? 'Auto' : 'Manual'}
               </Button>
             </div>
-            <div className="text-sm text-muted-foreground">
-              {states.size} active circuits
-            </div>
+            <div className="text-sm text-muted-foreground">{states.size} active circuits</div>
           </div>
 
           {/* Circuit Breakers Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from(states.entries()).map(([name, state]) => (
-              <Card 
+              <Card
                 key={name}
                 className={`cursor-pointer transition-all hover:shadow-md ${
                   selectedBreaker === name ? 'ring-2 ring-indigo-500' : ''
@@ -156,9 +150,7 @@ export function CircuitBreakerMonitor() {
                       {getStateIcon(state.state)}
                       <span className="font-medium text-sm">{name}</span>
                     </div>
-                    <Badge className={getStateColor(state.state)}>
-                      {state.state}
-                    </Badge>
+                    <Badge className={getStateColor(state.state)}>{state.state}</Badge>
                   </div>
 
                   <div className="space-y-2">
@@ -166,11 +158,10 @@ export function CircuitBreakerMonitor() {
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground">Health</span>
                       <div className="flex items-center gap-2">
-                        <Progress 
-                          value={state.healthScore} 
-                          className="w-20 h-2"
-                        />
-                        <span className={`text-xs font-medium ${getHealthColor(state.healthScore)}`}>
+                        <Progress value={state.healthScore} className="w-20 h-2" />
+                        <span
+                          className={`text-xs font-medium ${getHealthColor(state.healthScore)}`}
+                        >
                           {state.healthScore}%
                         </span>
                       </div>
@@ -187,9 +178,7 @@ export function CircuitBreakerMonitor() {
                     {/* Requests */}
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground">Requests</span>
-                      <span className="text-xs font-medium">
-                        {state.totalRequests}
-                      </span>
+                      <span className="text-xs font-medium">{state.totalRequests}</span>
                     </div>
 
                     {/* Quantum Probability */}
@@ -305,11 +294,15 @@ export function CircuitBreakerMonitor() {
                       </div>
                       <div>
                         <label className="text-sm font-medium">Successes</label>
-                        <p className="text-2xl font-bold text-green-600">{selectedState.successes}</p>
+                        <p className="text-2xl font-bold text-green-600">
+                          {selectedState.successes}
+                        </p>
                       </div>
                       <div>
                         <label className="text-sm font-medium">Avg Response Time</label>
-                        <p className="text-2xl font-bold">{Math.round(selectedState.averageResponseTime)}ms</p>
+                        <p className="text-2xl font-bold">
+                          {Math.round(selectedState.averageResponseTime)}ms
+                        </p>
                       </div>
                     </div>
 
@@ -328,27 +321,30 @@ export function CircuitBreakerMonitor() {
                   <TabsContent value="history" className="space-y-3">
                     <ScrollArea className="h-[200px]">
                       <div className="space-y-2">
-                        {selectedState.stateHistory.slice(-10).reverse().map((transition, i) => (
-                          <div key={i} className="p-2 border rounded text-sm">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Badge className={getStateColor(transition.from)}>
-                                  {transition.from}
-                                </Badge>
-                                <span>→</span>
-                                <Badge className={getStateColor(transition.to)}>
-                                  {transition.to}
-                                </Badge>
+                        {selectedState.stateHistory
+                          .slice(-10)
+                          .reverse()
+                          .map((transition, i) => (
+                            <div key={i} className="p-2 border rounded text-sm">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Badge className={getStateColor(transition.from)}>
+                                    {transition.from}
+                                  </Badge>
+                                  <span>→</span>
+                                  <Badge className={getStateColor(transition.to)}>
+                                    {transition.to}
+                                  </Badge>
+                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                  {formatTime(transition.timestamp)}
+                                </span>
                               </div>
-                              <span className="text-xs text-muted-foreground">
-                                {formatTime(transition.timestamp)}
-                              </span>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {transition.reason}
+                              </p>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {transition.reason}
-                            </p>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     </ScrollArea>
                   </TabsContent>
@@ -370,7 +366,8 @@ export function CircuitBreakerMonitor() {
                               </p>
                               {pattern.predictedNextFailure && (
                                 <p className="text-xs mt-2">
-                                  Next predicted: {pattern.predictedNextFailure.toLocaleTimeString()}
+                                  Next predicted:{' '}
+                                  {pattern.predictedNextFailure.toLocaleTimeString()}
                                 </p>
                               )}
                             </CardContent>
@@ -397,15 +394,20 @@ export function CircuitBreakerMonitor() {
                 <strong>Emergent Intelligence Insights:</strong>
                 <ul className="mt-2 space-y-1 text-sm">
                   {Array.from(states.values()).some(s => s.state === 'quantum') && (
-                    <li>• Quantum states detected - system is self-adapting to uncertain conditions</li>
+                    <li>
+                      • Quantum states detected - system is self-adapting to uncertain conditions
+                    </li>
                   )}
-                  {Array.from(states.values()).some(s => s.patterns.some(p => p.type === 'periodic')) && (
+                  {Array.from(states.values()).some(s =>
+                    s.patterns.some(p => p.type === 'periodic')
+                  ) && (
                     <li>• Periodic failure patterns detected - consider scheduled maintenance</li>
                   )}
                   {Array.from(states.values()).some(s => s.healthScore < 50) && (
                     <li>• Low health scores detected - self-healing mechanisms activated</li>
                   )}
-                  {Array.from(states.values()).filter(s => s.state === 'open').length > states.size / 2 && (
+                  {Array.from(states.values()).filter(s => s.state === 'open').length >
+                    states.size / 2 && (
                     <li>• Multiple circuits open - possible cascading failure scenario</li>
                   )}
                 </ul>

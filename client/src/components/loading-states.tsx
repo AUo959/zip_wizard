@@ -1,17 +1,15 @@
-import { Loader2, File, Search, Upload } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2, File, Search, Upload } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export function LoadingSpinner({ size = "default" }: { size?: "sm" | "default" | "lg" }) {
+export function LoadingSpinner({ size = 'default' }: { size?: 'sm' | 'default' | 'lg' }) {
   const sizeClasses = {
-    sm: "w-4 h-4",
-    default: "w-6 h-6", 
-    lg: "w-8 h-8"
+    sm: 'w-4 h-4',
+    default: 'w-6 h-6',
+    lg: 'w-8 h-8',
   };
 
-  return (
-    <Loader2 className={`${sizeClasses[size]} animate-spin`} />
-  );
+  return <Loader2 className={`${sizeClasses[size]} animate-spin`} />;
 }
 
 export function FileTreeLoading() {
@@ -71,12 +69,10 @@ export function UploadProgress({ progress, fileName }: { progress: number; fileN
           <Upload className="w-8 h-8 mx-auto text-primary animate-pulse" />
           <div>
             <p className="text-sm font-medium">Uploading...</p>
-            {fileName && (
-              <p className="text-xs text-muted-foreground truncate">{fileName}</p>
-            )}
+            {fileName && <p className="text-xs text-muted-foreground truncate">{fileName}</p>}
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
+            <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
@@ -106,7 +102,7 @@ export function AnalysisLoading() {
         <LoadingSpinner size="sm" />
         <span className="text-sm">Analyzing archive...</span>
       </div>
-      
+
       <div className="space-y-3">
         <div>
           <Skeleton className="h-4 w-32 mb-2" />

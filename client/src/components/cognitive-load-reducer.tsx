@@ -25,38 +25,38 @@ export function CognitiveLoadReducer({ onLoadChange, currentView }: CognitiveLoa
       name: 'Progressive Disclosure',
       description: 'Hide complexity behind simple interfaces',
       reduction: 15,
-      active: true
+      active: true,
     },
     {
       name: 'Contextual Chunking',
       description: 'Group related information together',
       reduction: 12,
-      active: true
+      active: true,
     },
     {
       name: 'Visual Hierarchy',
       description: 'Use typography and layout to guide attention',
       reduction: 10,
-      active: true
+      active: true,
     },
     {
       name: 'Predictive Loading',
       description: 'Anticipate user needs and preload content',
       reduction: 8,
-      active: false
+      active: false,
     },
     {
       name: 'Effortless Navigation',
       description: 'Minimize steps between related actions',
       reduction: 11,
-      active: false
+      active: false,
     },
     {
       name: 'Intelligent Defaults',
       description: 'Pre-select likely user choices',
       reduction: 9,
-      active: false
-    }
+      active: false,
+    },
   ]);
 
   const calculateTotalReduction = useCallback(() => {
@@ -72,8 +72,8 @@ export function CognitiveLoadReducer({ onLoadChange, currentView }: CognitiveLoa
   }, [effectiveLoad, onLoadChange]);
 
   const toggleTechnique = (index: number) => {
-    setReductionTechniques(prev => 
-      prev.map((technique, i) => 
+    setReductionTechniques(prev =>
+      prev.map((technique, i) =>
         i === index ? { ...technique, active: !technique.active } : technique
       )
     );
@@ -87,9 +87,12 @@ export function CognitiveLoadReducer({ onLoadChange, currentView }: CognitiveLoa
   };
 
   const getFlowState = (load: number) => {
-    if (load < 20) return { state: 'Flow State', color: 'text-green-600', icon: <Zap className="w-4 h-4" /> };
-    if (load < 40) return { state: 'Wu Wei', color: 'text-blue-600', icon: <Eye className="w-4 h-4" /> };
-    if (load < 60) return { state: 'Focused', color: 'text-yellow-600', icon: <Focus className="w-4 h-4" /> };
+    if (load < 20)
+      return { state: 'Flow State', color: 'text-green-600', icon: <Zap className="w-4 h-4" /> };
+    if (load < 40)
+      return { state: 'Wu Wei', color: 'text-blue-600', icon: <Eye className="w-4 h-4" /> };
+    if (load < 60)
+      return { state: 'Focused', color: 'text-yellow-600', icon: <Focus className="w-4 h-4" /> };
     return { state: 'Overwhelmed', color: 'text-red-600', icon: <Brain className="w-4 h-4" /> };
   };
 
@@ -112,16 +115,14 @@ export function CognitiveLoadReducer({ onLoadChange, currentView }: CognitiveLoa
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Current Cognitive Load</span>
             <div className="flex items-center gap-2">
-              <Badge className={`text-xs ${getLoadColor(effectiveLoad)}`}>
-                {effectiveLoad}%
-              </Badge>
+              <Badge className={`text-xs ${getLoadColor(effectiveLoad)}`}>{effectiveLoad}%</Badge>
               <div className={`flex items-center gap-1 ${flowState.color}`}>
                 {flowState.icon}
                 <span className="text-xs font-medium">{flowState.state}</span>
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Progress value={effectiveLoad} className="h-3" />
             <div className="flex justify-between text-xs text-muted-foreground">
@@ -153,7 +154,10 @@ export function CognitiveLoadReducer({ onLoadChange, currentView }: CognitiveLoa
           <h3 className="text-sm font-medium">Load Reduction Techniques</h3>
           <div className="space-y-3">
             {reductionTechniques.map((technique, index) => (
-              <div key={technique.name} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              <div
+                key={technique.name}
+                className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
+              >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{technique.name}</span>
@@ -161,14 +165,9 @@ export function CognitiveLoadReducer({ onLoadChange, currentView }: CognitiveLoa
                       -{technique.reduction}%
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {technique.description}
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">{technique.description}</p>
                 </div>
-                <Switch
-                  checked={technique.active}
-                  onCheckedChange={() => toggleTechnique(index)}
-                />
+                <Switch checked={technique.active} onCheckedChange={() => toggleTechnique(index)} />
               </div>
             ))}
           </div>
@@ -182,7 +181,8 @@ export function CognitiveLoadReducer({ onLoadChange, currentView }: CognitiveLoa
               <div className="text-sm">
                 <p className="font-medium text-blue-800 mb-1">File Explorer Optimization</p>
                 <p className="text-blue-700 text-xs">
-                  Enable predictive loading to pre-fetch likely file selections based on your browsing patterns.
+                  Enable predictive loading to pre-fetch likely file selections based on your
+                  browsing patterns.
                 </p>
               </div>
             )}
@@ -190,7 +190,8 @@ export function CognitiveLoadReducer({ onLoadChange, currentView }: CognitiveLoa
               <div className="text-sm">
                 <p className="font-medium text-green-800 mb-1">Symbolic Interface Flow</p>
                 <p className="text-green-700 text-xs">
-                  Wu Wei mode active - commands will execute with minimal conscious effort. Trust your intuitive selections.
+                  Wu Wei mode active - commands will execute with minimal conscious effort. Trust
+                  your intuitive selections.
                 </p>
               </div>
             )}
@@ -198,7 +199,8 @@ export function CognitiveLoadReducer({ onLoadChange, currentView }: CognitiveLoa
               <div className="text-sm">
                 <p className="font-medium text-purple-800 mb-1">Aurora Flow State</p>
                 <p className="text-purple-700 text-xs">
-                  Current interface optimized for {effectiveLoad < 30 ? 'effortless flow' : 'focused attention'}. 
+                  Current interface optimized for{' '}
+                  {effectiveLoad < 30 ? 'effortless flow' : 'focused attention'}.
                   {effectiveLoad > 60 && ' Consider enabling more reduction techniques.'}
                 </p>
               </div>
@@ -221,7 +223,7 @@ export function CognitiveLoadReducer({ onLoadChange, currentView }: CognitiveLoa
             variant="outline"
             size="sm"
             onClick={() => {
-              setReductionTechniques(prev => 
+              setReductionTechniques(prev =>
                 prev.map(technique => ({ ...technique, active: true }))
               );
             }}
