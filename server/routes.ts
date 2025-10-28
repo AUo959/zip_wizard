@@ -240,6 +240,57 @@ function analyzeCodeFile(filename: string, content: string, extension: string) {
   };
 }
 
+// Helper function to detect language from extension
+function detectLanguage(extension: string): string {
+  const languageMap: Record<string, string> = {
+    '.js': 'JavaScript',
+    '.jsx': 'React',
+    '.ts': 'TypeScript',
+    '.tsx': 'React TypeScript',
+    '.py': 'Python',
+    '.java': 'Java',
+    '.cpp': 'C++',
+    '.c': 'C',
+    '.css': 'CSS',
+    '.html': 'HTML',
+    '.json': 'JSON',
+    '.md': 'Markdown',
+    '.php': 'PHP',
+    '.rb': 'Ruby',
+    '.go': 'Go',
+    '.rs': 'Rust',
+  };
+  return languageMap[extension] || 'Unknown';
+}
+
+// Helper function to analyze content
+function analyzeContent(content: string, language: string): { complexity: string | null, dependencies: string[] } {
+  const dependencies: string[] = [];
+  
+  // Extract imports/dependencies
+  const importRegex = /(?:import|require|from|#include)\s+['"']([^'"']+)['"']/g;
+  let match;
+  while ((match = importRegex.exec(content)) !== null) {
+    dependencies.push(match[1]);
+  }
+
+  // Determine complexity based on content
+  const lines = content.split('\n').length;
+  const functions = (content.match(/function|def |class |const \w+\s*=/g) || []).length;
+  
+  let complexity = "Low";
+  if (lines > 100 || functions > 10) {
+    complexity = "High";
+  } else if (lines > 50 || functions > 5) {
+    complexity = "Medium";
+  }
+
+  return {
+    complexity,
+    dependencies: dependencies.slice(0, 10), // Limit dependencies
+  };
+}
+
 // Helper functions for enhanced export
 function extractKeyInsights(files: File[]): string[] {
   const insights: string[] = [];
@@ -467,7 +518,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (contents && contents.files) {
         // ZIP archive processing
         for (const [relativePath, zipEntry] of Object.entries(contents.files)) {
-          if (zipEntry.dir) {
+          const entry = zipEntry as JSZip.JSZipObject;
+          if (entry.dir) {
           // Directory entry
           const file = await storage.createFile({
             archiveId: archive.id,
@@ -487,7 +539,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           processedFiles.push(file);
         } else {
           // File entry
-          const content = await zipEntry.async("text");
+          const content = await entry.async("text");
           const extension = path.extname(relativePath);
           const name = path.basename(relativePath);
           const parentPath = path.dirname(relativePath) === '.' ? null : path.dirname(relativePath);

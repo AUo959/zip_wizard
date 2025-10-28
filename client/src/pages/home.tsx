@@ -41,6 +41,8 @@ import { MainNavigation } from "@/components/main-navigation";
 import { useKeyboardShortcuts, defaultShortcuts, formatShortcut } from "@/hooks/use-keyboard-shortcuts";
 import type { Archive as ArchiveType, File } from "@shared/schema";
 
+type ViewType = "main" | "status" | "ai" | "analytics" | "symbolic" | "archive-manager" | "privacy" | "multilingual" | "flow-manager" | "wu-wei" | "mushin" | "memory-compression" | "cognitive-load" | "pattern-recognition" | "incremental-processor" | "archive-comparison" | "vulnerability-scanner" | "dependency-graph" | "code-metrics" | "timing-optimizer" | "circuit-breaker";
+
 export default function Home() {
   const [selectedArchive, setSelectedArchive] = useState<ArchiveType | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -53,7 +55,7 @@ export default function Home() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [currentView, setCurrentView] = useState<"main" | "status" | "ai" | "analytics" | "symbolic" | "archive-manager" | "privacy" | "multilingual" | "flow-manager" | "wu-wei" | "mushin" | "memory-compression" | "cognitive-load" | "pattern-recognition" | "incremental-processor" | "archive-comparison" | "vulnerability-scanner" | "dependency-graph" | "code-metrics" | "timing-optimizer" | "circuit-breaker">("main");
+  const [currentView, setCurrentView] = useState<ViewType>("main");
   const [dreamMode, setDreamMode] = useState(false);
   const [privacyShieldActive, setPrivacyShieldActive] = useState(true);
   const [currentLanguage, setCurrentLanguage] = useState('en');
@@ -208,6 +210,9 @@ export default function Home() {
     setCurrentLanguage(language);
     console.log('Language changed to:', language);
   }, []);
+
+  // Helper to check view without triggering TypeScript narrowing in switch
+  const isActiveView = (view: ViewType) => currentView === view;
 
   if (showUpload || !archives?.length) {
     return (
@@ -975,7 +980,7 @@ export default function Home() {
             <div className="bg-muted/30 border-b border-border px-6 py-3">
               <div className="flex flex-wrap gap-2">
                 <Button
-                  variant={currentView === "symbolic" ? "default" : "outline"}
+                  variant={isActiveView("symbolic") ? "default" : "outline"}
                   onClick={() => setCurrentView("symbolic")}
                   size="sm"
                   className="text-xs"
@@ -983,7 +988,7 @@ export default function Home() {
                   ⚡ Symbolic Interface
                 </Button>
                 <Button
-                  variant={currentView === "archive-manager" ? "default" : "outline"}
+                  variant={isActiveView("archive-manager") ? "default" : "outline"}
                   onClick={() => setCurrentView("archive-manager")}
                   size="sm"
                   className="text-xs"
@@ -991,7 +996,7 @@ export default function Home() {
                   📦 Archive Manager
                 </Button>
                 <Button
-                  variant={currentView === "privacy" ? "default" : "outline"}
+                  variant={isActiveView("privacy") ? "default" : "outline"}
                   onClick={() => setCurrentView("privacy")}
                   size="sm"
                   className="text-xs"
@@ -999,7 +1004,7 @@ export default function Home() {
                   🛡️ Privacy Shield
                 </Button>
                 <Button
-                  variant={currentView === "multilingual" ? "default" : "outline"}
+                  variant={isActiveView("multilingual") ? "default" : "outline"}
                   onClick={() => setCurrentView("multilingual")}
                   size="sm"
                   className="text-xs"
@@ -1007,7 +1012,7 @@ export default function Home() {
                   🌍 Multilingual
                 </Button>
                 <Button
-                  variant={currentView === "flow-manager" ? "default" : "outline"}
+                  variant={isActiveView("flow-manager") ? "default" : "outline"}
                   onClick={() => setCurrentView("flow-manager")}
                   size="sm"
                   className="text-xs"
@@ -1015,7 +1020,7 @@ export default function Home() {
                   🧘 Flow States
                 </Button>
                 <Button
-                  variant={currentView === "wu-wei" ? "default" : "outline"}
+                  variant={isActiveView("wu-wei") ? "default" : "outline"}
                   onClick={() => setCurrentView("wu-wei")}
                   size="sm"
                   className="text-xs"
@@ -1023,7 +1028,7 @@ export default function Home() {
                   💫 Wu Wei
                 </Button>
                 <Button
-                  variant={currentView === "memory-compression" ? "default" : "outline"}
+                  variant={isActiveView("memory-compression") ? "default" : "outline"}
                   onClick={() => setCurrentView("memory-compression")}
                   size="sm"
                   className="text-xs"
@@ -1031,7 +1036,7 @@ export default function Home() {
                   🗜️ Compression
                 </Button>
                 <Button
-                  variant={currentView === "cognitive-load" ? "default" : "outline"}
+                  variant={isActiveView("cognitive-load") ? "default" : "outline"}
                   onClick={() => setCurrentView("cognitive-load")}
                   size="sm"
                   className="text-xs"
@@ -1039,7 +1044,7 @@ export default function Home() {
                   🧠 Cognitive Load
                 </Button>
                 <Button
-                  variant={currentView === "pattern-recognition" ? "default" : "outline"}
+                  variant={isActiveView("pattern-recognition") ? "default" : "outline"}
                   onClick={() => setCurrentView("pattern-recognition")}
                   size="sm"
                   className="text-xs"
@@ -1047,7 +1052,7 @@ export default function Home() {
                   🔍 Patterns
                 </Button>
                 <Button
-                  variant={currentView === "incremental-processor" ? "default" : "outline"}
+                  variant={isActiveView("incremental-processor") ? "default" : "outline"}
                   onClick={() => setCurrentView("incremental-processor")}
                   size="sm"
                   className="text-xs"
@@ -1055,7 +1060,7 @@ export default function Home() {
                   ⚡ Incremental
                 </Button>
                 <Button
-                  variant={currentView === "archive-comparison" ? "default" : "outline"}
+                  variant={isActiveView("archive-comparison") ? "default" : "outline"}
                   onClick={() => setCurrentView("archive-comparison")}
                   size="sm"
                   className="text-xs"
@@ -1063,7 +1068,7 @@ export default function Home() {
                   🔄 Compare
                 </Button>
                 <Button
-                  variant={currentView === "vulnerability-scanner" ? "default" : "outline"}
+                  variant={isActiveView("vulnerability-scanner") ? "default" : "outline"}
                   onClick={() => setCurrentView("vulnerability-scanner")}
                   size="sm"
                   className="text-xs"
@@ -1071,7 +1076,7 @@ export default function Home() {
                   🛡️ Security
                 </Button>
                 <Button
-                  variant={currentView === "dependency-graph" ? "default" : "outline"}
+                  variant={isActiveView("dependency-graph") ? "default" : "outline"}
                   onClick={() => setCurrentView("dependency-graph")}
                   size="sm"
                   className="text-xs"
@@ -1079,7 +1084,7 @@ export default function Home() {
                   🕸️ Graph
                 </Button>
                 <Button
-                  variant={currentView === "code-metrics" ? "default" : "outline"}
+                  variant={isActiveView("code-metrics") ? "default" : "outline"}
                   onClick={() => setCurrentView("code-metrics")}
                   size="sm"
                   className="text-xs"
@@ -1087,7 +1092,7 @@ export default function Home() {
                   📊 Metrics
                 </Button>
                 <Button
-                  variant={currentView === "timing-optimizer" ? "default" : "outline"}
+                  variant={isActiveView("timing-optimizer") ? "default" : "outline"}
                   onClick={() => setCurrentView("timing-optimizer")}
                   size="sm"
                   className="text-xs"
@@ -1095,7 +1100,7 @@ export default function Home() {
                   ⏱️ Timing
                 </Button>
                 <Button
-                  variant={currentView === "circuit-breaker" ? "default" : "outline"}
+                  variant={isActiveView("circuit-breaker") ? "default" : "outline"}
                   onClick={() => setCurrentView("circuit-breaker")}
                   size="sm"
                   className="text-xs"

@@ -122,7 +122,7 @@ export function DependencyGraph({
       }
     });
 
-    return [...new Set(dependencies)]; // Remove duplicates
+    return Array.from(new Set(dependencies)); // Remove duplicates
   }, []);
 
   const analyzeDependencies = useCallback(() => {

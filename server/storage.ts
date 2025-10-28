@@ -81,9 +81,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createFile(insertFile: InsertFile): Promise<File> {
+    // Ensure tags is properly typed as string array
+    const fileToInsert = {
+      ...insertFile,
+      tags: (Array.isArray(insertFile.tags) ? insertFile.tags : []) as string[]
+    };
+    
     const [file] = await db
       .insert(files)
-      .values(insertFile)
+      .values(fileToInsert as any) // Type assertion for Drizzle compatibility
       .returning();
     return file;
   }

@@ -353,9 +353,9 @@ export function CodeMetricsAnalyzer({
   const analyzeFile = (file: any): FileMetrics => {
     const content = file.content || '';
     const lines = content.split('\n');
-    const codeLines = lines.filter(line => line.trim() && !line.trim().startsWith('//')).length;
-    const commentLines = lines.filter(line => line.trim().startsWith('//')).length;
-    const blankLines = lines.filter(line => !line.trim()).length;
+    const codeLines = lines.filter((line: string) => line.trim() && !line.trim().startsWith('//')).length;
+    const commentLines = lines.filter((line: string) => line.trim().startsWith('//')).length;
+    const blankLines = lines.filter((line: string) => !line.trim()).length;
 
     const cyclomaticComplexity = calculateCyclomaticComplexity(content, file.language);
     const cognitiveComplexity = calculateCognitiveComplexity(content);

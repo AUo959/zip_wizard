@@ -43,7 +43,7 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     // Build the API URL with versioning
-    const endpoint = Array.isArray(queryKey) ? queryKey[0] as string : queryKey as string;
+    const endpoint = Array.isArray(queryKey) ? String(queryKey[0]) : String(queryKey);
     const url = buildApiUrl(endpoint);
     
     const res = await fetch(url, {

@@ -21,6 +21,7 @@ export interface FileMetadata {
   bitrate?: number;
   format?: string;
   compression?: string;
+  compressed?: boolean;
   encrypted?: boolean;
   pages?: number;
   words?: number;
@@ -818,7 +819,7 @@ class CodeFileParser implements ParserCapabilities {
       codeLines,
       commentLines,
       blankLines: lines.length - codeLines - commentLines,
-      imports: [...new Set(imports)],
+      imports: Array.from(new Set(imports)),
       complexity: Math.min(1 + Math.floor(codeLines / 50), 10)
     };
   }
