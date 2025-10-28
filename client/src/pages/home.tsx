@@ -1,48 +1,86 @@
-import { useState, useEffect, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Archive, Settings, Upload, Activity, ChevronDown, MoreVertical, Download, Folder, Search, Filter, Zap, Moon, Sun, BarChart3, Bot, Keyboard, FileText, Code, X, Eye, Copy, Clock, Layers } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuGroup } from "@/components/ui/dropdown-menu";
-import UploadZone from "@/components/upload-zone";
-import FileTree from "@/components/file-tree";
-import CodeEditor from "@/components/code-editor";
-import AnalysisPanel from "@/components/analysis-panel";
-import { StatusDashboard } from "@/components/status-dashboard";
-import { AIExplorationPanel } from "@/components/ai-exploration-panel";
-import { AnalyticsView } from "@/components/analytics-view";
-import { AIToolsView } from "@/components/ai-tools-view";
-import { SymbolicInterface } from "@/components/symbolic-interface";
-import { EnhancedArchiveManager } from "@/components/enhanced-archive-manager";
-import { ArchiveManager } from "@/components/ArchiveManager";
-import { PrivacyShield } from "@/components/privacy-shield";
-import { MultilingualSupport } from "@/components/multilingual-support";
-import { FlowStateManager } from "@/components/flow-state-manager";
-import { WuWeiInterface } from "@/components/wu-wei-interface";
-import { MemoryCompression } from "@/components/memory-compression";
-import { CognitiveLoadReducer } from "@/components/cognitive-load-reducer";
-import { PatternRecognitionEngine } from "@/components/pattern-recognition-engine";
-import { IncrementalProcessor } from "@/components/incremental-processor";
-import { ArchiveComparison } from "@/components/archive-comparison";
-import { VulnerabilityScanner } from "@/components/vulnerability-scanner";
-import { DependencyGraph } from "@/components/dependency-graph";
-import { CodeMetricsAnalyzer } from "@/components/code-metrics-analyzer";
-import { TimingOptimizer } from "@/components/timing-optimizer";
-import { CircuitBreakerMonitor } from "@/components/circuit-breaker-monitor";
-import { EnhancedFileTree } from "@/components/enhanced-file-tree";
-import { RecentFilesPanel } from "@/components/recent-files-panel";
-import { EnhancedSearch } from "@/components/enhanced-search";
-import { LoadingSpinner, FileTreeLoading, CodeEditorLoading } from "@/components/loading-states";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BreadcrumbNavigation } from "@/components/breadcrumb-navigation";
-import { ShortcutsDialog } from "@/components/shortcuts-dialog";
-import { PreferencesDialog } from "@/components/preferences-dialog";
-import { MainNavigation } from "@/components/main-navigation";
-import { EnhancedViewTabs } from "@/components/enhanced-view-tabs";
-import { useKeyboardShortcuts, defaultShortcuts, formatShortcut } from "@/hooks/use-keyboard-shortcuts";
-import type { Archive as ArchiveType, File } from "@shared/schema";
-import { type ViewType, ALL_VIEWS, VIEW_METADATA } from "@shared/views";
+import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import {
+  Archive,
+  Settings,
+  Upload,
+  Activity,
+  ChevronDown,
+  MoreVertical,
+  Download,
+  Folder,
+  Search,
+  Filter,
+  Zap,
+  Moon,
+  Sun,
+  BarChart3,
+  Bot,
+  Keyboard,
+  FileText,
+  Code,
+  X,
+  Eye,
+  Copy,
+  Clock,
+  Layers,
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuGroup,
+} from '@/components/ui/dropdown-menu';
+import UploadZone from '@/components/upload-zone';
+import FileTree from '@/components/file-tree';
+import CodeEditor from '@/components/code-editor';
+import AnalysisPanel from '@/components/analysis-panel';
+import { StatusDashboard } from '@/components/status-dashboard';
+import { AIExplorationPanel } from '@/components/ai-exploration-panel';
+import { AnalyticsView } from '@/components/analytics-view';
+import { AIToolsView } from '@/components/ai-tools-view';
+import { SymbolicInterface } from '@/components/symbolic-interface';
+import { EnhancedArchiveManager } from '@/components/enhanced-archive-manager';
+import { AdvancedArchiveManager } from '@/components/advanced-archive-manager';
+import { ArchiveManager } from '@/components/ArchiveManager';
+import { convertSchemaArchive } from '@/lib/archive-converter';
+import { PrivacyShield } from '@/components/privacy-shield';
+import { MultilingualSupport } from '@/components/multilingual-support';
+import { FlowStateManager } from '@/components/flow-state-manager';
+import { WuWeiInterface } from '@/components/wu-wei-interface';
+import { MemoryCompression } from '@/components/memory-compression';
+import { CognitiveLoadReducer } from '@/components/cognitive-load-reducer';
+import { PatternRecognitionEngine } from '@/components/pattern-recognition-engine';
+import { IncrementalProcessor } from '@/components/incremental-processor';
+import { ArchiveComparison } from '@/components/archive-comparison';
+import { VulnerabilityScanner } from '@/components/vulnerability-scanner';
+import { DependencyGraph } from '@/components/dependency-graph';
+import { CodeMetricsAnalyzer } from '@/components/code-metrics-analyzer';
+import { TimingOptimizer } from '@/components/timing-optimizer';
+import { CircuitBreakerMonitor } from '@/components/circuit-breaker-monitor';
+import { EnhancedFileTree } from '@/components/enhanced-file-tree';
+import { RecentFilesPanel } from '@/components/recent-files-panel';
+import { EnhancedSearch } from '@/components/enhanced-search';
+import { LoadingSpinner, FileTreeLoading, CodeEditorLoading } from '@/components/loading-states';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation';
+import { ShortcutsDialog } from '@/components/shortcuts-dialog';
+import { PreferencesDialog } from '@/components/preferences-dialog';
+import { MainNavigation } from '@/components/main-navigation';
+import {
+  useKeyboardShortcuts,
+  defaultShortcuts,
+  formatShortcut,
+} from '@/hooks/use-keyboard-shortcuts';
+import type { Archive as ArchiveType, File } from '@shared/schema';
+import { type ViewType, ALL_VIEWS, VIEW_METADATA } from '@shared/views';
+import { EnhancedViewTabs } from '@/components/enhanced-view-tabs';
 
 /**
  * Main application component for ZipWizard.
@@ -451,25 +489,7 @@ export default function Home() {
           </div>
         );
 
-      case "archive-manager":
-        // Convert files to FileNode format for ArchiveManager
-        // Create a map for efficient file lookup
-        const fileMap = new Map(files?.map(f => [`${f.name}-${f.path}`, f]) || []);
-        
-        const fileNodes = files?.map(f => ({
-          name: f.name,
-          path: f.path,
-          size: f.size,
-          isDirectory: f.isDirectory === "true",
-          modified: f.lastMutated || undefined,
-          error: undefined,
-          metadata: {
-            language: f.language,
-            extension: f.extension,
-            complexity: f.complexity
-          }
-        })) || [];
-        
+      case 'archive-manager':
         return (
           <div className="h-full bg-background">
             <MainNavigation
@@ -484,19 +504,30 @@ export default function Home() {
               selectedArchive={selectedArchive}
               filesCount={files?.length}
             />
-            <ArchiveManager
-              initialFiles={fileNodes}
-              initialArchiveName={selectedArchive?.name || "Archive"}
-              onFileSelect={(file) => {
-                // Use map for O(1) lookup instead of find
-                const matchedFile = fileMap.get(`${file.name}-${file.path}`);
-                if (matchedFile) {
-                  setSelectedFile(matchedFile);
-                }
-              }}
-              enableCollaboration={true}
-              enableUndo={true}
-            />
+            <div className="flex items-center p-4 border-b">
+              <Button variant="ghost" onClick={() => setCurrentView('main')} className="mr-4">
+                ← Back to Files
+              </Button>
+            </div>
+            <div className="p-6">
+              <AdvancedArchiveManager
+                archives={archives.map(a => convertSchemaArchive(a))}
+                onArchiveAction={async (archiveId, action, params) => {
+                  console.log(
+                    'Archive action:',
+                    action,
+                    'on archive:',
+                    archiveId,
+                    'with params:',
+                    params
+                  );
+                  // Handle actions here
+                }}
+                selectedArchiveId={selectedArchive?.id.toString()}
+                enableRepair={true}
+                enableComparison={true}
+              />
+            </div>
           </div>
         );
 
