@@ -22,6 +22,13 @@ export type PluginType =
   | 'policy-engine'
   | 'validator';
 
+/**
+ * Helper function to format error messages consistently
+ */
+function formatError(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unknown error';
+}
+
 export interface PluginMetadata {
   id: string;
   name: string;
@@ -34,10 +41,10 @@ export interface PluginMetadata {
   dependencies?: string[]; // Plugin IDs this plugin depends on
 }
 
-export interface Plugin<T = any> {
+export interface Plugin<T = unknown> {
   metadata: PluginMetadata;
   initialize(): Promise<void>;
-  execute(context: T): Promise<any>;
+  execute(context: T): Promise<unknown>;
   cleanup?(): Promise<void>;
   healthCheck?(): Promise<boolean>;
 }
@@ -143,11 +150,11 @@ class PluginRegistry {
       await auditLog.log('critical', 'system', 'Plugin registration failed', {
         details: {
           pluginId: id,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: formatError(error)
         }
       });
 
-      throw new Error(`Failed to initialize plugin '${id}': ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Failed to initialize plugin '${id}': ${formatError(error)}`);
     }
   }
 
@@ -288,7 +295,7 @@ class PluginRegistry {
         await auditLog.log('critical', 'system', 'Plugin health check error', {
           details: {
             pluginId: id,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: formatError(error)
           }
         });
       }
@@ -313,7 +320,7 @@ class PluginRegistry {
     }>;
   } {
     const plugins = Array.from(this.plugins.values());
-    const byType: Record<string, number> = {};
+    const byType: Partial<Record<PluginType, number>> = {};
 
     plugins.forEach(p => {
       byType[p.metadata.type] = (byType[p.metadata.type] || 0) + 1;
@@ -357,7 +364,7 @@ class PluginRegistry {
         await auditLog.log('warning', 'system', 'Plugin execution failed', {
           details: {
             pluginId: plugin.metadata.id,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: formatError(error)
           }
         });
       }
@@ -380,9 +387,9 @@ export const pluginRegistry = new PluginRegistry();
 /**
  * Helper to create a basic plugin
  */
-export function createPlugin<T = any>(
+export function createPlugin<T = unknown>(
   metadata: PluginMetadata,
-  executor: (context: T) => Promise<any>,
+  executor: (context: T) => Promise<unknown>,
   initializer?: () => Promise<void>,
   cleaner?: () => Promise<void>
 ): Plugin<T> {
