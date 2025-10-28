@@ -30,7 +30,7 @@ describe('useTabNavigation', () => {
 
     const event = new KeyboardEvent('keydown', { key: 'ArrowRight' });
     act(() => {
-      result.current.handleKeyDown(event as any);
+      result.current.handleKeyDown(event as unknown as React.KeyboardEvent);
     });
 
     expect(setView).toHaveBeenCalled();
@@ -44,7 +44,7 @@ describe('useTabNavigation', () => {
 
     const event = new KeyboardEvent('keydown', { key: '2' });
     act(() => {
-      result.current.handleKeyDown(event as any);
+      result.current.handleKeyDown(event as unknown as React.KeyboardEvent);
     });
 
     expect(setView).toHaveBeenCalled();
@@ -56,7 +56,7 @@ describe('useTabNavigation', () => {
 
     const homeEvent = new KeyboardEvent('keydown', { key: 'Home' });
     act(() => {
-      result.current.handleKeyDown(homeEvent as any);
+      result.current.handleKeyDown(homeEvent as unknown as React.KeyboardEvent);
     });
 
     expect(setView).toHaveBeenCalled();

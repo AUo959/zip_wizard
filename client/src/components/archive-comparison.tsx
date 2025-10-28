@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import type { Archive, FileNode } from '@shared/archive-types';
 import {
   GitCompare,
   Plus,
@@ -19,11 +20,11 @@ import {
 } from 'lucide-react';
 
 interface ArchiveComparisonProps {
-  archive1?: any;
-  archive2?: any;
-  files1?: any[];
-  files2?: any[];
-  onSelectFile?: (file: any, archive: 'left' | 'right') => void;
+  archive1?: Archive;
+  archive2?: Archive;
+  files1?: FileNode[];
+  files2?: FileNode[];
+  onSelectFile?: (file: FileNode, archive: 'left' | 'right') => void;
 }
 
 interface ComparisonResult {
@@ -40,8 +41,8 @@ interface FileComparison {
   status: 'added' | 'removed' | 'modified' | 'unchanged';
   sizeChange?: number;
   complexityChange?: string;
-  leftFile?: any;
-  rightFile?: any;
+  leftFile?: FileNode;
+  rightFile?: FileNode;
 }
 
 interface ComparisonStats {

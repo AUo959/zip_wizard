@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import type { Archive } from '@shared/archive-types';
 import { Bot, Brain, FileSearch, Zap, Sparkles, Code, AlertCircle } from 'lucide-react';
 
 interface AIToolsViewProps {
@@ -12,7 +13,7 @@ interface AIToolsViewProps {
     language: string;
     complexity: string;
   }>;
-  selectedArchive?: any;
+  selectedArchive?: Archive;
 }
 
 export function AIToolsView({ files = [], selectedArchive }: AIToolsViewProps) {

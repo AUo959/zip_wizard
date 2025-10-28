@@ -18,8 +18,16 @@ import {
   Layers,
 } from 'lucide-react';
 
+interface AnalyzableFile {
+  name: string;
+  content?: string;
+  language?: string;
+  path?: string;
+  size?: number;
+}
+
 interface CodeMetricsAnalyzerProps {
-  files?: any[];
+  files?: AnalyzableFile[];
   onAnalysisComplete?: (_metrics: CodeMetrics) => void;
   onFileAnalyzed?: (_file: string, _metrics: FileMetrics) => void;
 }
@@ -349,7 +357,7 @@ export function CodeMetricsAnalyzer({
     return functions;
   };
 
-  const analyzeFile = (file: any): FileMetrics => {
+  const analyzeFile = (file: AnalyzableFile): FileMetrics => {
     const content = file.content || '';
     const lines = content.split('\n');
     const codeLines = lines.filter(
@@ -394,7 +402,7 @@ export function CodeMetricsAnalyzer({
     };
   };
 
-  const calculateDuplication = (files: any[]): DuplicationMetrics => {
+  const calculateDuplication = (files: AnalyzableFile[]): DuplicationMetrics => {
     let duplicatedLines = 0;
     let duplicatedBlocks = 0;
     const seenBlocks = new Map<string, number>();
