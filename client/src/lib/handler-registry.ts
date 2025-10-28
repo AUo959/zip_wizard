@@ -1,6 +1,6 @@
 /**
  * Archive Handler Registry
- * 
+ *
  * Extensible system for registering and managing archive/file handlers.
  * Supports plugin-based architecture for future expandability.
  */
@@ -95,7 +95,7 @@ export const createZipHandler = (): ArchiveHandler => {
 
         const nodes: FileNode[] = [];
         const folderMap = new Map<string, FileNode>();
-        
+
         // First pass: collect all entries with their metadata
         const entries: Array<{ path: string; entry: any }> = [];
         zip.forEach((relativePath, zipEntry) => {
@@ -159,7 +159,7 @@ export const createZipHandler = (): ArchiveHandler => {
                 fileSize = undefined;
               }
             }
-            
+
             const node: FileNode = {
               id: relativePath,
               name,
@@ -188,7 +188,9 @@ export const createZipHandler = (): ArchiveHandler => {
 
         return nodes;
       } catch (error) {
-        throw new Error(`Failed to load ZIP archive: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw new Error(
+          `Failed to load ZIP archive: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
       }
     },
 
@@ -206,9 +208,9 @@ export const createZipHandler = (): ArchiveHandler => {
         // Try to load with lenient mode
         const JSZip = (await import('jszip')).default;
         const zip = new JSZip();
-        
+
         // JSZip doesn't have a true "repair" mode, but we can try loading with optimistic parsing
-        await zip.loadAsync(data, { 
+        await zip.loadAsync(data, {
           checkCRC32: false, // Skip CRC checks
         });
 
@@ -232,7 +234,7 @@ export const createZipHandler = (): ArchiveHandler => {
                 fileSize = undefined;
               }
             }
-            
+
             const node: FileNode = {
               id: relativePath,
               name: relativePath.split('/').pop() || relativePath,
@@ -258,7 +260,9 @@ export const createZipHandler = (): ArchiveHandler => {
           log,
         };
       } catch (repairError) {
-        log.push(`Repair failed: ${repairError instanceof Error ? repairError.message : 'Unknown error'}`);
+        log.push(
+          `Repair failed: ${repairError instanceof Error ? repairError.message : 'Unknown error'}`
+        );
         return {
           success: false,
           log,

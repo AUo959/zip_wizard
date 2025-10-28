@@ -1,6 +1,6 @@
 /**
  * Code Repair Utilities
- * 
+ *
  * Best-effort recovery and repair for corrupted code files.
  * Includes bracket balancing, tag completion, and line-by-line recovery.
  */
@@ -36,7 +36,7 @@ export const bracketBalancingStrategy: CodeRepairStrategy = {
       const line = lines[lineNum];
       for (let col = 0; col < line.length; col++) {
         const char = line[col];
-        
+
         if (char in brackets) {
           stack.push({ char, line: lineNum, col });
         } else if (Object.values(brackets).includes(char)) {
@@ -53,7 +53,7 @@ export const bracketBalancingStrategy: CodeRepairStrategy = {
     if (stack.length > 0) {
       const closers = stack.reverse().map(item => brackets[item.char as keyof typeof brackets]);
       repairedContent += '\n' + closers.join('');
-      
+
       repairedSections.push({
         line: lines.length,
         original: content,
@@ -75,13 +75,13 @@ export const bracketBalancingStrategy: CodeRepairStrategy = {
 
 /**
  * HTML/XML tag completion strategy
- * 
+ *
  * Note: This uses a simple regex-based approach for basic tag matching.
  * Limitations:
  * - Does not handle nested tags with the same name correctly
  * - May produce false positives with complex HTML structures
  * - Does not understand context (e.g., tags in strings or comments)
- * 
+ *
  * For production use with complex HTML, consider integrating a proper HTML parser
  * like parse5 or htmlparser2.
  */
@@ -112,7 +112,24 @@ export const tagCompletionStrategy: CodeRepairStrategy = {
     // For robust HTML parsing, integrate a proper HTML parser library
     // Pattern uses bounded lookahead to prevent catastrophic backtracking
     const openTagRegex = /<(\w+)(?:\s[^>]*)?>(?![\s\S]{0,1000}<\/\1>)/g;
-    const selfClosingTags = new Set(['br', 'hr', 'img', 'input', 'link', 'meta', 'area', 'base', 'col', 'command', 'embed', 'keygen', 'param', 'source', 'track', 'wbr']);
+    const selfClosingTags = new Set([
+      'br',
+      'hr',
+      'img',
+      'input',
+      'link',
+      'meta',
+      'area',
+      'base',
+      'col',
+      'command',
+      'embed',
+      'keygen',
+      'param',
+      'source',
+      'track',
+      'wbr',
+    ]);
 
     const lines = content.split('\n');
     const unclosedTags: string[] = [];
@@ -127,7 +144,10 @@ export const tagCompletionStrategy: CodeRepairStrategy = {
     }
 
     if (unclosedTags.length > 0) {
-      const closingTags = unclosedTags.reverse().map(tag => `</${tag}>`).join('\n');
+      const closingTags = unclosedTags
+        .reverse()
+        .map(tag => `</${tag}>`)
+        .join('\n');
       repairedContent += '\n' + closingTags;
 
       repairedSections.push({
@@ -165,11 +185,12 @@ export const lineByLineRecoveryStrategy: CodeRepairStrategy = {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      
+
       // Check if line contains obvious corruption markers
       const hasNullBytes = line.includes('\0');
       const hasInvalidUtf8 = /[\uFFFD]/.test(line);
-      const hasExcessiveSpecialChars = (line.match(/[^\x20-\x7E\s]/g) || []).length > line.length * 0.3;
+      const hasExcessiveSpecialChars =
+        (line.match(/[^\x20-\x7E\s]/g) || []).length > line.length * 0.3;
 
       if (hasNullBytes || hasInvalidUtf8 || hasExcessiveSpecialChars) {
         // Try to clean the line
@@ -273,31 +294,31 @@ export const repairCode = async (
  */
 export const detectLanguage = (filename: string): string | undefined => {
   const ext = filename.split('.').pop()?.toLowerCase();
-  
+
   const languageMap: Record<string, string> = {
-    'js': 'javascript',
-    'jsx': 'jsx',
-    'ts': 'typescript',
-    'tsx': 'tsx',
-    'py': 'python',
-    'java': 'java',
-    'cpp': 'cpp',
-    'c': 'c',
-    'cs': 'csharp',
-    'rb': 'ruby',
-    'go': 'go',
-    'rs': 'rust',
-    'php': 'php',
-    'html': 'html',
-    'xml': 'xml',
-    'css': 'css',
-    'scss': 'scss',
-    'json': 'json',
-    'yaml': 'yaml',
-    'yml': 'yaml',
-    'md': 'markdown',
-    'vue': 'vue',
-    'svelte': 'svelte',
+    js: 'javascript',
+    jsx: 'jsx',
+    ts: 'typescript',
+    tsx: 'tsx',
+    py: 'python',
+    java: 'java',
+    cpp: 'cpp',
+    c: 'c',
+    cs: 'csharp',
+    rb: 'ruby',
+    go: 'go',
+    rs: 'rust',
+    php: 'php',
+    html: 'html',
+    xml: 'xml',
+    css: 'css',
+    scss: 'scss',
+    json: 'json',
+    yaml: 'yaml',
+    yml: 'yaml',
+    md: 'markdown',
+    vue: 'vue',
+    svelte: 'svelte',
   };
 
   return ext ? languageMap[ext] : undefined;

@@ -1,12 +1,21 @@
 /**
  * Advanced FileTree Component
- * 
+ *
  * Recursive, accessible file tree with infinite nesting support,
  * error indicators, lazy loading, and keyboard navigation.
  */
 
 import React, { useState, useCallback, KeyboardEvent, useEffect } from 'react';
-import { ChevronRight, ChevronDown, File, Folder, Archive, AlertCircle, Loader2, FolderOpen } from 'lucide-react';
+import {
+  ChevronRight,
+  ChevronDown,
+  File,
+  Folder,
+  Archive,
+  AlertCircle,
+  Loader2,
+  FolderOpen,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { FileNode, FileTreeProps } from '@shared/archive-types';
 
@@ -177,7 +186,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
         {/* Expand/collapse chevron */}
         {hasChildren && (
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               handleToggle();
             }}
@@ -212,9 +221,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 
         {/* Error indicator */}
         {node.error && showErrors && (
-          <span className="text-xs text-destructive flex-shrink-0">
-            Error
-          </span>
+          <span className="text-xs text-destructive flex-shrink-0">Error</span>
         )}
 
         {/* Partial recovery indicator */}
@@ -238,7 +245,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
       {/* Child nodes */}
       {shouldShowChildren && children.length > 0 && (
         <div role="group">
-          {children.map((child) => (
+          {children.map(child => (
             <TreeNode
               key={child.id}
               node={child}
@@ -306,12 +313,8 @@ export const AdvancedFileTree: React.FC<FileTreeProps> = ({
   }
 
   return (
-    <div
-      role="tree"
-      aria-label="File tree"
-      className={cn('text-sm select-none', className)}
-    >
-      {nodes.map((node) => (
+    <div role="tree" aria-label="File tree" className={cn('text-sm select-none', className)}>
+      {nodes.map(node => (
         <TreeNode
           key={node.id}
           node={node}

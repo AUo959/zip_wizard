@@ -1,6 +1,6 @@
 /**
  * Advanced Archive Manager Type Definitions
- * 
+ *
  * Comprehensive type system for the enhanced archive management system.
  * Supports infinite nesting, error recovery, repair operations, and extensibility.
  */
@@ -8,41 +8,41 @@
 /**
  * Status of an archive or file operation
  */
-export type ArchiveStatus = 
-  | "idle"           // No operation in progress
-  | "loading"        // Loading archive
-  | "processing"     // Processing files
-  | "analyzing"      // Running analysis
-  | "repairing"      // Attempting repair
-  | "completed"      // Operation completed successfully
-  | "error"          // Error occurred
-  | "corrupted"      // Archive is corrupted
-  | "partial";       // Partially recovered
+export type ArchiveStatus =
+  | 'idle' // No operation in progress
+  | 'loading' // Loading archive
+  | 'processing' // Processing files
+  | 'analyzing' // Running analysis
+  | 'repairing' // Attempting repair
+  | 'completed' // Operation completed successfully
+  | 'error' // Error occurred
+  | 'corrupted' // Archive is corrupted
+  | 'partial'; // Partially recovered
 
 /**
  * Types of actions that can be performed on an archive
  */
-export type ArchiveAction = 
-  | "open"           // Open/load archive
-  | "export"         // Export archive or files
-  | "delete"         // Delete archive
-  | "tag"            // Add/edit tags
-  | "compare"        // Compare with another archive
-  | "scan"           // Scan for issues/vulnerabilities
-  | "repair"         // Attempt to repair corrupted archive
-  | "analyze"        // Deep analysis
-  | "optimize"       // Optimize archive structure
-  | "extract";       // Extract files
+export type ArchiveAction =
+  | 'open' // Open/load archive
+  | 'export' // Export archive or files
+  | 'delete' // Delete archive
+  | 'tag' // Add/edit tags
+  | 'compare' // Compare with another archive
+  | 'scan' // Scan for issues/vulnerabilities
+  | 'repair' // Attempt to repair corrupted archive
+  | 'analyze' // Deep analysis
+  | 'optimize' // Optimize archive structure
+  | 'extract'; // Extract files
 
 /**
  * Type of file node in the tree
  */
-export type FileNodeType = "file" | "folder" | "archive";
+export type FileNodeType = 'file' | 'folder' | 'archive';
 
 /**
  * Severity level for errors and warnings
  */
-export type ErrorSeverity = "info" | "warning" | "error" | "critical";
+export type ErrorSeverity = 'info' | 'warning' | 'error' | 'critical';
 
 /**
  * Error details with recovery information

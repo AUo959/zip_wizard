@@ -8,18 +8,21 @@ An advanced archive management application with intelligent file exploration, AI
 ## ✨ Features
 
 ### 🗂️ Archive Management
+
 - **Multiple Format Support**: Work with ZIP, TAR, GZ, and other archive formats
 - **Smart File Tree**: Hierarchical view with expandable folders
 - **Quick Upload**: Drag-and-drop interface for easy archive uploads
 - **Archive Comparison**: Side-by-side comparison of multiple archives
 
 ### 🤖 AI-Powered Tools
+
 - **Intelligent Insights**: AI-generated summaries and recommendations
 - **Smart Clustering**: Automatic file organization based on content
 - **Pattern Recognition**: Identify common patterns and structures
 - **Code Analysis**: Metrics and quality analysis for source code files
 
 ### 🎯 Enhanced Navigation
+
 - **Keyboard Shortcuts**: Press 1-9 to jump between views instantly
 - **Arrow Navigation**: Use arrow keys to navigate between tabs
 - **Quick Access**: Home/End keys to jump to first/last view
@@ -28,18 +31,21 @@ An advanced archive management application with intelligent file exploration, AI
 - **Mobile Optimized**: Responsive design with dropdown navigation
 
 ### 🔒 Security & Privacy
+
 - **Vulnerability Scanner**: Detect security issues in files
 - **Privacy Shield**: Data encryption and protection
 - **Circuit Breaker**: Automatic error recovery and resilience
 - **Security Monitoring**: Real-time threat detection
 
 ### 📊 Analytics & Insights
+
 - **Usage Analytics**: Track file access patterns
 - **Performance Metrics**: Monitor application performance
 - **Code Metrics**: Analyze code quality and complexity
 - **Dependency Graphs**: Visualize file and module dependencies
 
 ### 🧘 Productivity Features
+
 - **Wu Wei Interface**: Zen-inspired, distraction-free mode
 - **Mushin State**: Flow-optimized interface for deep work
 - **Cognitive Load Reducer**: Simplified views when needed
@@ -79,6 +85,7 @@ ZIP Wizard uses a modern, layered architecture designed for performance, securit
 ```
 
 **Key Processing Flow:**
+
 1. **Upload** → Archive validation → Virus scan → Storage
 2. **Parse** → Streaming extraction → Metadata indexing → Tree generation
 3. **Analyze** → AI insights → Pattern recognition → Vulnerability scan
@@ -89,6 +96,7 @@ ZIP Wizard uses a modern, layered architecture designed for performance, securit
 ### Multi-Layer Security Model
 
 **Vulnerability Scanning:**
+
 - Real-time file scanning during upload and extraction
 - Pattern-based detection for known vulnerabilities
 - Heuristic analysis for zero-day threats
@@ -96,6 +104,7 @@ ZIP Wizard uses a modern, layered architecture designed for performance, securit
 - Quarantine system for suspicious files
 
 **Circuit Breaker Protection:**
+
 - Automatic throttling on abnormal activity patterns
 - Graceful degradation under load
 - Error rate monitoring and auto-recovery
@@ -103,6 +112,7 @@ ZIP Wizard uses a modern, layered architecture designed for performance, securit
 - Configurable thresholds per operation type
 
 **Privacy Shield:**
+
 - End-to-end encryption for sensitive archives
 - Secure deletion with multi-pass overwrite
 - Redacted file previews for sensitive content
@@ -110,6 +120,7 @@ ZIP Wizard uses a modern, layered architecture designed for performance, securit
 - GDPR-compliant data lifecycle management
 
 **Audit & Compliance:**
+
 - Immutable audit logs for all security events
 - Exportable compliance reports (JSON, CSV, PDF)
 - Role-based access control (RBAC) system
@@ -117,6 +128,7 @@ ZIP Wizard uses a modern, layered architecture designed for performance, securit
 - Support for SOC 2, GDPR, and HIPAA workflows
 
 **Access Control:**
+
 - Fine-grained permissions per archive/file
 - User roles: Admin, Analyst, Viewer, Guest
 - API key management for programmatic access
@@ -140,6 +152,7 @@ SCAN_TIMEOUT=30s
 ### Optimized for Large Archives
 
 **Tested Limits:**
+
 - ✅ Archives up to **10 TB** in size
 - ✅ Files with **50+ million** entries
 - ✅ Concurrent processing of **100+** archives
@@ -148,30 +161,35 @@ SCAN_TIMEOUT=30s
 **Performance Techniques:**
 
 **Streaming Processing:**
+
 - Chunked reading of archives (no full memory load)
 - Progressive UI updates during extraction
 - Background workers for heavy computation
 - Automatic memory cleanup and compression
 
 **Smart Caching:**
+
 - LRU cache for frequently accessed files
 - Metadata indexing for instant search
 - Virtual scrolling for large file trees
 - Lazy loading of preview content
 
 **Parallel Processing:**
+
 - Web Workers for CPU-intensive tasks
 - Parallel file parsing and analysis
 - Concurrent archive comparison
 - Background AI inference
 
 **Memory Optimization:**
+
 - Incremental garbage collection
 - Memory pressure monitoring
 - Automatic quality reduction under load
 - Configurable memory limits per operation
 
 **Hardware Recommendations:**
+
 - **Small Archives (<100MB):** 2GB RAM, 2 CPU cores
 - **Medium Archives (100MB-1GB):** 4GB RAM, 4 CPU cores
 - **Large Archives (1GB-10GB):** 8GB RAM, 8 CPU cores
@@ -236,6 +254,7 @@ npm run test:coverage
 ```
 
 **Test Coverage:**
+
 - 39 tests passing
 - Component tests for enhanced navigation
 - Hook tests for state management
@@ -299,7 +318,7 @@ export class CustomFormatHandler implements FormatHandler {
   canHandle(buffer: Buffer): boolean {
     return buffer.toString('hex', 0, 4) === 'cafebabe';
   }
-  
+
   async parse(buffer: Buffer): Promise<ArchiveMetadata> {
     // Your parsing logic
   }
@@ -319,7 +338,7 @@ export class CustomScanner implements VulnerabilityScanner {
     return {
       threats: [],
       severity: 'none',
-      recommendations: []
+      recommendations: [],
     };
   }
 }
@@ -343,6 +362,7 @@ export class CustomAnalyzer implements AIAnalyzer {
 ZIP Wizard is built with accessibility as a core principle:
 
 ### Keyboard Navigation
+
 - **Full keyboard support** - No mouse required
 - **Tab navigation** - Logical tab order throughout
 - **Keyboard shortcuts** - 1-9, arrows, Home/End for quick access
@@ -350,6 +370,7 @@ ZIP Wizard is built with accessibility as a core principle:
 - **Skip links** - Jump to main content
 
 ### Screen Reader Support
+
 - **ARIA labels** - Comprehensive labeling for all interactive elements
 - **ARIA live regions** - Dynamic content announcements
 - **Semantic HTML** - Proper heading hierarchy and landmarks
@@ -357,6 +378,7 @@ ZIP Wizard is built with accessibility as a core principle:
 - **Status messages** - Clear feedback for all actions
 
 ### Visual Accessibility
+
 - **High contrast** - WCAG AA compliant color ratios (4.5:1+)
 - **Customizable themes** - Light, dark, and high-contrast modes
 - **Scalable text** - Supports browser zoom up to 200%
@@ -364,6 +386,7 @@ ZIP Wizard is built with accessibility as a core principle:
 - **Reduced motion** - Respects `prefers-reduced-motion`
 
 ### Accessibility Testing
+
 - Automated testing with **axe-core**
 - Manual testing with **NVDA**, **JAWS**, and **VoiceOver**
 - Keyboard-only navigation testing
@@ -374,6 +397,7 @@ ZIP Wizard is built with accessibility as a core principle:
 ## 🌍 Internationalization
 
 ### Supported Languages
+
 - 🇺🇸 English (default)
 - 🇪🇸 Spanish
 - 🇫🇷 French
@@ -393,6 +417,7 @@ ZIP Wizard is built with accessibility as a core principle:
 ```
 
 To contribute translations:
+
 1. Copy `client/src/locales/en.json`
 2. Translate all strings
 3. Submit a PR with your locale file
@@ -412,6 +437,7 @@ Settings → Language → Español
 ### Logging
 
 **Structured JSON logs** for all operations:
+
 ```json
 {
   "timestamp": "2025-10-28T12:34:56Z",
@@ -425,6 +451,7 @@ Settings → Language → Español
 ```
 
 **Log Levels:**
+
 - `error` - Critical failures requiring immediate attention
 - `warn` - Degraded performance or recoverable errors
 - `info` - Normal operations and milestones
@@ -433,6 +460,7 @@ Settings → Language → Español
 ### Metrics
 
 **Built-in metrics tracked:**
+
 - Upload/download throughput
 - Parse and extraction times
 - Memory and CPU usage
@@ -441,6 +469,7 @@ Settings → Language → Español
 - Error rates by operation
 
 **Export formats:**
+
 - Prometheus (metrics endpoint: `/metrics`)
 - JSON (API: `/api/metrics`)
 - CloudWatch (AWS integration)
@@ -448,6 +477,7 @@ Settings → Language → Español
 ### Tracing
 
 **Distributed tracing** for request flows:
+
 - Trace ID propagation across services
 - Span annotations for key operations
 - Performance bottleneck identification
@@ -458,6 +488,7 @@ Settings → Language → Español
 ### Circuit Breaker Monitoring
 
 Real-time dashboard at `/status` shows:
+
 - Active circuit breaker states
 - Error rates per operation
 - Recovery timelines
@@ -468,6 +499,7 @@ Real-time dashboard at `/status` shows:
 ### Data Protection
 
 **GDPR Compliance:**
+
 - ✅ Right to access (export all user data)
 - ✅ Right to erasure (secure deletion)
 - ✅ Data portability (JSON/CSV export)
@@ -475,6 +507,7 @@ Real-time dashboard at `/status` shows:
 - ✅ Data processing agreements
 
 **HIPAA Considerations:**
+
 - ✅ Encryption at rest and in transit
 - ✅ Audit logging of all PHI access
 - ✅ Role-based access controls
@@ -482,6 +515,7 @@ Real-time dashboard at `/status` shows:
 - ⚠️ Requires additional BAA for healthcare use
 
 **SOC 2 Type II:**
+
 - ✅ Security controls documented
 - ✅ Continuous monitoring
 - ✅ Incident response procedures
@@ -490,12 +524,14 @@ Real-time dashboard at `/status` shows:
 ### Data Retention
 
 **Default policies:**
+
 - Archives: 90 days after last access
 - Audit logs: 2 years
 - User data: Until account deletion
 - Temporary files: 24 hours
 
 **Configurable via:**
+
 ```bash
 DATA_RETENTION_DAYS=90
 AUDIT_LOG_RETENTION_YEARS=2
@@ -511,27 +547,32 @@ See [LICENSE-THIRD-PARTY.md](LICENSE-THIRD-PARTY.md) for all dependencies and th
 ### Common Issues
 
 **Q: Upload fails with "File too large"**
+
 ```bash
 # Increase upload limit in .env
 MAX_UPLOAD_SIZE=500MB
 ```
 
 **Q: Extraction is slow for large archives**
+
 - Enable streaming mode (default for archives >100MB)
 - Increase memory allocation: `NODE_OPTIONS=--max-old-space-size=4096`
 - Use SSD storage for better I/O performance
 
 **Q: Circuit breaker is blocking operations**
+
 - Check `/status` dashboard for error details
 - Review audit logs: `npm run logs:audit`
 - Manual reset: `curl -X POST http://localhost:5000/api/circuit-breaker/reset`
 
 **Q: Vulnerability scanner shows false positives**
+
 - Adjust scan sensitivity in Settings → Security
 - Add exceptions for known-safe patterns
 - Submit feedback to improve detection
 
 **Q: Tests are failing**
+
 ```bash
 # Clear test cache
 rm -rf node_modules/.vitest
@@ -548,17 +589,20 @@ npm run test:run
 ### Debugging Tips
 
 **Enable debug logging:**
+
 ```bash
 DEBUG=zip-wizard:* npm run dev
 ```
 
 **Profile performance:**
+
 ```bash
 NODE_ENV=production npm run build
 npm run start -- --profile
 ```
 
 **Check database health:**
+
 ```bash
 npm run db:check
 ```
@@ -566,12 +610,14 @@ npm run db:check
 ## 🗺️ Roadmap & Known Issues
 
 ### In Progress
+
 - [ ] WebAssembly support for faster parsing
 - [ ] Real-time collaborative archive exploration
 - [ ] Advanced AI repair suggestions
 - [ ] S3-compatible cloud storage integration
 
 ### Planned Features
+
 - [ ] Browser extension for direct download analysis
 - [ ] Mobile app (React Native)
 - [ ] GraphQL API
@@ -579,6 +625,7 @@ npm run db:check
 - [ ] Custom report templates
 
 ### Known Issues
+
 - Large archive comparison (>5GB each) may timeout - [#42](https://github.com/AUo959/zip_wizard/issues/42)
 - Safari <15 has limited Web Worker support - [#67](https://github.com/AUo959/zip_wizard/issues/67)
 - Dark mode theme needs refinement - [#89](https://github.com/AUo959/zip_wizard/issues/89)
@@ -587,13 +634,13 @@ npm run db:check
 
 ## ⌨️ Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| `1-9` | Jump to view 1-9 |
-| `←` `→` | Navigate between tabs |
-| `Home` | Jump to first tab |
-| `End` | Jump to last tab |
-| `Esc` | Close dialogs/dropdowns |
+| Shortcut | Action                  |
+| -------- | ----------------------- |
+| `1-9`    | Jump to view 1-9        |
+| `←` `→`  | Navigate between tabs   |
+| `Home`   | Jump to first tab       |
+| `End`    | Jump to last tab        |
+| `Esc`    | Close dialogs/dropdowns |
 
 ## 📚 Documentation
 
@@ -606,6 +653,7 @@ npm run db:check
 ## 🛠️ Technology Stack
 
 ### Frontend
+
 - **React 18** - UI framework
 - **TypeScript** - Type safety
 - **Vite** - Build tool and dev server
@@ -615,22 +663,26 @@ npm run db:check
 - **Lucide React** - Icons
 
 ### Backend
+
 - **Express** - Web server
 - **Drizzle ORM** - Database ORM
 - **PostgreSQL** - Database
 - **tsx** - TypeScript execution
 
 ### Testing
+
 - **Vitest** - Test framework
 - **Testing Library** - React component testing
 - **jsdom** - DOM testing environment
 
 ### Code Quality
+
 - **ESLint** - Linting
 - **Prettier** - Code formatting
 - **TypeScript** - Type checking
 
 ### CI/CD
+
 - **GitHub Actions** - Automated testing and deployment
 - **Codecov** - Code coverage tracking
 - **Trivy** - Security scanning
@@ -684,6 +736,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 **DO NOT** open public issues for security vulnerabilities.
 
 Instead:
+
 1. Email: security@zipwizard.example
 2. Use GitHub Security Advisories (private disclosure)
 3. Expected response time: 48 hours
@@ -698,6 +751,7 @@ Instead:
 ### Secure Development
 
 All contributors must:
+
 - Enable 2FA on GitHub account
 - Sign commits with GPG key (preferred)
 - Follow OWASP secure coding guidelines

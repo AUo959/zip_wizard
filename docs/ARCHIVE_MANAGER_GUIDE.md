@@ -29,6 +29,7 @@ HandlerRegistry   - Registry for managing archive handlers
 #### 2. AdvancedArchiveManager (`client/src/components/advanced-archive-manager.tsx`)
 
 The main component providing:
+
 - Archive listing with search and filtering
 - Individual archive cards with health indicators
 - Action dropdown menus for each archive
@@ -38,19 +39,20 @@ The main component providing:
 - Responsive layout
 
 **Props:**
+
 ```typescript
 interface ArchiveManagerProps {
-  archives: Archive[];                    // List of archives
+  archives: Archive[]; // List of archives
   onArchiveAction: (id, action, params) => void | Promise<void>;
-  selectedArchiveId?: string;             // Currently selected archive
-  loading?: boolean;                      // Loading state
-  searchQuery?: string;                   // Search filter
-  renderFileTree?: (archive, tree) => React.ReactNode;  // Custom tree renderer
-  renderArchiveDetails?: (archive) => React.ReactNode;  // Custom details
-  renderError?: (error, archive) => React.ReactNode;    // Custom error UI
-  handlerRegistry?: HandlerRegistry;      // Custom handlers
-  enableRepair?: boolean;                 // Enable repair features
-  enableComparison?: boolean;             // Enable comparison
+  selectedArchiveId?: string; // Currently selected archive
+  loading?: boolean; // Loading state
+  searchQuery?: string; // Search filter
+  renderFileTree?: (archive, tree) => React.ReactNode; // Custom tree renderer
+  renderArchiveDetails?: (archive) => React.ReactNode; // Custom details
+  renderError?: (error, archive) => React.ReactNode; // Custom error UI
+  handlerRegistry?: HandlerRegistry; // Custom handlers
+  enableRepair?: boolean; // Enable repair features
+  enableComparison?: boolean; // Enable comparison
   className?: string;
 }
 ```
@@ -58,6 +60,7 @@ interface ArchiveManagerProps {
 #### 3. AdvancedFileTree (`client/src/components/advanced-file-tree.tsx`)
 
 Recursive file tree with:
+
 - Infinite nesting support via recursive TreeNode components
 - Lazy loading for performance
 - Error indicators for corrupted files
@@ -67,12 +70,14 @@ Recursive file tree with:
 - Custom node rendering via render props
 
 **Keyboard Navigation:**
+
 - Arrow keys: Navigate tree
 - Enter/Space: Select node
 - Right arrow: Expand folder
 - Left arrow: Collapse folder
 
 **Accessibility:**
+
 - ARIA tree role
 - ARIA treeitem roles for nodes
 - ARIA expanded state
@@ -82,6 +87,7 @@ Recursive file tree with:
 #### 4. ErrorBoundary (`client/src/components/error-boundary.tsx`)
 
 React error boundary providing:
+
 - Global and per-component error catching
 - Fallback UI with error details
 - Action buttons: Retry, Export Log, Get Help
@@ -89,6 +95,7 @@ React error boundary providing:
 - Custom fallback rendering via props
 
 **Usage:**
+
 ```typescript
 <ErrorBoundary boundaryId="archive-manager" onError={handleError}>
   <ArchiveManager {...props} />
@@ -105,8 +112,8 @@ Extensible plugin system for archive formats:
 interface ArchiveHandler {
   id: string;
   name: string;
-  extensions: string[];        // e.g., ['zip', 'jar']
-  mimeTypes?: string[];        // e.g., ['application/zip']
+  extensions: string[]; // e.g., ['zip', 'jar']
+  mimeTypes?: string[]; // e.g., ['application/zip']
   canRepair: boolean;
   load: (data) => Promise<FileNode[]>;
   extract?: (node) => Promise<Blob>;
@@ -122,6 +129,7 @@ const handler = handlerRegistry.getHandlerForExtension('zip');
 ```
 
 **Built-in Handlers:**
+
 - ZIP handler with JSZip integration
 - Repair capability for corrupted ZIPs
 - Validation support
@@ -150,6 +158,7 @@ Best-effort code recovery strategies:
    - Returns comprehensive repair result
 
 **Usage:**
+
 ```typescript
 import { repairCode, detectLanguage } from '@/lib/code-repair';
 
@@ -157,8 +166,8 @@ const language = detectLanguage('file.js');
 const result = await repairCode(corruptedContent, language, 'combined-repair');
 
 console.log(result.repairedContent);
-console.log(result.confidence);  // 0-1
-console.log(result.repairedSections);  // Details of repairs
+console.log(result.confidence); // 0-1
+console.log(result.repairedSections); // Details of repairs
 ```
 
 ## Features
@@ -224,7 +233,7 @@ import type { Archive, ArchiveAction } from '@shared/archive-types';
 
 function MyApp() {
   const [archives, setArchives] = useState<Archive[]>([...]);
-  
+
   const handleAction = async (
     archiveId: string,
     action: ArchiveAction,
@@ -240,7 +249,7 @@ function MyApp() {
       // ... handle other actions
     }
   };
-  
+
   return (
     <AdvancedArchiveManager
       archives={archives}
@@ -296,6 +305,7 @@ handlerRegistry.register(tarHandler);
 ### 1. Custom Archive Handlers
 
 Implement the `ArchiveHandler` interface to support new formats:
+
 - RAR, 7z, TAR, etc.
 - Custom compression formats
 - Encrypted archives
@@ -303,6 +313,7 @@ Implement the `ArchiveHandler` interface to support new formats:
 ### 2. Custom Repair Strategies
 
 Implement `CodeRepairStrategy` for domain-specific repairs:
+
 - Language-specific fixes
 - Project structure repairs
 - Configuration file repairs
@@ -310,6 +321,7 @@ Implement `CodeRepairStrategy` for domain-specific repairs:
 ### 3. Custom Panels
 
 Use render props to add custom UI:
+
 - AI-powered analysis panels
 - Comparison visualization
 - Activity logs
@@ -318,6 +330,7 @@ Use render props to add custom UI:
 ### 4. Custom Actions
 
 Extend `ArchiveAction` type and handle in `onArchiveAction`:
+
 - Custom workflows
 - Integration with external tools
 - Batch operations

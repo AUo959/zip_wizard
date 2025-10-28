@@ -1,6 +1,6 @@
 /**
  * Advanced ArchiveManager Component
- * 
+ *
  * Comprehensive archive management with error recovery, repair,
  * accessibility, and extensibility features.
  */
@@ -36,12 +36,7 @@ import {
 } from 'lucide-react';
 import { ErrorBoundary } from './error-boundary';
 import { AdvancedFileTree } from './advanced-file-tree';
-import type {
-  Archive,
-  ArchiveAction,
-  ArchiveManagerProps,
-  FileNode,
-} from '@shared/archive-types';
+import type { Archive, ArchiveAction, ArchiveManagerProps, FileNode } from '@shared/archive-types';
 import { cn, capitalizeFirst } from '@/lib/utils';
 
 /**
@@ -122,7 +117,7 @@ const ArchiveCard: React.FC<ArchiveCardProps> = ({
             </div>
 
             <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                   <MoreVertical className="w-4 h-4" />
                 </Button>
@@ -150,10 +145,7 @@ const ArchiveCard: React.FC<ArchiveCardProps> = ({
                     Attempt Repair
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem
-                  onClick={() => onAction('delete')}
-                  className="text-destructive"
-                >
+                <DropdownMenuItem onClick={() => onAction('delete')} className="text-destructive">
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete
                 </DropdownMenuItem>
@@ -192,7 +184,7 @@ const ArchiveCard: React.FC<ArchiveCardProps> = ({
           {/* Tags */}
           {archive.tags && archive.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {archive.tags.map((tag) => (
+              {archive.tags.map(tag => (
                 <Badge key={tag} variant="secondary" className="text-xs">
                   {tag}
                 </Badge>
@@ -205,9 +197,7 @@ const ArchiveCard: React.FC<ArchiveCardProps> = ({
             <Alert variant="destructive">
               <AlertCircle className="w-4 h-4" />
               <AlertTitle>Error</AlertTitle>
-              <AlertDescription className="text-xs">
-                {archive.error.message}
-              </AlertDescription>
+              <AlertDescription className="text-xs">{archive.error.message}</AlertDescription>
             </Alert>
           )}
 
@@ -254,15 +244,15 @@ export const AdvancedArchiveManager: React.FC<ArchiveManagerProps> = ({
 
     const query = searchQuery.toLowerCase();
     return archives.filter(
-      (archive) =>
+      archive =>
         archive.name.toLowerCase().includes(query) ||
-        archive.tags?.some((tag) => tag.toLowerCase().includes(query))
+        archive.tags?.some(tag => tag.toLowerCase().includes(query))
     );
   }, [archives, searchQuery]);
 
   // Get selected archive
   const selectedArchive = useMemo(() => {
-    return archives.find((a) => a.id === selectedId);
+    return archives.find(a => a.id === selectedId);
   }, [archives, selectedId]);
 
   // Handle archive selection
@@ -302,9 +292,7 @@ export const AdvancedArchiveManager: React.FC<ArchiveManagerProps> = ({
           <ArchiveIcon className="w-12 h-12 mx-auto text-muted-foreground" />
           <div>
             <h3 className="font-semibold text-lg">No archives found</h3>
-            <p className="text-sm text-muted-foreground">
-              Upload an archive to get started
-            </p>
+            <p className="text-sm text-muted-foreground">Upload an archive to get started</p>
           </div>
         </div>
       </div>
@@ -321,7 +309,7 @@ export const AdvancedArchiveManager: React.FC<ArchiveManagerProps> = ({
             <Input
               placeholder="Search archives..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -333,7 +321,7 @@ export const AdvancedArchiveManager: React.FC<ArchiveManagerProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Archive list */}
           <div className="space-y-3 max-h-[600px] overflow-y-auto">
-            {filteredArchives.map((archive) => (
+            {filteredArchives.map(archive => (
               <ArchiveCard
                 key={archive.id}
                 archive={archive}
@@ -355,9 +343,7 @@ export const AdvancedArchiveManager: React.FC<ArchiveManagerProps> = ({
                       <FileText className="w-5 h-5" />
                       <span>File Structure</span>
                     </CardTitle>
-                    <CardDescription>
-                      {selectedArchive.name}
-                    </CardDescription>
+                    <CardDescription>{selectedArchive.name}</CardDescription>
                   </CardHeader>
                   <CardContent className="max-h-[500px] overflow-y-auto">
                     {selectedArchive.error && renderError ? (

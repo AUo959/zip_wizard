@@ -1,6 +1,6 @@
 /**
  * Error Boundary Component
- * 
+ *
  * Catches and handles errors gracefully in the component tree.
  * Provides fallback UI and recovery options.
  */
@@ -107,7 +107,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     // This should integrate with the app's modal/toast notification system.
     // For now, error information is logged to console for debugging purposes.
     console.log('Help requested for error:', this.state.error);
-    
+
     if (typeof window !== 'undefined') {
       console.info('Help system not yet implemented. Error details logged above.');
     }
@@ -134,9 +134,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <div className="flex items-start space-x-3">
               <AlertTriangle className="w-6 h-6 text-destructive mt-1" />
               <div>
-                <CardTitle className="text-destructive">
-                  Something went wrong
-                </CardTitle>
+                <CardTitle className="text-destructive">Something went wrong</CardTitle>
                 <CardDescription>
                   {boundaryId ? `Error in ${boundaryId}` : 'An unexpected error occurred'}
                 </CardDescription>
@@ -153,9 +151,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
             {showDetails && errorInfo?.componentStack && (
               <div className="bg-muted p-4 rounded-md max-h-48 overflow-auto">
-                <pre className="text-xs whitespace-pre-wrap">
-                  {errorInfo.componentStack}
-                </pre>
+                <pre className="text-xs whitespace-pre-wrap">{errorInfo.componentStack}</pre>
               </div>
             )}
 
