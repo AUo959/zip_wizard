@@ -14,7 +14,7 @@
  * @module EnhancedViewTabs
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Fragment } from 'react';
 import { Home, Menu, X } from 'lucide-react';
 import { ViewType, VIEW_METADATA, ALL_VIEWS } from '@shared/views';
 import {
@@ -247,10 +247,10 @@ export function EnhancedViewTabs({
       if (visibleCategoryViews.length === 0) return null;
 
       return (
-        <React.Fragment key={category}>
+        <div key={category}>
           <div className="enhanced-nav__divider">{category}</div>
           {visibleCategoryViews.map((view, index) => renderTab(view, index))}
-        </React.Fragment>
+        </div>
       );
     });
   }, [groupedViews, visibleViews, visibility, renderTab]);
