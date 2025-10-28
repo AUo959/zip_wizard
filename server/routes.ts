@@ -1036,6 +1036,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Import and register security routes
+  const securityRoutes = await import('./routes/security');
+  app.use('/api/v1/security', securityRoutes.default);
+
   const httpServer = createServer(app);
   return httpServer;
 }
