@@ -1,4 +1,4 @@
-import type { File, FileTreeNode } from "@shared/schema";
+import type { File, FileTreeNode } from '@shared/schema';
 
 export function buildFileTree(files: File[]): FileTreeNode[] {
   const nodeMap = new Map<string, FileTreeNode>();
@@ -10,12 +10,12 @@ export function buildFileTree(files: File[]): FileTreeNode[] {
       id: file.id,
       name: file.name,
       path: file.path,
-      isDirectory: file.isDirectory === "true",
+      isDirectory: file.isDirectory === 'true',
       size: file.size,
       extension: file.extension || undefined,
       language: file.language || undefined,
       tags: file.tags || undefined,
-      children: file.isDirectory === "true" ? [] : undefined,
+      children: file.isDirectory === 'true' ? [] : undefined,
     };
     nodeMap.set(file.path, node);
   });
@@ -55,11 +55,12 @@ export function buildFileTree(files: File[]): FileTreeNode[] {
 
 export function searchFiles(files: File[], query: string): File[] {
   const lowerQuery = query.toLowerCase();
-  return files.filter(file => 
-    file.name.toLowerCase().includes(lowerQuery) ||
-    file.path.toLowerCase().includes(lowerQuery) ||
-    file.description?.toLowerCase().includes(lowerQuery) ||
-    file.tags?.some(tag => tag.toLowerCase().includes(lowerQuery))
+  return files.filter(
+    file =>
+      file.name.toLowerCase().includes(lowerQuery) ||
+      file.path.toLowerCase().includes(lowerQuery) ||
+      file.description?.toLowerCase().includes(lowerQuery) ||
+      file.tags?.some(tag => tag.toLowerCase().includes(lowerQuery))
   );
 }
 

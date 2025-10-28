@@ -17,7 +17,8 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
         const matchesKey = event.key.toLowerCase() === shortcut.key.toLowerCase();
         const matchesCtrl = shortcut.ctrlKey === undefined || event.ctrlKey === shortcut.ctrlKey;
         const matchesMeta = shortcut.metaKey === undefined || event.metaKey === shortcut.metaKey;
-        const matchesShift = shortcut.shiftKey === undefined || event.shiftKey === shortcut.shiftKey;
+        const matchesShift =
+          shortcut.shiftKey === undefined || event.shiftKey === shortcut.shiftKey;
         const matchesAlt = shortcut.altKey === undefined || event.altKey === shortcut.altKey;
 
         if (matchesKey && matchesCtrl && matchesMeta && matchesShift && matchesAlt) {
@@ -47,7 +48,7 @@ export const defaultShortcuts = {
 
 export function formatShortcut(shortcut: Partial<KeyboardShortcut>): string {
   const parts = [];
-  
+
   if (shortcut.ctrlKey || shortcut.metaKey) {
     parts.push('Ctrl');
   }
@@ -57,8 +58,8 @@ export function formatShortcut(shortcut: Partial<KeyboardShortcut>): string {
   if (shortcut.altKey) {
     parts.push('Alt');
   }
-  
+
   parts.push(shortcut.key?.toUpperCase() || '');
-  
+
   return parts.join(' + ');
 }

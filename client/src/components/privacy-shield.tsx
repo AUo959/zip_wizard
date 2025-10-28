@@ -6,21 +6,21 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Shield, 
-  Eye, 
-  EyeOff, 
-  Lock, 
-  Unlock, 
-  AlertTriangle, 
-  CheckCircle, 
+import {
+  Shield,
+  Eye,
+  EyeOff,
+  Lock,
+  Unlock,
+  AlertTriangle,
+  CheckCircle,
   Scan,
   FileText,
   Database,
   Server,
   Key,
   UserCheck,
-  Clock
+  Clock,
 } from 'lucide-react';
 
 interface PrivacySettings {
@@ -52,7 +52,7 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
     encryptedStorage: true,
     auditLogging: true,
     gdprCompliance: true,
-    zeroKnowledgeMode: false
+    zeroKnowledgeMode: false,
   });
 
   const [scanProgress, setScanProgress] = useState(0);
@@ -74,16 +74,14 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
     setScanResults([]);
 
     // Simulate security scan
-    const mockFiles = [
-      'config.json', 'user_data.csv', 'api_keys.txt', 'logs.txt', 'database.sql'
-    ];
+    const mockFiles = ['config.json', 'user_data.csv', 'api_keys.txt', 'logs.txt', 'database.sql'];
 
     const interval = setInterval(() => {
       setScanProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval);
           setIsScanning(false);
-          
+
           // Generate mock scan results
           const results: SecurityScan[] = mockFiles.map(filename => ({
             filename,
@@ -91,11 +89,11 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
             issues: [
               'Contains potential PII data',
               'Unencrypted sensitive information',
-              'Missing data classification'
+              'Missing data classification',
             ].slice(0, Math.floor(Math.random() * 3) + 1),
-            status: 'scanned'
+            status: 'scanned',
           }));
-          
+
           setScanResults(results);
           return 100;
         }
@@ -106,10 +104,14 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
 
   const getRiskColor = (level: string) => {
     switch (level) {
-      case 'high': return 'text-red-500 bg-red-100';
-      case 'medium': return 'text-yellow-500 bg-yellow-100';
-      case 'low': return 'text-green-500 bg-green-100';
-      default: return 'text-gray-500 bg-gray-100';
+      case 'high':
+        return 'text-red-500 bg-red-100';
+      case 'medium':
+        return 'text-yellow-500 bg-yellow-100';
+      case 'low':
+        return 'text-green-500 bg-green-100';
+      default:
+        return 'text-gray-500 bg-gray-100';
     }
   };
 
@@ -122,30 +124,28 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
   return (
     <div className="space-y-6">
       {/* Privacy Shield Header */}
-      <Card className={`border-2 ${isActive ? 'border-green-500 bg-green-50/50' : 'border-orange-500 bg-orange-50/50'}`}>
+      <Card
+        className={`border-2 ${isActive ? 'border-green-500 bg-green-50/50' : 'border-orange-500 bg-orange-50/50'}`}
+      >
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Shield className={`w-5 h-5 ${isActive ? 'text-green-600' : 'text-orange-600'}`} />
               <span>Privacy Shield</span>
-              <Badge variant={isActive ? "default" : "destructive"}>
+              <Badge variant={isActive ? 'default' : 'destructive'}>
                 {isActive ? 'ACTIVE' : 'INACTIVE'}
               </Badge>
             </div>
-            <Switch
-              checked={isActive}
-              onCheckedChange={onToggle}
-            />
+            <Switch checked={isActive} onCheckedChange={onToggle} />
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">
-                {isActive 
+                {isActive
                   ? 'Privacy protection is active. All data processing follows privacy-first principles.'
-                  : 'Privacy protection is disabled. Enable for enhanced data security.'
-                }
+                  : 'Privacy protection is disabled. Enable for enhanced data security.'}
               </p>
             </div>
             <div className="text-right">
@@ -182,7 +182,7 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
                   </div>
                   <Switch
                     checked={settings.dataRedaction}
-                    onCheckedChange={(value) => handleSettingChange('dataRedaction', value)}
+                    onCheckedChange={value => handleSettingChange('dataRedaction', value)}
                   />
                 </div>
 
@@ -195,7 +195,7 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
                   </div>
                   <Switch
                     checked={settings.anonymization}
-                    onCheckedChange={(value) => handleSettingChange('anonymization', value)}
+                    onCheckedChange={value => handleSettingChange('anonymization', value)}
                   />
                 </div>
 
@@ -208,7 +208,7 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
                   </div>
                   <Switch
                     checked={settings.zeroKnowledgeMode}
-                    onCheckedChange={(value) => handleSettingChange('zeroKnowledgeMode', value)}
+                    onCheckedChange={value => handleSettingChange('zeroKnowledgeMode', value)}
                   />
                 </div>
               </CardContent>
@@ -228,7 +228,7 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
                   </div>
                   <Switch
                     checked={settings.encryptedStorage}
-                    onCheckedChange={(value) => handleSettingChange('encryptedStorage', value)}
+                    onCheckedChange={value => handleSettingChange('encryptedStorage', value)}
                   />
                 </div>
 
@@ -241,7 +241,7 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
                   </div>
                   <Switch
                     checked={settings.auditLogging}
-                    onCheckedChange={(value) => handleSettingChange('auditLogging', value)}
+                    onCheckedChange={value => handleSettingChange('auditLogging', value)}
                   />
                 </div>
 
@@ -254,7 +254,7 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
                   </div>
                   <Switch
                     checked={settings.gdprCompliance}
-                    onCheckedChange={(value) => handleSettingChange('gdprCompliance', value)}
+                    onCheckedChange={value => handleSettingChange('gdprCompliance', value)}
                   />
                 </div>
               </CardContent>
@@ -304,7 +304,10 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
                         {result.issues.length > 0 && (
                           <div className="space-y-1">
                             {result.issues.map((issue, issueIndex) => (
-                              <div key={issueIndex} className="text-sm text-muted-foreground flex items-center space-x-2">
+                              <div
+                                key={issueIndex}
+                                className="text-sm text-muted-foreground flex items-center space-x-2"
+                              >
                                 <AlertTriangle className="w-3 h-3" />
                                 <span>{issue}</span>
                               </div>
@@ -335,22 +338,25 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
                     timestamp: new Date(Date.now() - 1000 * 60 * 5),
                     action: 'Privacy Shield Activated',
                     user: 'System',
-                    details: 'All privacy protection features enabled'
+                    details: 'All privacy protection features enabled',
                   },
                   {
                     timestamp: new Date(Date.now() - 1000 * 60 * 15),
                     action: 'Security Scan Completed',
                     user: 'User',
-                    details: '5 files scanned, 2 issues found'
+                    details: '5 files scanned, 2 issues found',
                   },
                   {
                     timestamp: new Date(Date.now() - 1000 * 60 * 30),
                     action: 'Data Redaction Applied',
                     user: 'System',
-                    details: 'Sensitive data redacted in processing logs'
-                  }
+                    details: 'Sensitive data redacted in processing logs',
+                  },
                 ].map((entry, index) => (
-                  <div key={index} className="flex items-center space-x-4 p-3 bg-muted/50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center space-x-4 p-3 bg-muted/50 rounded-lg"
+                  >
                     <Clock className="w-4 h-4 text-muted-foreground" />
                     <div className="flex-1">
                       <div className="font-medium">{entry.action}</div>
@@ -379,7 +385,7 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
                     { name: 'GDPR Compliance', status: true, score: 95 },
                     { name: 'Data Minimization', status: true, score: 88 },
                     { name: 'Consent Management', status: false, score: 65 },
-                    { name: 'Data Portability', status: true, score: 92 }
+                    { name: 'Data Portability', status: true, score: 92 },
                   ].map((item, index) => (
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">

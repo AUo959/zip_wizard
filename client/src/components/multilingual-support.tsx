@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Globe, 
-  Languages, 
-  FileText, 
-  Clock, 
-  MapPin, 
+import {
+  Globe,
+  Languages,
+  FileText,
+  Clock,
+  MapPin,
   Users,
   Type,
   Calendar,
-  Compass
+  Compass,
 } from 'lucide-react';
 
 interface Language {
@@ -38,14 +44,17 @@ interface MultilingualSupportProps {
   currentLanguage: string;
 }
 
-export function MultilingualSupport({ onLanguageChange, currentLanguage }: MultilingualSupportProps) {
+export function MultilingualSupport({
+  onLanguageChange,
+  currentLanguage,
+}: MultilingualSupportProps) {
   const [detectedEncoding, setDetectedEncoding] = useState('UTF-8');
   const [culturalPreferences, setCulturalPreferences] = useState<CulturalContext>({
     dateFormat: 'MM/DD/YYYY',
     timeFormat: '12-hour',
     numberFormat: 'US',
     fileNamingConvention: 'Western',
-    archiveStructure: 'Hierarchical'
+    archiveStructure: 'Hierarchical',
   });
 
   const supportedLanguages: Language[] = [
@@ -54,42 +63,42 @@ export function MultilingualSupport({ onLanguageChange, currentLanguage }: Multi
       name: 'English',
       nativeName: 'English',
       flag: '🇺🇸',
-      coverage: 100
+      coverage: 100,
     },
     {
       code: 'es',
       name: 'Spanish',
       nativeName: 'Español',
       flag: '🇪🇸',
-      coverage: 95
+      coverage: 95,
     },
     {
       code: 'fr',
       name: 'French',
       nativeName: 'Français',
       flag: '🇫🇷',
-      coverage: 90
+      coverage: 90,
     },
     {
       code: 'de',
       name: 'German',
       nativeName: 'Deutsch',
       flag: '🇩🇪',
-      coverage: 88
+      coverage: 88,
     },
     {
       code: 'ja',
       name: 'Japanese',
       nativeName: '日本語',
       flag: '🇯🇵',
-      coverage: 85
+      coverage: 85,
     },
     {
       code: 'zh',
       name: 'Chinese',
       nativeName: '中文',
       flag: '🇨🇳',
-      coverage: 82
+      coverage: 82,
     },
     {
       code: 'ar',
@@ -97,53 +106,53 @@ export function MultilingualSupport({ onLanguageChange, currentLanguage }: Multi
       nativeName: 'العربية',
       flag: '🇸🇦',
       coverage: 75,
-      rtl: true
+      rtl: true,
     },
     {
       code: 'ru',
       name: 'Russian',
       nativeName: 'Русский',
       flag: '🇷🇺',
-      coverage: 80
-    }
+      coverage: 80,
+    },
   ];
 
   const culturalContexts: Record<string, CulturalContext> = {
-    'en': {
+    en: {
       dateFormat: 'MM/DD/YYYY',
       timeFormat: '12-hour',
       numberFormat: 'US (1,234.56)',
       fileNamingConvention: 'CamelCase, spaces allowed',
-      archiveStructure: 'Hierarchical folders'
+      archiveStructure: 'Hierarchical folders',
     },
-    'de': {
+    de: {
       dateFormat: 'DD.MM.YYYY',
       timeFormat: '24-hour',
       numberFormat: 'German (1.234,56)',
       fileNamingConvention: 'Compound words, no spaces',
-      archiveStructure: 'Deep categorization'
+      archiveStructure: 'Deep categorization',
     },
-    'ja': {
+    ja: {
       dateFormat: 'YYYY/MM/DD',
       timeFormat: '24-hour',
       numberFormat: 'Japanese (1,234.56)',
       fileNamingConvention: 'Mixed scripts, date prefixes',
-      archiveStructure: 'Categorical grouping'
+      archiveStructure: 'Categorical grouping',
     },
-    'ar': {
+    ar: {
       dateFormat: 'DD/MM/YYYY',
       timeFormat: '12-hour',
       numberFormat: 'Arabic (١٬٢٣٤٫٥٦)',
       fileNamingConvention: 'Right-to-left naming',
-      archiveStructure: 'Topic-based organization'
+      archiveStructure: 'Topic-based organization',
     },
-    'zh': {
+    zh: {
       dateFormat: 'YYYY-MM-DD',
       timeFormat: '24-hour',
       numberFormat: 'Chinese (1,234.56)',
       fileNamingConvention: 'Pinyin with characters',
-      archiveStructure: 'Thematic grouping'
-    }
+      archiveStructure: 'Thematic grouping',
+    },
   };
 
   const translations = {
@@ -154,7 +163,7 @@ export function MultilingualSupport({ onLanguageChange, currentLanguage }: Multi
       cultural: 'Cultural Context',
       fileNaming: 'File Naming Suggestions',
       archiveOrg: 'Archive Organization',
-      timezone: 'Timezone Settings'
+      timezone: 'Timezone Settings',
     },
     es: {
       title: 'Soporte Multiidioma',
@@ -163,7 +172,7 @@ export function MultilingualSupport({ onLanguageChange, currentLanguage }: Multi
       cultural: 'Contexto Cultural',
       fileNaming: 'Sugerencias de Nomenclatura',
       archiveOrg: 'Organización de Archivos',
-      timezone: 'Configuración de Zona Horaria'
+      timezone: 'Configuración de Zona Horaria',
     },
     fr: {
       title: 'Support Multilingue',
@@ -172,7 +181,7 @@ export function MultilingualSupport({ onLanguageChange, currentLanguage }: Multi
       cultural: 'Contexte Culturel',
       fileNaming: 'Suggestions de Nommage',
       archiveOrg: 'Organisation des Archives',
-      timezone: 'Paramètres de Fuseau Horaire'
+      timezone: 'Paramètres de Fuseau Horaire',
     },
     de: {
       title: 'Mehrsprachige Unterstützung',
@@ -181,7 +190,7 @@ export function MultilingualSupport({ onLanguageChange, currentLanguage }: Multi
       cultural: 'Kultureller Kontext',
       fileNaming: 'Dateibenennungsvorschläge',
       archiveOrg: 'Archivorganisation',
-      timezone: 'Zeitzoneneinstellungen'
+      timezone: 'Zeitzoneneinstellungen',
     },
     ja: {
       title: '多言語サポート',
@@ -190,11 +199,12 @@ export function MultilingualSupport({ onLanguageChange, currentLanguage }: Multi
       cultural: '文化的コンテキスト',
       fileNaming: 'ファイル命名提案',
       archiveOrg: 'アーカイブ整理',
-      timezone: 'タイムゾーン設定'
-    }
+      timezone: 'タイムゾーン設定',
+    },
   };
 
-  const currentTranslations = translations[currentLanguage as keyof typeof translations] || translations.en;
+  const currentTranslations =
+    translations[currentLanguage as keyof typeof translations] || translations.en;
 
   useEffect(() => {
     if (culturalContexts[currentLanguage]) {
@@ -215,7 +225,7 @@ export function MultilingualSupport({ onLanguageChange, currentLanguage }: Multi
   const generateFileNameSuggestion = (originalName: string): string => {
     const context = culturalContexts[currentLanguage];
     const now = new Date();
-    
+
     switch (currentLanguage) {
       case 'ja':
         return `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${originalName}`;
@@ -247,7 +257,8 @@ export function MultilingualSupport({ onLanguageChange, currentLanguage }: Multi
           <Alert>
             <Languages className="w-4 h-4" />
             <AlertDescription>
-              ZipWiz supports global file processing with cultural context awareness and localized user interfaces.
+              ZipWiz supports global file processing with cultural context awareness and localized
+              user interfaces.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -267,7 +278,7 @@ export function MultilingualSupport({ onLanguageChange, currentLanguage }: Multi
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {supportedLanguages.map((lang) => (
+                  {supportedLanguages.map(lang => (
                     <SelectItem key={lang.code} value={lang.code}>
                       <div className="flex items-center space-x-2">
                         <span>{lang.flag}</span>
@@ -283,7 +294,9 @@ export function MultilingualSupport({ onLanguageChange, currentLanguage }: Multi
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">{currentTranslations.encoding}</label>
+              <label className="text-sm font-medium mb-2 block">
+                {currentTranslations.encoding}
+              </label>
               <Select value={detectedEncoding} onValueChange={setDetectedEncoding}>
                 <SelectTrigger>
                   <SelectValue />
@@ -367,9 +380,7 @@ export function MultilingualSupport({ onLanguageChange, currentLanguage }: Multi
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">Original Filename</label>
-                <div className="mt-1 p-2 bg-muted rounded text-sm">
-                  project_documentation.zip
-                </div>
+                <div className="mt-1 p-2 bg-muted rounded text-sm">project_documentation.zip</div>
               </div>
               <div>
                 <label className="text-sm font-medium">Cultural Suggestion</label>
@@ -382,8 +393,9 @@ export function MultilingualSupport({ onLanguageChange, currentLanguage }: Multi
             <Alert>
               <MapPin className="w-4 h-4" />
               <AlertDescription>
-                File naming follows {culturalPreferences.fileNamingConvention.toLowerCase()} conventions 
-                and {culturalPreferences.archiveStructure.toLowerCase()} for better organization.
+                File naming follows {culturalPreferences.fileNamingConvention.toLowerCase()}{' '}
+                conventions and {culturalPreferences.archiveStructure.toLowerCase()} for better
+                organization.
               </AlertDescription>
             </Alert>
           </div>
@@ -400,21 +412,24 @@ export function MultilingualSupport({ onLanguageChange, currentLanguage }: Multi
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Object.entries(culturalContexts).slice(0, 3).map(([code, context]) => (
-              <Card key={code} className={`border ${currentLanguage === code ? 'border-primary' : 'border-border'}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <span>{supportedLanguages.find(l => l.code === code)?.flag}</span>
-                    <span className="font-medium">
-                      {supportedLanguages.find(l => l.code === code)?.name}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {context.archiveStructure}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+            {Object.entries(culturalContexts)
+              .slice(0, 3)
+              .map(([code, context]) => (
+                <Card
+                  key={code}
+                  className={`border ${currentLanguage === code ? 'border-primary' : 'border-border'}`}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span>{supportedLanguages.find(l => l.code === code)?.flag}</span>
+                      <span className="font-medium">
+                        {supportedLanguages.find(l => l.code === code)?.name}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{context.archiveStructure}</p>
+                  </CardContent>
+                </Card>
+              ))}
           </div>
         </CardContent>
       </Card>

@@ -1,0 +1,104 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run weekly on Monday at 00:00
+    - cron: '0 0 * * 1'
+
+jobs:
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run full validation
+        run: npm run validate
+      
+      - name: Check for console.log statements
+        run: |
+          if grep -r "console\.log" client/src --include="*.tsx" --include="*.ts" --exclude-dir=__tests__; then
+            echo "❌ Found console.log statements"
+            exit 1
+          else
+            echo "✅ No console.log statements found"
+          fi
+      
+      - name: Check for TODO comments
+        run: |
+          echo "📝 TODO items found:"
+          grep -r "TODO" client/src server/ --include="*.tsx" --include="*.ts" || echo "None"
+      
+      - name: Check bundle size
+        run: |
+          npm run build
+          SIZE=$(du -sh dist/public/assets/*.js | awk '{print $1}')
+          echo "Bundle size: $SIZE"
+      
+      - name: Dependency audit
+        run: npm audit --audit-level=moderate
+      
+      - name: Check for outdated packages
+        run: npm outdated || true
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  documentation:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for missing documentation
+        run: |
+          # Check if new components have documentation
+          for file in client/src/components/*.tsx; do
+            basename=$(basename "$file" .tsx)
+            if [ ! -f "docs/$basename.md" ] && [ "$basename" != "ui" ]; then
+              echo "⚠️  Missing docs for: $basename"
+            fi
+          done
+      
+      - name: Check README updates
+        run: |
+          if [ -f "docs/ENHANCED-NAVIGATION.md" ]; then
+            echo "✅ Enhanced navigation documentation exists"
+          else
+            echo "❌ Enhanced navigation documentation missing"
+            exit 1
+          fi

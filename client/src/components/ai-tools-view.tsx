@@ -1,8 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Bot, Brain, FileSearch, Zap, Sparkles, Code, AlertCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Bot, Brain, FileSearch, Zap, Sparkles, Code, AlertCircle } from 'lucide-react';
 
 interface AIToolsViewProps {
   files?: Array<{
@@ -21,40 +21,40 @@ export function AIToolsView({ files = [], selectedArchive }: AIToolsViewProps) {
 
   const aiFeatures = [
     {
-      title: "Code Analysis",
-      description: "Deep analysis of code patterns, quality, and potential improvements",
+      title: 'Code Analysis',
+      description: 'Deep analysis of code patterns, quality, and potential improvements',
       icon: Code,
-      status: "active",
-      action: "Analyze Codebase"
+      status: 'active',
+      action: 'Analyze Codebase',
     },
     {
-      title: "Smart Search",
-      description: "AI-powered semantic search across your entire codebase",
+      title: 'Smart Search',
+      description: 'AI-powered semantic search across your entire codebase',
       icon: FileSearch,
-      status: "active", 
-      action: "Enable Smart Search"
+      status: 'active',
+      action: 'Enable Smart Search',
     },
     {
-      title: "Code Suggestions",
-      description: "Get intelligent suggestions for code improvements and refactoring",
+      title: 'Code Suggestions',
+      description: 'Get intelligent suggestions for code improvements and refactoring',
       icon: Brain,
-      status: "requires-api",
-      action: "Configure AI"
+      status: 'requires-api',
+      action: 'Configure AI',
     },
     {
-      title: "Documentation Generator",
-      description: "Automatically generate documentation from your code",
+      title: 'Documentation Generator',
+      description: 'Automatically generate documentation from your code',
       icon: Sparkles,
-      status: "requires-api",
-      action: "Generate Docs"
+      status: 'requires-api',
+      action: 'Generate Docs',
     },
     {
-      title: "Quantum Processing",
-      description: "Advanced quantum-inspired analysis for complex codebases",
+      title: 'Quantum Processing',
+      description: 'Advanced quantum-inspired analysis for complex codebases',
       icon: Zap,
-      status: "experimental",
-      action: "Enable Quantum"
-    }
+      status: 'experimental',
+      action: 'Enable Quantum',
+    },
   ];
 
   const getStatusBadge = (status: string) => {
@@ -62,9 +62,17 @@ export function AIToolsView({ files = [], selectedArchive }: AIToolsViewProps) {
       case 'active':
         return <Badge className="bg-green-500 text-white">Active</Badge>;
       case 'requires-api':
-        return <Badge variant="outline" className="border-orange-500 text-orange-500">Needs API Key</Badge>;
+        return (
+          <Badge variant="outline" className="border-orange-500 text-orange-500">
+            Needs API Key
+          </Badge>
+        );
       case 'experimental':
-        return <Badge variant="outline" className="border-purple-500 text-purple-500">Experimental</Badge>;
+        return (
+          <Badge variant="outline" className="border-purple-500 text-purple-500">
+            Experimental
+          </Badge>
+        );
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
@@ -75,9 +83,7 @@ export function AIToolsView({ files = [], selectedArchive }: AIToolsViewProps) {
       <div className="flex items-center space-x-2">
         <Bot className="w-6 h-6 text-primary" />
         <h2 className="text-2xl font-bold">AI Tools</h2>
-        {selectedArchive && (
-          <Badge variant="outline">{selectedArchive.name}</Badge>
-        )}
+        {selectedArchive && <Badge variant="outline">{selectedArchive.name}</Badge>}
       </div>
 
       {/* Overview */}
@@ -107,7 +113,9 @@ export function AIToolsView({ files = [], selectedArchive }: AIToolsViewProps) {
             <CardTitle className="text-sm">AI Coverage</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalFiles > 0 ? Math.round((codeFiles / totalFiles) * 100) : 0}%</div>
+            <div className="text-2xl font-bold">
+              {totalFiles > 0 ? Math.round((codeFiles / totalFiles) * 100) : 0}%
+            </div>
             <p className="text-sm text-muted-foreground">Files ready for AI analysis</p>
           </CardContent>
         </Card>
@@ -117,13 +125,14 @@ export function AIToolsView({ files = [], selectedArchive }: AIToolsViewProps) {
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Some AI features require an API key. Configure your API keys in the settings to unlock advanced capabilities.
+          Some AI features require an API key. Configure your API keys in the settings to unlock
+          advanced capabilities.
         </AlertDescription>
       </Alert>
 
       {/* AI Features */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {aiFeatures.map((feature) => {
+        {aiFeatures.map(feature => {
           const Icon = feature.icon;
           return (
             <Card key={feature.title} className="relative">
@@ -137,10 +146,8 @@ export function AIToolsView({ files = [], selectedArchive }: AIToolsViewProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  {feature.description}
-                </p>
-                <Button 
+                <p className="text-sm text-muted-foreground">{feature.description}</p>
+                <Button
                   variant={feature.status === 'active' ? 'default' : 'outline'}
                   className="w-full"
                   disabled={feature.status === 'requires-api'}

@@ -6,9 +6,9 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Clock, 
-  Zap, 
+import {
+  Clock,
+  Zap,
   Activity,
   Timer,
   TrendingUp,
@@ -19,7 +19,7 @@ import {
   RotateCw,
   Settings,
   Gauge,
-  Brain
+  Brain,
 } from 'lucide-react';
 
 interface TimingOptimizerProps {
@@ -81,9 +81,9 @@ interface CircuitBreaker {
   nextRetryTime?: Date;
 }
 
-export function TimingOptimizer({ 
-  onOptimizationApplied, 
-  onTimeoutPrevented 
+export function TimingOptimizer({
+  onOptimizationApplied,
+  onTimeoutPrevented,
 }: TimingOptimizerProps) {
   const [config, setConfig] = useState<OptimizationConfig>({
     maxConcurrent: 5,
@@ -95,7 +95,7 @@ export function TimingOptimizer({
     adaptiveScaling: true,
     priorityQueuing: true,
     circuitBreakerEnabled: true,
-    resourcePooling: true
+    resourcePooling: true,
   });
 
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -107,7 +107,7 @@ export function TimingOptimizer({
   const [circuitBreakers, setCircuitBreakers] = useState<Map<string, CircuitBreaker>>(new Map());
   const [systemLoad, setSystemLoad] = useState(0);
   const [throughput, setThroughput] = useState(0);
-  
+
   const queueRef = useRef<QueueItem[]>([]);
   const runningRef = useRef<number>(0);
   const metricsRef = useRef<Map<string, OperationMetrics>>(new Map());
@@ -116,30 +116,32 @@ export function TimingOptimizer({
   const adaptiveScale = useCallback(() => {
     if (!config.adaptiveScaling) return;
 
-    const avgResponseTime = metrics.reduce((sum, m) => sum + m.averageTime, 0) / Math.max(metrics.length, 1);
-    const successRate = metrics.reduce((sum, m) => sum + m.successRate, 0) / Math.max(metrics.length, 1);
-    
+    const avgResponseTime =
+      metrics.reduce((sum, m) => sum + m.averageTime, 0) / Math.max(metrics.length, 1);
+    const successRate =
+      metrics.reduce((sum, m) => sum + m.successRate, 0) / Math.max(metrics.length, 1);
+
     let newConfig = { ...config };
-    
+
     // Adjust concurrency based on performance
     if (successRate > 0.95 && avgResponseTime < 1000) {
       newConfig.maxConcurrent = Math.min(config.maxConcurrent + 1, 20);
     } else if (successRate < 0.8 || avgResponseTime > 5000) {
       newConfig.maxConcurrent = Math.max(config.maxConcurrent - 1, 1);
     }
-    
+
     // Adjust timeout based on average response times
     if (avgResponseTime > config.timeout * 0.8) {
       newConfig.timeout = Math.min(config.timeout * 1.5, 60000);
     }
-    
+
     // Adjust batch size based on throughput
     if (throughput > 100) {
       newConfig.batchSize = Math.min(config.batchSize + 2, 50);
     } else if (throughput < 10) {
       newConfig.batchSize = Math.max(config.batchSize - 2, 1);
     }
-    
+
     if (JSON.stringify(newConfig) !== JSON.stringify(config)) {
       setConfig(newConfig);
       onOptimizationApplied?.(newConfig);
@@ -159,7 +161,7 @@ export function TimingOptimizer({
   const checkCircuitBreaker = (operationName: string): boolean => {
     const breaker = circuitBreakers.get(operationName);
     if (!breaker || !config.circuitBreakerEnabled) return true;
-    
+
     if (breaker.state === 'open') {
       if (breaker.nextRetryTime && new Date() > breaker.nextRetryTime) {
         // Try half-open state
@@ -172,21 +174,21 @@ export function TimingOptimizer({
       }
       return false;
     }
-    
+
     return true;
   };
 
   const updateCircuitBreaker = (operationName: string, success: boolean) => {
     if (!config.circuitBreakerEnabled) return;
-    
+
     setCircuitBreakers(prev => {
       const updated = new Map(prev);
       const breaker = updated.get(operationName) || {
         state: 'closed' as const,
         failures: 0,
-        successCount: 0
+        successCount: 0,
       };
-      
+
       if (success) {
         if (breaker.state === 'half-open') {
           breaker.state = 'closed';
@@ -196,20 +198,24 @@ export function TimingOptimizer({
       } else {
         breaker.failures++;
         breaker.lastFailureTime = new Date();
-        
+
         if (breaker.failures >= 5) {
           breaker.state = 'open';
           breaker.nextRetryTime = new Date(Date.now() + 30000); // 30 seconds
         }
       }
-      
+
       updated.set(operationName, breaker);
       return updated;
     });
   };
 
   // Priority queue implementation
-  const addToQueue = (operation: () => Promise<any>, priority: number = 5, operationName: string = 'unknown') => {
+  const addToQueue = (
+    operation: () => Promise<any>,
+    priority: number = 5,
+    operationName: string = 'unknown'
+  ) => {
     const item: QueueItem = {
       id: `op-${Date.now()}-${Math.random()}`,
       operation,
@@ -217,9 +223,9 @@ export function TimingOptimizer({
       timeout: config.timeout,
       retries: 0,
       createdAt: new Date(),
-      status: 'queued'
+      status: 'queued',
     };
-    
+
     setQueue(prev => {
       const updated = [...prev, item];
       if (config.priorityQueuing) {
@@ -227,44 +233,45 @@ export function TimingOptimizer({
       }
       return updated;
     });
-    
+
     return item.id;
   };
 
   // Resource pooling
   const acquireResource = async (type: string, amount: number = 1): Promise<boolean> => {
     if (!config.resourcePooling) return true;
-    
+
     const pool = resourcePools.find(p => p.type === type);
     if (!pool) {
       // Create new pool
-      setResourcePools(prev => [...prev, {
-        id: `pool-${type}`,
-        type,
-        available: 10 - amount,
-        total: 10,
-        inUse: amount,
-        waitQueue: 0
-      }]);
+      setResourcePools(prev => [
+        ...prev,
+        {
+          id: `pool-${type}`,
+          type,
+          available: 10 - amount,
+          total: 10,
+          inUse: amount,
+          waitQueue: 0,
+        },
+      ]);
       return true;
     }
-    
+
     if (pool.available >= amount) {
-      setResourcePools(prev => prev.map(p => 
-        p.type === type 
-          ? { ...p, available: p.available - amount, inUse: p.inUse + amount }
-          : p
-      ));
+      setResourcePools(prev =>
+        prev.map(p =>
+          p.type === type ? { ...p, available: p.available - amount, inUse: p.inUse + amount } : p
+        )
+      );
       return true;
     }
-    
+
     // Add to wait queue
-    setResourcePools(prev => prev.map(p => 
-      p.type === type 
-        ? { ...p, waitQueue: p.waitQueue + 1 }
-        : p
-    ));
-    
+    setResourcePools(prev =>
+      prev.map(p => (p.type === type ? { ...p, waitQueue: p.waitQueue + 1 } : p))
+    );
+
     // Wait and retry
     await new Promise(resolve => setTimeout(resolve, 1000));
     return acquireResource(type, amount);
@@ -272,17 +279,19 @@ export function TimingOptimizer({
 
   const releaseResource = (type: string, amount: number = 1) => {
     if (!config.resourcePooling) return;
-    
-    setResourcePools(prev => prev.map(p => 
-      p.type === type 
-        ? { 
-            ...p, 
-            available: Math.min(p.available + amount, p.total),
-            inUse: Math.max(p.inUse - amount, 0),
-            waitQueue: Math.max(p.waitQueue - 1, 0)
-          }
-        : p
-    ));
+
+    setResourcePools(prev =>
+      prev.map(p =>
+        p.type === type
+          ? {
+              ...p,
+              available: Math.min(p.available + amount, p.total),
+              inUse: Math.max(p.inUse - amount, 0),
+              waitQueue: Math.max(p.waitQueue - 1, 0),
+            }
+          : p
+      )
+    );
   };
 
   // Process queue with concurrency control
@@ -290,49 +299,46 @@ export function TimingOptimizer({
     if (runningRef.current >= config.maxConcurrent || queue.length === 0) {
       return;
     }
-    
+
     const item = queue[0];
     if (!item || !checkCircuitBreaker(item.id)) return;
-    
+
     setQueue(prev => prev.slice(1));
     setActiveOperations(prev => [...prev, { ...item, status: 'running', startedAt: new Date() }]);
     runningRef.current++;
-    
+
     // Throttling
     if (config.throttleMs > 0) {
       await new Promise(resolve => setTimeout(resolve, config.throttleMs));
     }
-    
+
     try {
       // Acquire resources if needed
       await acquireResource('default');
-      
+
       // Execute with timeout
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Operation timeout')), item.timeout)
       );
-      
-      const result = await Promise.race([
-        item.operation(),
-        timeoutPromise
-      ]);
-      
+
+      const result = await Promise.race([item.operation(), timeoutPromise]);
+
       // Success
       item.status = 'completed';
       item.result = result;
       item.completedAt = new Date();
-      
+
       updateCircuitBreaker(item.id, true);
       updateMetrics(item.id, true, item.completedAt!.getTime() - item.startedAt!.getTime());
-      
+
       setCompletedOperations(prev => [...prev, item]);
     } catch (error) {
       // Handle failure
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
+
       if (errorMessage === 'Operation timeout') {
         onTimeoutPrevented?.(item.id);
-        
+
         // Retry logic
         if (item.retries < config.retryAttempts) {
           item.retries++;
@@ -350,14 +356,14 @@ export function TimingOptimizer({
         item.error = errorMessage;
         setCompletedOperations(prev => [...prev, item]);
       }
-      
+
       updateCircuitBreaker(item.id, false);
       updateMetrics(item.id, false, Date.now() - item.startedAt!.getTime());
     } finally {
       releaseResource('default');
       runningRef.current--;
       setActiveOperations(prev => prev.filter(op => op.id !== item.id));
-      
+
       // Process next item
       processQueue();
     }
@@ -371,19 +377,21 @@ export function TimingOptimizer({
       timeouts: 0,
       retries: 0,
       lastRun: new Date(),
-      status: 'pending' as const
+      status: 'pending' as const,
     };
-    
+
     const totalRuns = (existing.successRate > 0 ? 1 / existing.successRate : 0) + 1;
     existing.averageTime = (existing.averageTime * (totalRuns - 1) + duration) / totalRuns;
-    existing.successRate = success ? (existing.successRate * (totalRuns - 1) + 1) / totalRuns : existing.successRate * (totalRuns - 1) / totalRuns;
+    existing.successRate = success
+      ? (existing.successRate * (totalRuns - 1) + 1) / totalRuns
+      : (existing.successRate * (totalRuns - 1)) / totalRuns;
     existing.status = success ? 'success' : 'failed';
     existing.lastRun = new Date();
-    
+
     if (!success && duration >= config.timeout) {
       existing.timeouts++;
     }
-    
+
     metricsRef.current.set(operationName, existing);
     setMetrics(Array.from(metricsRef.current.values()));
   };
@@ -393,17 +401,17 @@ export function TimingOptimizer({
     const interval = setInterval(() => {
       const load = (runningRef.current / config.maxConcurrent) * 100;
       setSystemLoad(load);
-      
+
       // Calculate throughput
-      const recentCompleted = completedOperations.filter(op => 
-        op.completedAt && op.completedAt.getTime() > Date.now() - 60000
+      const recentCompleted = completedOperations.filter(
+        op => op.completedAt && op.completedAt.getTime() > Date.now() - 60000
       ).length;
       setThroughput(recentCompleted);
-      
+
       // Adaptive scaling
       adaptiveScale();
     }, 1000);
-    
+
     return () => clearInterval(interval);
   }, [config, completedOperations, adaptiveScale]);
 
@@ -415,28 +423,29 @@ export function TimingOptimizer({
   // Simulate operations for testing
   const runTestOperations = () => {
     setIsOptimizing(true);
-    
+
     // Add various test operations
     for (let i = 0; i < 20; i++) {
       const priority = Math.floor(Math.random() * 10);
       const duration = Math.random() * 5000;
       const shouldFail = Math.random() > 0.8;
-      
+
       addToQueue(
-        () => new Promise((resolve, reject) => {
-          setTimeout(() => {
-            if (shouldFail) {
-              reject(new Error('Simulated failure'));
-            } else {
-              resolve(`Result ${i}`);
-            }
-          }, duration);
-        }),
+        () =>
+          new Promise((resolve, reject) => {
+            setTimeout(() => {
+              if (shouldFail) {
+                reject(new Error('Simulated failure'));
+              } else {
+                resolve(`Result ${i}`);
+              }
+            }, duration);
+          }),
         priority,
         `test-op-${i}`
       );
     }
-    
+
     setTimeout(() => setIsOptimizing(false), 10000);
   };
 
@@ -527,7 +536,7 @@ export function TimingOptimizer({
           {/* Optimization Controls */}
           <div className="flex items-center justify-between">
             <div className="flex gap-2">
-              <Button 
+              <Button
                 onClick={runTestOperations}
                 disabled={isOptimizing}
                 className="flex items-center gap-2"
@@ -544,7 +553,7 @@ export function TimingOptimizer({
                   </>
                 )}
               </Button>
-              
+
               <Button
                 variant="outline"
                 onClick={() => {
@@ -556,7 +565,7 @@ export function TimingOptimizer({
                 <RotateCw className="w-4 h-4" />
               </Button>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Badge variant={config.adaptiveScaling ? 'default' : 'outline'}>
                 {config.adaptiveScaling ? 'Adaptive ON' : 'Adaptive OFF'}
@@ -576,7 +585,9 @@ export function TimingOptimizer({
                   <input
                     type="number"
                     value={config.maxConcurrent}
-                    onChange={(e) => setConfig(prev => ({ ...prev, maxConcurrent: parseInt(e.target.value) }))}
+                    onChange={e =>
+                      setConfig(prev => ({ ...prev, maxConcurrent: parseInt(e.target.value) }))
+                    }
                     className="w-full mt-1 px-2 py-1 border rounded text-sm"
                     min="1"
                     max="50"
@@ -587,7 +598,9 @@ export function TimingOptimizer({
                   <input
                     type="number"
                     value={config.timeout}
-                    onChange={(e) => setConfig(prev => ({ ...prev, timeout: parseInt(e.target.value) }))}
+                    onChange={e =>
+                      setConfig(prev => ({ ...prev, timeout: parseInt(e.target.value) }))
+                    }
                     className="w-full mt-1 px-2 py-1 border rounded text-sm"
                     min="1000"
                     max="60000"
@@ -598,7 +611,9 @@ export function TimingOptimizer({
                   <input
                     type="number"
                     value={config.retryAttempts}
-                    onChange={(e) => setConfig(prev => ({ ...prev, retryAttempts: parseInt(e.target.value) }))}
+                    onChange={e =>
+                      setConfig(prev => ({ ...prev, retryAttempts: parseInt(e.target.value) }))
+                    }
                     className="w-full mt-1 px-2 py-1 border rounded text-sm"
                     min="0"
                     max="10"
@@ -609,7 +624,9 @@ export function TimingOptimizer({
                   <input
                     type="number"
                     value={config.batchSize}
-                    onChange={(e) => setConfig(prev => ({ ...prev, batchSize: parseInt(e.target.value) }))}
+                    onChange={e =>
+                      setConfig(prev => ({ ...prev, batchSize: parseInt(e.target.value) }))
+                    }
                     className="w-full mt-1 px-2 py-1 border rounded text-sm"
                     min="1"
                     max="100"
@@ -620,7 +637,9 @@ export function TimingOptimizer({
                   <input
                     type="number"
                     value={config.throttleMs}
-                    onChange={(e) => setConfig(prev => ({ ...prev, throttleMs: parseInt(e.target.value) }))}
+                    onChange={e =>
+                      setConfig(prev => ({ ...prev, throttleMs: parseInt(e.target.value) }))
+                    }
                     className="w-full mt-1 px-2 py-1 border rounded text-sm"
                     min="0"
                     max="1000"
@@ -631,20 +650,24 @@ export function TimingOptimizer({
                   <input
                     type="number"
                     value={config.retryDelay}
-                    onChange={(e) => setConfig(prev => ({ ...prev, retryDelay: parseInt(e.target.value) }))}
+                    onChange={e =>
+                      setConfig(prev => ({ ...prev, retryDelay: parseInt(e.target.value) }))
+                    }
                     className="w-full mt-1 px-2 py-1 border rounded text-sm"
                     min="100"
                     max="10000"
                   />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={config.adaptiveScaling}
-                    onChange={(e) => setConfig(prev => ({ ...prev, adaptiveScaling: e.target.checked }))}
+                    onChange={e =>
+                      setConfig(prev => ({ ...prev, adaptiveScaling: e.target.checked }))
+                    }
                   />
                   <span className="text-sm">Adaptive Scaling</span>
                 </label>
@@ -652,7 +675,9 @@ export function TimingOptimizer({
                   <input
                     type="checkbox"
                     checked={config.priorityQueuing}
-                    onChange={(e) => setConfig(prev => ({ ...prev, priorityQueuing: e.target.checked }))}
+                    onChange={e =>
+                      setConfig(prev => ({ ...prev, priorityQueuing: e.target.checked }))
+                    }
                   />
                   <span className="text-sm">Priority Queue</span>
                 </label>
@@ -660,7 +685,9 @@ export function TimingOptimizer({
                   <input
                     type="checkbox"
                     checked={config.circuitBreakerEnabled}
-                    onChange={(e) => setConfig(prev => ({ ...prev, circuitBreakerEnabled: e.target.checked }))}
+                    onChange={e =>
+                      setConfig(prev => ({ ...prev, circuitBreakerEnabled: e.target.checked }))
+                    }
                   />
                   <span className="text-sm">Circuit Breaker</span>
                 </label>
@@ -668,7 +695,9 @@ export function TimingOptimizer({
                   <input
                     type="checkbox"
                     checked={config.resourcePooling}
-                    onChange={(e) => setConfig(prev => ({ ...prev, resourcePooling: e.target.checked }))}
+                    onChange={e =>
+                      setConfig(prev => ({ ...prev, resourcePooling: e.target.checked }))
+                    }
                   />
                   <span className="text-sm">Resource Pooling</span>
                 </label>
@@ -691,48 +720,58 @@ export function TimingOptimizer({
                 {activeOperations.length > 0 ? (
                   <div className="space-y-2">
                     {activeOperations.map(op => (
-                      <div key={op.id} className="flex items-center justify-between p-2 border rounded">
+                      <div
+                        key={op.id}
+                        className="flex items-center justify-between p-2 border rounded"
+                      >
                         <span className="text-sm font-medium">{op.id}</span>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-xs">
                             Priority: {op.priority}
                           </Badge>
-                          <Badge className="bg-blue-100 text-blue-700">
-                            Running
-                          </Badge>
+                          <Badge className="bg-blue-100 text-blue-700">Running</Badge>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-4 text-muted-foreground">
-                    No active operations
-                  </div>
+                  <div className="text-center py-4 text-muted-foreground">No active operations</div>
                 )}
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-sm font-medium">Completed Operations ({completedOperations.length})</h3>
+                <h3 className="text-sm font-medium">
+                  Completed Operations ({completedOperations.length})
+                </h3>
                 <ScrollArea className="h-[200px]">
                   <div className="space-y-2">
-                    {completedOperations.slice(-10).reverse().map(op => (
-                      <div key={op.id} className="flex items-center justify-between p-2 border rounded text-sm">
-                        <span className={getStatusColor(op.status)}>{op.id}</span>
-                        <div className="flex items-center gap-2">
-                          {op.completedAt && op.startedAt && (
-                            <span className="text-xs text-muted-foreground">
-                              {op.completedAt.getTime() - op.startedAt.getTime()}ms
-                            </span>
-                          )}
-                          <Badge className={
-                            op.status === 'completed' ? 'bg-green-100 text-green-700' :
-                            'bg-red-100 text-red-700'
-                          }>
-                            {op.status}
-                          </Badge>
+                    {completedOperations
+                      .slice(-10)
+                      .reverse()
+                      .map(op => (
+                        <div
+                          key={op.id}
+                          className="flex items-center justify-between p-2 border rounded text-sm"
+                        >
+                          <span className={getStatusColor(op.status)}>{op.id}</span>
+                          <div className="flex items-center gap-2">
+                            {op.completedAt && op.startedAt && (
+                              <span className="text-xs text-muted-foreground">
+                                {op.completedAt.getTime() - op.startedAt.getTime()}ms
+                              </span>
+                            )}
+                            <Badge
+                              className={
+                                op.status === 'completed'
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-red-100 text-red-700'
+                              }
+                            >
+                              {op.status}
+                            </Badge>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </ScrollArea>
               </div>
@@ -746,18 +785,20 @@ export function TimingOptimizer({
                       <CardContent className="p-3">
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-sm">{metric.name}</span>
-                          <Badge className={getStatusColor(metric.status)}>
-                            {metric.status}
-                          </Badge>
+                          <Badge className={getStatusColor(metric.status)}>{metric.status}</Badge>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 text-xs">
                           <div>
                             <span className="text-muted-foreground">Avg Time:</span>
-                            <span className="ml-1 font-medium">{Math.round(metric.averageTime)}ms</span>
+                            <span className="ml-1 font-medium">
+                              {Math.round(metric.averageTime)}ms
+                            </span>
                           </div>
                           <div>
                             <span className="text-muted-foreground">Success:</span>
-                            <span className="ml-1 font-medium">{(metric.successRate * 100).toFixed(1)}%</span>
+                            <span className="ml-1 font-medium">
+                              {(metric.successRate * 100).toFixed(1)}%
+                            </span>
                           </div>
                           <div>
                             <span className="text-muted-foreground">Timeouts:</span>
@@ -791,10 +832,7 @@ export function TimingOptimizer({
                             {pool.available}/{pool.total} available
                           </Badge>
                         </div>
-                        <Progress 
-                          value={(pool.inUse / pool.total) * 100} 
-                          className="h-2"
-                        />
+                        <Progress value={(pool.inUse / pool.total) * 100} className="h-2" />
                         {pool.waitQueue > 0 && (
                           <div className="mt-2 text-xs text-orange-600">
                             {pool.waitQueue} operations waiting
@@ -819,11 +857,15 @@ export function TimingOptimizer({
                       <CardContent className="p-3">
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-sm">{name}</span>
-                          <Badge className={
-                            breaker.state === 'closed' ? 'bg-green-100 text-green-700' :
-                            breaker.state === 'open' ? 'bg-red-100 text-red-700' :
-                            'bg-yellow-100 text-yellow-700'
-                          }>
+                          <Badge
+                            className={
+                              breaker.state === 'closed'
+                                ? 'bg-green-100 text-green-700'
+                                : breaker.state === 'open'
+                                  ? 'bg-red-100 text-red-700'
+                                  : 'bg-yellow-100 text-yellow-700'
+                            }
+                          >
                             {breaker.state}
                           </Badge>
                         </div>
@@ -860,11 +902,21 @@ export function TimingOptimizer({
             <AlertDescription>
               <strong>AI Optimization Insights:</strong>
               <ul className="mt-2 space-y-1 text-sm">
-                {config.adaptiveScaling && <li>• Adaptive scaling is adjusting concurrency based on performance</li>}
-                {systemLoad > 80 && <li>• High system load detected - consider reducing concurrent operations</li>}
-                {metrics.some(m => m.successRate < 0.5) && <li>• Low success rate detected - check failing operations</li>}
-                {circuitBreakers.size > 0 && <li>• Circuit breakers active - some operations are being protected</li>}
-                {throughput < 10 && config.batchSize > 10 && <li>• Low throughput - consider reducing batch size</li>}
+                {config.adaptiveScaling && (
+                  <li>• Adaptive scaling is adjusting concurrency based on performance</li>
+                )}
+                {systemLoad > 80 && (
+                  <li>• High system load detected - consider reducing concurrent operations</li>
+                )}
+                {metrics.some(m => m.successRate < 0.5) && (
+                  <li>• Low success rate detected - check failing operations</li>
+                )}
+                {circuitBreakers.size > 0 && (
+                  <li>• Circuit breakers active - some operations are being protected</li>
+                )}
+                {throughput < 10 && config.batchSize > 10 && (
+                  <li>• Low throughput - consider reducing batch size</li>
+                )}
               </ul>
             </AlertDescription>
           </Alert>

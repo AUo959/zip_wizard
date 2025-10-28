@@ -1,65 +1,86 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, jsonb, integer, timestamp, boolean, json } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
+import { sql } from 'drizzle-orm';
+import {
+  pgTable,
+  text,
+  varchar,
+  jsonb,
+  integer,
+  timestamp,
+  boolean,
+  json,
+} from 'drizzle-orm/pg-core';
+import { createInsertSchema } from 'drizzle-zod';
+import { z } from 'zod';
 
-export const archives = pgTable("archives", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
-  originalSize: integer("original_size").notNull(),
-  fileCount: integer("file_count").notNull(),
-  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+export const archives = pgTable('archives', {
+  id: varchar('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  name: text('name').notNull(),
+  originalSize: integer('original_size').notNull(),
+  fileCount: integer('file_count').notNull(),
+  uploadedAt: timestamp('uploaded_at').defaultNow().notNull(),
   // Enhanced metadata for ZIPWizard v2.2.6b
-  symbolicChain: text("symbolic_chain"),
-  threadTag: text("thread_tag"),
-  ethicsLock: text("ethics_lock"),
-  trustAnchor: text("trust_anchor"),
-  replayable: boolean("replayable").default(true),
-  monitoringWindow: integer("monitoring_window").default(48), // hours
+  symbolicChain: text('symbolic_chain'),
+  threadTag: text('thread_tag'),
+  ethicsLock: text('ethics_lock'),
+  trustAnchor: text('trust_anchor'),
+  replayable: boolean('replayable').default(true),
+  monitoringWindow: integer('monitoring_window').default(48), // hours
 });
 
-export const files = pgTable("files", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  archiveId: varchar("archive_id").notNull().references(() => archives.id),
-  path: text("path").notNull(),
-  name: text("name").notNull(),
-  extension: text("extension"),
-  size: integer("size").notNull(),
-  content: text("content"),
-  isDirectory: text("is_directory").notNull().default("false"),
-  parentPath: text("parent_path"),
-  language: text("language"),
-  description: text("description"),
-  tags: jsonb("tags").$type<string[]>().default([]),
-  complexity: text("complexity"),
-  dependencies: jsonb("dependencies").$type<string[]>().default([]),
+export const files = pgTable('files', {
+  id: varchar('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  archiveId: varchar('archive_id')
+    .notNull()
+    .references(() => archives.id),
+  path: text('path').notNull(),
+  name: text('name').notNull(),
+  extension: text('extension'),
+  size: integer('size').notNull(),
+  content: text('content'),
+  isDirectory: text('is_directory').notNull().default('false'),
+  parentPath: text('parent_path'),
+  language: text('language'),
+  description: text('description'),
+  tags: jsonb('tags').$type<string[]>().default([]),
+  complexity: text('complexity'),
+  dependencies: jsonb('dependencies').$type<string[]>().default([]),
   // Mutation tracking
-  originalHash: text("original_hash"),
-  currentHash: text("current_hash"),
-  lastMutated: timestamp("last_mutated"),
+  originalHash: text('original_hash'),
+  currentHash: text('current_hash'),
+  lastMutated: timestamp('last_mutated'),
 });
 
 // Observer events table
-export const observerEvents = pgTable("observer_events", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  archiveId: varchar("archive_id").references(() => archives.id),
-  fileId: varchar("file_id").references(() => files.id),
-  type: text("type").notNull(), // 'upload' | 'analysis' | 'mutation' | 'export' | 'access'
-  target: text("target").notNull(),
-  metadata: json("metadata"),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
-  severity: text("severity").notNull(), // 'info' | 'warning' | 'critical'
+export const observerEvents = pgTable('observer_events', {
+  id: varchar('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  archiveId: varchar('archive_id').references(() => archives.id),
+  fileId: varchar('file_id').references(() => files.id),
+  type: text('type').notNull(), // 'upload' | 'analysis' | 'mutation' | 'export' | 'access'
+  target: text('target').notNull(),
+  metadata: json('metadata'),
+  timestamp: timestamp('timestamp').defaultNow().notNull(),
+  severity: text('severity').notNull(), // 'info' | 'warning' | 'critical'
 });
 
 // File mutations table
-export const fileMutations = pgTable("file_mutations", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  fileId: varchar("file_id").notNull().references(() => files.id),
-  type: text("type").notNull(), // 'content' | 'metadata' | 'structure'
-  description: text("description").notNull(),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
-  author: text("author"),
-  delta: json("delta"),
+export const fileMutations = pgTable('file_mutations', {
+  id: varchar('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  fileId: varchar('file_id')
+    .notNull()
+    .references(() => files.id),
+  type: text('type').notNull(), // 'content' | 'metadata' | 'structure'
+  description: text('description').notNull(),
+  timestamp: timestamp('timestamp').defaultNow().notNull(),
+  author: text('author'),
+  delta: json('delta'),
 });
 
 export const insertArchiveSchema = createInsertSchema(archives).omit({

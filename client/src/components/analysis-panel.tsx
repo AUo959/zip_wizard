@@ -1,9 +1,9 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Download, Share, Tag, X, Package, Activity, Clock } from "lucide-react";
-import type { File } from "@shared/schema";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Download, Share, Tag, X, Package, Activity, Clock } from 'lucide-react';
+import type { File } from '@shared/schema';
 
 interface AnalysisPanelProps {
   file: File;
@@ -12,10 +12,14 @@ interface AnalysisPanelProps {
 export default function AnalysisPanel({ file }: AnalysisPanelProps) {
   const getComplexityColor = (complexity: string | null) => {
     switch (complexity?.toLowerCase()) {
-      case 'low': return 'text-green-600 bg-green-50';
-      case 'medium': return 'text-yellow-600 bg-yellow-50';
-      case 'high': return 'text-red-600 bg-red-50';
-      default: return 'text-gray-600 bg-gray-50';
+      case 'low':
+        return 'text-green-600 bg-green-50';
+      case 'medium':
+        return 'text-yellow-600 bg-yellow-50';
+      case 'high':
+        return 'text-red-600 bg-red-50';
+      default:
+        return 'text-gray-600 bg-gray-50';
     }
   };
 
@@ -66,9 +70,7 @@ export default function AnalysisPanel({ file }: AnalysisPanelProps) {
               <CardTitle className="text-sm font-medium text-gray-900">Language</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <Badge className={getLanguageColor(file.language)}>
-                {file.language}
-              </Badge>
+              <Badge className={getLanguageColor(file.language)}>{file.language}</Badge>
             </CardContent>
           </Card>
         )}

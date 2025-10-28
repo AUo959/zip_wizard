@@ -6,7 +6,7 @@ export const APP_CONFIG = {
     timeout: 30000,
     headers: {
       'Content-Type': 'application/json',
-    }
+    },
   },
   features: {
     cors: true,
@@ -26,7 +26,7 @@ export const APP_CONFIG = {
     formats: ['json', 'csv', 'xml'],
     includeMetadata: true,
     includeAnalysis: true,
-  }
+  },
 };
 
 // API endpoint builder
@@ -34,12 +34,12 @@ export function buildApiUrl(endpoint: string): string {
   const { baseUrl, version } = APP_CONFIG.api;
   // Remove leading slash if present
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
-  
+
   // Handle endpoints that already include version
   if (cleanEndpoint.includes('/v1/') || cleanEndpoint === 'health') {
     return `${baseUrl}/api/${cleanEndpoint}`;
   }
-  
+
   return `${baseUrl}/api/${version}/${cleanEndpoint}`;
 }
 
