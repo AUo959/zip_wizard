@@ -6,22 +6,25 @@ import { AlertCircle, CheckCircle2, Clock, Lock, Shield, Activity } from 'lucide
 import { useQuery } from '@tanstack/react-query';
 
 interface StatusDashboardProps {
-  archiveId: string;
+  archiveId?: string;
+}
+
+interface CriticalEvent {
+  timestamp: Date;
+  type: string;
+  severity: string;
+  message: string;
 }
 
 interface StatusData {
-  symbolicChain: string;
-  threadTag: string;
-  ethicsLock: string;
-  trustAnchor: string;
-  deploymentStatus: {
-    guiHabitat: boolean;
-    glyphcardExport: boolean;
-    zipBundle: string;
-    monitoring: string;
-    acknowledgment: boolean;
+  health?: {
+    score: number;
+    status: 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
+    issues: string[];
   };
-  replayState: {
+  recovery?: {
+    attempted: boolean;
+    successful: boolean;
     replayable: boolean;
     continuityAnchors: string;
   };
@@ -29,7 +32,7 @@ interface StatusData {
     totalEvents: number;
     byType: Record<string, number>;
     bySeverity: Record<string, number>;
-    recentCritical: any[];
+    recentCritical: CriticalEvent[];
   };
 }
 

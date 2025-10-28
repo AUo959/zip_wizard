@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { FileNode } from '@shared/archive-types';
 import { Brain, Zap, Database, Network, Layers, Hash, FileArchive, Cpu } from 'lucide-react';
 
 interface MemoryCompressionProps {
-  files?: any[];
+  files?: FileNode[];
   onCompressionApplied?: (result: CompressionResult) => void;
 }
 

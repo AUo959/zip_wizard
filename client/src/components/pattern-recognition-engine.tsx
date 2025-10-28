@@ -15,9 +15,10 @@ import {
   Eye,
   Target,
 } from 'lucide-react';
+import type { FileNode } from '@shared/archive-types';
 
 interface PatternRecognitionEngineProps {
-  files?: any[];
+  files?: FileNode[];
   onPatternsDetected?: (patterns: Pattern[]) => void;
   onOrganizationSuggested?: (organization: OrganizationSuggestion) => void;
 }
@@ -32,10 +33,19 @@ interface Pattern {
   optimization_potential: number;
 }
 
+interface OrganizationStructure {
+  folders: Array<{
+    name: string;
+    purpose: string;
+    suggestedFiles: string[];
+  }>;
+  rationale: string;
+}
+
 interface OrganizationSuggestion {
   type: 'hierarchical' | 'functional' | 'domain' | 'temporal';
   confidence: number;
-  structure: any;
+  structure: OrganizationStructure;
   benefits: string[];
   cognitive_load_reduction: number;
 }
