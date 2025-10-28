@@ -94,7 +94,7 @@ export function SecurityNotificationPanel() {
 
     // Call API to snooze
     try {
-      await fetch(`/api/v1/notifications/${id}/snooze`, {
+      await fetch(`/api/v1/security/notifications/${id}/snooze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ durationMinutes: durationHours * 60 })
