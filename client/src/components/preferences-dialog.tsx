@@ -22,7 +22,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Settings,
   Palette,
-  Keyboard,
   Monitor,
   FileText,
   Zap,
