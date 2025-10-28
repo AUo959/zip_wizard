@@ -29,7 +29,7 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
+const IntersectionObserverMock = class {
   constructor() {}
   disconnect() {}
   observe() {}
@@ -37,20 +37,24 @@ global.IntersectionObserver = class IntersectionObserver {
     return [];
   }
   unobserve() {}
-} as any;
+};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(global as any).IntersectionObserver = IntersectionObserverMock;
 
 // Mock ResizeObserver
-global.ResizeObserver = class ResizeObserver {
+const ResizeObserverMock = class {
   constructor() {}
   disconnect() {}
   observe() {}
   unobserve() {}
-} as any;
+};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(global as any).ResizeObserver = ResizeObserverMock;
 
 // Suppress console errors in tests (optional)
 const originalError = console.error;
 beforeAll(() => {
-  console.error = (...args: any[]) => {
+  console.error = (...args: unknown[]) => {
     if (typeof args[0] === 'string' && args[0].includes('Warning: ReactDOM.render')) {
       return;
     }

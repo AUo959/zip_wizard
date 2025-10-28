@@ -294,6 +294,33 @@ export function TimingOptimizer({
     );
   }, [config.resourcePooling]);
 
+  const updateMetrics = useCallback((operationName: string, success: boolean, duration: number) => {
+    const existing = metricsRef.current.get(operationName) || {
+      name: operationName,
+      averageTime: 0,
+      successRate: 0,
+      timeouts: 0,
+      retries: 0,
+      lastRun: new Date(),
+      status: 'pending' as const,
+    };
+
+    const totalRuns = (existing.successRate > 0 ? 1 / existing.successRate : 0) + 1;
+    existing.averageTime = (existing.averageTime * (totalRuns - 1) + duration) / totalRuns;
+    existing.successRate = success
+      ? (existing.successRate * (totalRuns - 1) + 1) / totalRuns
+      : (existing.successRate * (totalRuns - 1)) / totalRuns;
+    existing.status = success ? 'success' : 'failed';
+    existing.lastRun = new Date();
+
+    if (!success && duration >= config.timeout) {
+      existing.timeouts++;
+    }
+
+    metricsRef.current.set(operationName, existing);
+    setMetrics(Array.from(metricsRef.current.values()));
+  }, [config.timeout]);
+
   // Process queue with concurrency control
   const processQueue = useCallback(async () => {
     if (runningRef.current >= config.maxConcurrent || queue.length === 0) {
@@ -368,33 +395,6 @@ export function TimingOptimizer({
       processQueue();
     }
   }, [queue, config, onTimeoutPrevented, acquireResource, calculateRetryDelay, checkCircuitBreaker, releaseResource, updateCircuitBreaker, updateMetrics]);
-
-  const updateMetrics = useCallback((operationName: string, success: boolean, duration: number) => {
-    const existing = metricsRef.current.get(operationName) || {
-      name: operationName,
-      averageTime: 0,
-      successRate: 0,
-      timeouts: 0,
-      retries: 0,
-      lastRun: new Date(),
-      status: 'pending' as const,
-    };
-
-    const totalRuns = (existing.successRate > 0 ? 1 / existing.successRate : 0) + 1;
-    existing.averageTime = (existing.averageTime * (totalRuns - 1) + duration) / totalRuns;
-    existing.successRate = success
-      ? (existing.successRate * (totalRuns - 1) + 1) / totalRuns
-      : (existing.successRate * (totalRuns - 1)) / totalRuns;
-    existing.status = success ? 'success' : 'failed';
-    existing.lastRun = new Date();
-
-    if (!success && duration >= config.timeout) {
-      existing.timeouts++;
-    }
-
-    metricsRef.current.set(operationName, existing);
-    setMetrics(Array.from(metricsRef.current.values()));
-  }, [config.timeout]);
 
   // Monitor system load
   useEffect(() => {
