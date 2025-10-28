@@ -214,7 +214,7 @@ export function TimingOptimizer({
   const addToQueue = (
     operation: () => Promise<any>,
     priority: number = 5,
-    operationName: string = 'unknown'
+    _operationName: string = 'unknown'
   ) => {
     const item: QueueItem = {
       id: `op-${Date.now()}-${Math.random()}`,

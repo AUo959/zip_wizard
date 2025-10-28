@@ -20,7 +20,7 @@ interface NaturalPattern {
   efficiency: number;
 }
 
-export function WuWeiInterface({ onAction, currentFlow = 0 }: WuWeiInterfaceProps) {
+export function WuWeiInterface({ onAction, currentFlow: _currentFlow = 0 }: WuWeiInterfaceProps) {
   const [selectedPattern, setSelectedPattern] = useState<string>('water');
   const [effortLevel, setEffortLevel] = useState(0);
   const [naturalAlignment, setNaturalAlignment] = useState(75);
