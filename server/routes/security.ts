@@ -8,12 +8,18 @@
  * - Security event reporting
  */
 
-import express from 'express';
+import express, { Request } from 'express';
 import { auditLog } from '../audit-log';
 import { rbac } from '../rbac';
 import { notificationService } from '../notifications';
 
 const router = express.Router();
+
+// Extend Express Request type to include user and sessionID
+interface AuthRequest extends Request {
+  user?: { id: string };
+  sessionID?: string;
+}
 
 /**
  * GET /api/v1/security/audit-logs
@@ -137,7 +143,7 @@ router.get('/notifications', async (req, res) => {
  * POST /api/v1/security/notifications/:id/acknowledge
  * Acknowledge a notification
  */
-router.post('/notifications/:id/acknowledge', async (req, res) => {
+router.post('/notifications/:id/acknowledge', async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id || 'anonymous';
@@ -158,7 +164,7 @@ router.post('/notifications/:id/acknowledge', async (req, res) => {
  * POST /api/v1/security/notifications/:id/snooze
  * Snooze a notification
  */
-router.post('/notifications/:id/snooze', async (req, res) => {
+router.post('/notifications/:id/snooze', async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const { durationMinutes } = req.body;
@@ -188,7 +194,7 @@ router.post('/notifications/:id/snooze', async (req, res) => {
  * POST /api/v1/security/check-permission
  * Check if user has permission for a resource
  */
-router.post('/check-permission', async (req, res) => {
+router.post('/check-permission', async (req: AuthRequest, res) => {
   try {
     const { resourceId, resourceType, permission } = req.body;
     const userId = req.user?.id || 'anonymous';
@@ -226,7 +232,7 @@ router.post('/check-permission', async (req, res) => {
  * POST /api/v1/security/report-event
  * Report a security event
  */
-router.post('/report-event', async (req, res) => {
+router.post('/report-event', async (req: AuthRequest, res) => {
   try {
     const { level, category, action, details } = req.body;
     const userId = req.user?.id || 'anonymous';
@@ -260,7 +266,7 @@ router.post('/report-event', async (req, res) => {
  * GET /api/v1/security/permissions/:resourceId
  * Get permission details for a resource
  */
-router.get('/permissions/:resourceId', async (req, res) => {
+router.get('/permissions/:resourceId', async (req: AuthRequest, res) => {
   try {
     const { resourceId } = req.params;
     const userId = req.user?.id || 'anonymous';

@@ -44,7 +44,7 @@ export interface SecurityBadgeProps {
 export interface SecurityAlertProps {
   id: string;
   severity: SecuritySeverity;
-  title: string;
+  title: string | React.ReactNode;
   description: string;
   timestamp?: Date;
   dismissible?: boolean;

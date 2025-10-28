@@ -26,7 +26,8 @@ export type AuditLogCategory =
   | 'authorization'
   | 'export'
   | 'scan'
-  | 'circuit_breaker';
+  | 'circuit_breaker'
+  | 'system';
 
 export interface AuditLogEntry {
   id: string;

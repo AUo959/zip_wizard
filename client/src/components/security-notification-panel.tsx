@@ -222,7 +222,7 @@ export function SecurityNotificationPanel() {
                         'info'
                       }
                       title={
-                        <div className="flex items-center gap-2">
+                        <>
                           {getCategoryIcon(notification.category)}
                           {notification.title}
                           {notification.escalated && (
@@ -230,7 +230,7 @@ export function SecurityNotificationPanel() {
                               Escalated ({notification.escalationCount})
                             </Badge>
                           )}
-                        </div>
+                        </>
                       }
                       description={notification.message}
                       timestamp={notification.timestamp}
