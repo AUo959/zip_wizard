@@ -15,6 +15,7 @@ import { AnalyticsView } from "@/components/analytics-view";
 import { AIToolsView } from "@/components/ai-tools-view";
 import { SymbolicInterface } from "@/components/symbolic-interface";
 import { EnhancedArchiveManager } from "@/components/enhanced-archive-manager";
+import { ArchiveManager } from "@/components/ArchiveManager";
 import { PrivacyShield } from "@/components/privacy-shield";
 import { MultilingualSupport } from "@/components/multilingual-support";
 import { FlowStateManager } from "@/components/flow-state-manager";
@@ -458,6 +459,21 @@ export default function Home() {
         );
 
       case "archive-manager":
+        // Convert files to FileNode format for ArchiveManager
+        const fileNodes = files?.map(f => ({
+          name: f.name,
+          path: f.path,
+          size: f.size,
+          isDirectory: f.isDirectory === "true",
+          modified: f.lastMutated || new Date(),
+          error: undefined,
+          metadata: {
+            language: f.language,
+            extension: f.extension,
+            complexity: f.complexity
+          }
+        })) || [];
+        
         return (
           <div className="h-full bg-background">
             <MainNavigation
@@ -472,22 +488,19 @@ export default function Home() {
               selectedArchive={selectedArchive}
               filesCount={files?.length}
             />
-            <div className="flex items-center p-4 border-b">
-              <Button 
-                variant="ghost" 
-                onClick={() => setCurrentView("main")}
-                className="mr-4"
-              >
-                ← Back to Files
-              </Button>
-            </div>
-            <div className="p-6">
-              <EnhancedArchiveManager
-                archives={archives}
-                onArchiveProcess={handleArchiveProcess}
-                onBatchOperation={handleBatchOperation}
-              />
-            </div>
+            <ArchiveManager
+              initialFiles={fileNodes}
+              initialArchiveName={selectedArchive?.name || "Archive"}
+              onFileSelect={(file) => {
+                // Find matching file in original files array
+                const matchedFile = files?.find(f => f.name === file.name && f.path === file.path);
+                if (matchedFile) {
+                  setSelectedFile(matchedFile);
+                }
+              }}
+              enableCollaboration={true}
+              enableUndo={true}
+            />
           </div>
         );
 
