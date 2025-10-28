@@ -21,15 +21,12 @@ export interface RepairChange {
 /**
  * Attempt to repair broken or incomplete code.
  * Uses heuristics and pattern matching to reconstruct missing parts.
- * 
+ *
  * @param code - The potentially broken code
  * @param language - Optional language hint for better repair
  * @returns Repair result with reconstructed code and notes
  */
-export async function magicRepairCode(
-  code: string,
-  language?: string
-): Promise<RepairResult> {
+export async function magicRepairCode(code: string, language?: string): Promise<RepairResult> {
   const notes: string[] = [];
   const changes: RepairChange[] = [];
   let reconstructed = code;
@@ -91,7 +88,7 @@ export async function magicRepairCode(
     reconstructed,
     notes,
     confidence,
-    changes
+    changes,
   };
 }
 
@@ -106,7 +103,7 @@ function fixMissingBraces(code: string): {
 } {
   const notes: string[] = [];
   const changes: RepairChange[] = [];
-  
+
   const openBraces = (code.match(/{/g) || []).length;
   const closeBraces = (code.match(/}/g) || []).length;
   const missing = openBraces - closeBraces;
@@ -114,19 +111,19 @@ function fixMissingBraces(code: string): {
   if (missing > 0) {
     const lines = code.split('\n');
     const lastLine = lines.length;
-    
+
     code += '\n' + '}'.repeat(missing);
     notes.push(`Added ${missing} missing closing brace(s)`);
-    
+
     for (let i = 0; i < missing; i++) {
       changes.push({
         line: lastLine + i,
         type: 'added',
         after: '}',
-        reason: 'Missing closing brace'
+        reason: 'Missing closing brace',
       });
     }
-    
+
     return { code, fixed: true, notes, changes };
   }
 
@@ -144,7 +141,7 @@ function fixMissingParentheses(code: string): {
 } {
   const notes: string[] = [];
   const changes: RepairChange[] = [];
-  
+
   const openParens = (code.match(/\(/g) || []).length;
   const closeParens = (code.match(/\)/g) || []).length;
   const missing = openParens - closeParens;
@@ -152,19 +149,19 @@ function fixMissingParentheses(code: string): {
   if (missing > 0) {
     const lines = code.split('\n');
     const lastLine = lines.length;
-    
+
     code += ')'.repeat(missing);
     notes.push(`Added ${missing} missing closing parenthesis/parentheses`);
-    
+
     for (let i = 0; i < missing; i++) {
       changes.push({
         line: lastLine + i,
         type: 'added',
         after: ')',
-        reason: 'Missing closing parenthesis'
+        reason: 'Missing closing parenthesis',
       });
     }
-    
+
     return { code, fixed: true, notes, changes };
   }
 
@@ -182,14 +179,14 @@ function fixMissingQuotes(code: string): {
 } {
   const notes: string[] = [];
   const changes: RepairChange[] = [];
-  
+
   // Count unmatched quotes by line
   const lines = code.split('\n');
   let fixed = false;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    
+
     // Simple check for unclosed string literals
     const singleQuotes = (line.match(/'/g) || []).length;
     const doubleQuotes = (line.match(/"/g) || []).length;
@@ -204,7 +201,7 @@ function fixMissingQuotes(code: string): {
         type: 'modified',
         before: line,
         after: lines[i],
-        reason: 'Unclosed string literal'
+        reason: 'Unclosed string literal',
       });
       fixed = true;
     }
@@ -233,10 +230,15 @@ function fixTruncatedLines(code: string): {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    
+
     // Check for lines ending with operators or incomplete statements
-    if (line.endsWith(',') || line.endsWith('+') || line.endsWith('=') || 
-        line.endsWith('&&') || line.endsWith('||')) {
+    if (
+      line.endsWith(',') ||
+      line.endsWith('+') ||
+      line.endsWith('=') ||
+      line.endsWith('&&') ||
+      line.endsWith('||')
+    ) {
       // Add semicolon comment to indicate truncation
       lines[i] += ' /* [TRUNCATED] */';
       notes.push(`Marked truncated statement on line ${i + 1}`);
@@ -245,7 +247,7 @@ function fixTruncatedLines(code: string): {
         type: 'modified',
         before: line,
         after: lines[i],
-        reason: 'Incomplete statement detected'
+        reason: 'Incomplete statement detected',
       });
       fixed = true;
     }
@@ -261,7 +263,10 @@ function fixTruncatedLines(code: string): {
 /**
  * Apply language-specific repair heuristics.
  */
-function applyLanguageSpecificFixes(code: string, language: string): {
+function applyLanguageSpecificFixes(
+  code: string,
+  language: string
+): {
   code: string;
   fixed: boolean;
   notes: string[];
@@ -277,9 +282,14 @@ function applyLanguageSpecificFixes(code: string, language: string): {
     const lines = code.split('\n');
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
-      if ((line.startsWith('if ') || line.startsWith('def ') || 
-           line.startsWith('class ') || line.startsWith('for ') || 
-           line.startsWith('while ')) && !line.endsWith(':')) {
+      if (
+        (line.startsWith('if ') ||
+          line.startsWith('def ') ||
+          line.startsWith('class ') ||
+          line.startsWith('for ') ||
+          line.startsWith('while ')) &&
+        !line.endsWith(':')
+      ) {
         lines[i] += ':';
         notes.push(`Added missing colon on line ${i + 1}`);
         changes.push({
@@ -287,12 +297,12 @@ function applyLanguageSpecificFixes(code: string, language: string): {
           type: 'modified',
           before: line,
           after: lines[i],
-          reason: 'Missing colon in Python statement'
+          reason: 'Missing colon in Python statement',
         });
         fixed = true;
       }
     }
-    
+
     if (fixed) {
       return { code: lines.join('\n'), fixed: true, notes, changes };
     }
@@ -304,13 +314,23 @@ function applyLanguageSpecificFixes(code: string, language: string): {
     const lines = code.split('\n');
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
-      if (line && !line.endsWith(';') && !line.endsWith('{') && 
-          !line.endsWith('}') && !line.startsWith('//') && 
-          !line.startsWith('/*') && !line.startsWith('*')) {
+      if (
+        line &&
+        !line.endsWith(';') &&
+        !line.endsWith('{') &&
+        !line.endsWith('}') &&
+        !line.startsWith('//') &&
+        !line.startsWith('/*') &&
+        !line.startsWith('*')
+      ) {
         // Check if it looks like a statement
-        if (line.includes('=') || line.includes('return') || 
-            line.includes('const ') || line.includes('let ') || 
-            line.includes('var ')) {
+        if (
+          line.includes('=') ||
+          line.includes('return') ||
+          line.includes('const ') ||
+          line.includes('let ') ||
+          line.includes('var ')
+        ) {
           lines[i] += ';';
           notes.push(`Added missing semicolon on line ${i + 1}`);
           changes.push({
@@ -318,13 +338,13 @@ function applyLanguageSpecificFixes(code: string, language: string): {
             type: 'modified',
             before: line,
             after: lines[i],
-            reason: 'Missing semicolon'
+            reason: 'Missing semicolon',
           });
           fixed = true;
         }
       }
     }
-    
+
     if (fixed) {
       return { code: lines.join('\n'), fixed: true, notes, changes };
     }
@@ -352,12 +372,12 @@ export async function repairBinaryFile(
   // - Fix corrupted headers
   // - Recover partial data
   // - Reconstruct file structure
-  
+
   notes.push('Binary repair not yet implemented - returning original data');
-  
+
   return {
     repaired: data,
     notes,
-    recoveredBytes
+    recoveredBytes,
   };
 }

@@ -38,6 +38,7 @@ for await (const chunk of streamFileWithProgress(file, (bytes, total, pct) => {
 ```
 
 **Features:**
+
 - Configurable chunk sizes (default 1MB)
 - Web Streams API support
 - Progress callbacks
@@ -69,6 +70,7 @@ const format = detectArchiveFormat('archive.zip', firstChunk);
 ```
 
 **Features:**
+
 - Plugin registration system
 - Magic byte detection
 - Format auto-detection
@@ -80,7 +82,7 @@ const format = detectArchiveFormat('archive.zip', firstChunk);
 Renders massive file lists efficiently:
 
 ```typescript
-<HugeFileTree 
+<HugeFileTree
   files={fileNodes}
   onFileClick={(file) => console.log('Clicked:', file.name)}
   height={600}
@@ -89,6 +91,7 @@ Renders massive file lists efficiently:
 ```
 
 **Features:**
+
 - Custom virtualization (no external deps for core logic)
 - Handles 10,000+ files smoothly
 - Error state visualization
@@ -108,6 +111,7 @@ Navigation for nested archives:
 ```
 
 **Features:**
+
 - Click-to-jump navigation
 - Home button
 - Truncation for long names
@@ -127,6 +131,7 @@ Graceful error handling:
 ```
 
 **Features:**
+
 - Catches React errors
 - Retry functionality
 - Error details display
@@ -151,6 +156,7 @@ const repaired = await repairBinaryFile(corruptedData, 'zip');
 ```
 
 **Features:**
+
 - Missing brace/parenthesis detection
 - Quote completion
 - Truncation handling
@@ -180,6 +186,7 @@ Real-time progress tracking:
 ```
 
 **Features:**
+
 - Progress bar
 - File counts
 - Error/recovery stats
@@ -199,6 +206,7 @@ Live filtering and search:
 ```
 
 **Features:**
+
 - Text search
 - File type filters (20+ common types)
 - Active filter badges
@@ -223,6 +231,7 @@ exportErrorsAsCSV(errors, 'archive-name');
 ```
 
 **Features:**
+
 - JSON/text/CSV formats
 - Summary statistics
 - Severity grouping
@@ -252,6 +261,7 @@ if (undoManager.canUndo()) {
 ```
 
 **Features:**
+
 - Generic state type
 - Description tracking
 - Max history size
@@ -274,6 +284,7 @@ Audit logs and notifications:
 ```
 
 **Features:**
+
 - Audit log display
 - Notification badges
 - Unread counts
@@ -298,6 +309,7 @@ Orchestrates all features:
 ```
 
 **Features:**
+
 - Integrates all components
 - File selection/navigation
 - Search and filtering
@@ -327,7 +339,7 @@ const files: FileNode[] = myFiles.map(f => ({
   isDirectory: f.isDirectory,
   modified: f.modifiedDate,
   error: undefined,
-  metadata: {}
+  metadata: {},
 }));
 ```
 
@@ -350,19 +362,19 @@ import { registerHandler } from '@/lib/archiveHandlers';
 
 registerHandler('custom', async (stream, options) => {
   const files: FileNode[] = [];
-  
+
   for await (const chunk of stream) {
     // Parse your format
     const parsedFiles = parseCustomFormat(chunk);
-    
+
     // Report progress
     parsedFiles.forEach(file => {
       options?.onFileDiscovered?.(file);
     });
-    
+
     files.push(...parsedFiles);
   }
-  
+
   return files;
 });
 ```
@@ -374,17 +386,14 @@ import { streamFileWithProgress } from '@/lib/archiveStreamUtils';
 
 async function processLargeFile(file: File) {
   let totalBytes = 0;
-  
-  for await (const chunk of streamFileWithProgress(
-    file,
-    (bytes, total, percentage) => {
-      console.log(`Progress: ${percentage.toFixed(1)}%`);
-    }
-  )) {
+
+  for await (const chunk of streamFileWithProgress(file, (bytes, total, percentage) => {
+    console.log(`Progress: ${percentage.toFixed(1)}%`);
+  })) {
     // Process chunk
     totalBytes += chunk.byteLength;
   }
-  
+
   return totalBytes;
 }
 ```
@@ -396,13 +405,13 @@ import { magicRepairCode } from '@/lib/aiRepair';
 
 async function recoverBrokenFile(content: string, language: string) {
   const result = await magicRepairCode(content, language);
-  
+
   if (result.confidence > 0.8) {
     console.log('High confidence repair:', result.reconstructed);
   } else {
     console.warn('Low confidence repair, review changes:', result.changes);
   }
-  
+
   return result;
 }
 ```
@@ -419,6 +428,7 @@ async function recoverBrokenFile(content: string, language: string) {
 ### Optimization Tips
 
 1. **Adjust chunk size** based on available memory:
+
 ```typescript
 import { estimateMemoryUsage } from '@/lib/archiveStreamUtils';
 
@@ -443,10 +453,10 @@ import { UndoManager } from '@/lib/UndoManager';
 
 test('undo manager basics', () => {
   const manager = new UndoManager<number>(10);
-  
+
   manager.push(1, 'First');
   manager.push(2, 'Second');
-  
+
   expect(manager.current()).toBe(2);
   expect(manager.undo()).toBe(1);
   expect(manager.redo()).toBe(2);
@@ -462,14 +472,14 @@ import { ArchiveManager } from '@/components/ArchiveManager';
 test('file selection works', () => {
   const onFileSelect = jest.fn();
   const files = [{ name: 'test.txt', path: '/test.txt', size: 100, isDirectory: false }];
-  
+
   const { getByText } = render(
-    <ArchiveManager 
+    <ArchiveManager
       initialFiles={files}
       onFileSelect={onFileSelect}
     />
   );
-  
+
   fireEvent.click(getByText('test.txt'));
   expect(onFileSelect).toHaveBeenCalledWith(files[0]);
 });
@@ -505,13 +515,15 @@ Possible additions (not in current scope):
 ### "Out of memory" errors
 
 Reduce chunk size:
+
 ```typescript
-streamFileChunks(file, 512 * 1024) // 512KB chunks
+streamFileChunks(file, 512 * 1024); // 512KB chunks
 ```
 
 ### Slow virtualization
 
 Increase item size or reduce list size:
+
 ```typescript
 <HugeFileTree itemSize={40} height={400} />
 ```
@@ -538,6 +550,7 @@ MIT - See repository LICENSE file
 ## Credits
 
 Implemented according to specifications in the problem statement, focusing on:
+
 - Streaming architecture for unlimited file sizes
 - Virtualized rendering for instant UI
 - Plugin-based format support

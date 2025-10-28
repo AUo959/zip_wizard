@@ -4,40 +4,36 @@
  * error recovery, search, collaboration, and undo/redo.
  */
 
-import React, { useState, useCallback, useEffect } from "react";
-import { HugeFileTree } from "./HugeFileTree";
-import { ArchiveDashboard, type ArchiveStats } from "./ArchiveDashboard";
-import { ErrorBoundary } from "./ErrorBoundary";
-import { ArchiveSearchBar, type SearchFilters } from "./ArchiveSearchBar";
-import { CollaborationPanel, type ChangeLog, type Notification } from "./CollaborationPanel";
-import { ArchiveBreadcrumbs } from "./ArchiveBreadcrumbs";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileNode } from "@/lib/archiveHandlers";
-import { UndoManager } from "@/lib/UndoManager";
-import { exportErrors, exportFullReport, type ErrorLog, type RecoveryLog } from "@/lib/exportErrors";
-import { 
-  Undo2, 
-  Redo2, 
-  Download, 
-  FileDown,
-  Settings,
-  Play,
-  Pause,
-  X
-} from "lucide-react";
+import React, { useState, useCallback, useEffect } from 'react';
+import { HugeFileTree } from './HugeFileTree';
+import { ArchiveDashboard, type ArchiveStats } from './ArchiveDashboard';
+import { ErrorBoundary } from './ErrorBoundary';
+import { ArchiveSearchBar, type SearchFilters } from './ArchiveSearchBar';
+import { CollaborationPanel, type ChangeLog, type Notification } from './CollaborationPanel';
+import { ArchiveBreadcrumbs } from './ArchiveBreadcrumbs';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FileNode } from '@/lib/archiveHandlers';
+import { UndoManager } from '@/lib/UndoManager';
+import {
+  exportErrors,
+  exportFullReport,
+  type ErrorLog,
+  type RecoveryLog,
+} from '@/lib/exportErrors';
+import { Undo2, Redo2, Download, FileDown, Settings, Play, Pause, X } from 'lucide-react';
 
 export interface ArchiveManagerProps {
   // Optional initial data
   initialFiles?: FileNode[];
   initialArchiveName?: string;
-  
+
   // Callbacks
   onFileSelect?: (file: FileNode) => void;
   onExtract?: (files: FileNode[]) => void;
   onBatchOperation?: (operation: string, files: FileNode[]) => void;
-  
+
   // Options
   enableCollaboration?: boolean;
   enableUndo?: boolean;
@@ -55,20 +51,20 @@ interface ArchiveState {
  */
 export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
   initialFiles = [],
-  initialArchiveName = "Archive",
+  initialArchiveName = 'Archive',
   onFileSelect,
   onExtract,
   onBatchOperation,
   enableCollaboration = true,
   enableUndo = true,
-  maxUndoSteps = 50
+  maxUndoSteps = 50,
 }) => {
   // State
   const [files, setFiles] = useState<FileNode[]>(initialFiles);
   const [filteredFiles, setFilteredFiles] = useState<FileNode[]>(initialFiles);
   const [archiveStack, setArchiveStack] = useState<string[]>([initialArchiveName]);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -80,7 +76,7 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
     errors: 0,
     recovered: 0,
     progress: 100,
-    operationStatus: 'idle'
+    operationStatus: 'idle',
   });
 
   // Collaboration
@@ -106,9 +102,8 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
     // Apply text search
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(file => 
-        file.name.toLowerCase().includes(query) ||
-        file.path.toLowerCase().includes(query)
+      filtered = filtered.filter(
+        file => file.name.toLowerCase().includes(query) || file.path.toLowerCase().includes(query)
       );
     }
 
@@ -129,30 +124,36 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
   }, [files, searchQuery, searchFilters]);
 
   // Handle file click
-  const handleFileClick = useCallback((file: FileNode) => {
-    if (onFileSelect) {
-      onFileSelect(file);
-    }
-
-    // If it's a nested archive, navigate into it
-    if (file.name.match(/\.(zip|tar|rar|7z|gz)$/i)) {
-      setArchiveStack(prev => [...prev, file.name]);
-      
-      if (enableCollaboration) {
-        addChangeLog('opened', `${file.name}`);
+  const handleFileClick = useCallback(
+    (file: FileNode) => {
+      if (onFileSelect) {
+        onFileSelect(file);
       }
-    }
-  }, [onFileSelect, enableCollaboration]);
+
+      // If it's a nested archive, navigate into it
+      if (file.name.match(/\.(zip|tar|rar|7z|gz)$/i)) {
+        setArchiveStack(prev => [...prev, file.name]);
+
+        if (enableCollaboration) {
+          addChangeLog('opened', `${file.name}`);
+        }
+      }
+    },
+    [onFileSelect, enableCollaboration]
+  );
 
   // Handle breadcrumb navigation
-  const handleJumpToLevel = useCallback((level: number) => {
-    const newStack = archiveStack.slice(0, level + 1);
-    setArchiveStack(newStack);
-    
-    if (enableCollaboration) {
-      addChangeLog('navigated', `to ${newStack[newStack.length - 1]}`);
-    }
-  }, [archiveStack, enableCollaboration]);
+  const handleJumpToLevel = useCallback(
+    (level: number) => {
+      const newStack = archiveStack.slice(0, level + 1);
+      setArchiveStack(newStack);
+
+      if (enableCollaboration) {
+        addChangeLog('navigated', `to ${newStack[newStack.length - 1]}`);
+      }
+    },
+    [archiveStack, enableCollaboration]
+  );
 
   // Handle search
   const handleSearch = useCallback((query: string) => {
@@ -171,22 +172,19 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
       user: 'Current User', // Would come from auth in real app
       action,
       target,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
     setChanges(prev => [change, ...prev].slice(0, 100)); // Keep last 100
   }, []);
 
   // Add notification
-  const addNotification = useCallback((
-    type: Notification['type'],
-    message: string
-  ) => {
+  const addNotification = useCallback((type: Notification['type'], message: string) => {
     const notification: Notification = {
       id: `${Date.now()}-${Math.random()}`,
       type,
       message,
       timestamp: new Date(),
-      read: false
+      read: false,
     };
     setNotifications(prev => [notification, ...prev].slice(0, 50)); // Keep last 50
   }, []);
@@ -194,39 +192,39 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
   // Undo/Redo handlers
   const handleUndo = useCallback(() => {
     if (!undoManager) return;
-    
+
     const previousState = undoManager.undo();
     if (previousState) {
       setFiles(previousState.files);
       setArchiveStack(previousState.archiveStack);
       setSelectedFiles(previousState.selectedFiles);
-      
+
       addNotification('info', `Undid: ${undoManager.getRedoDescription() || 'action'}`);
     }
   }, [undoManager, addNotification]);
 
   const handleRedo = useCallback(() => {
     if (!undoManager) return;
-    
+
     const nextState = undoManager.redo();
     if (nextState) {
       setFiles(nextState.files);
       setArchiveStack(nextState.archiveStack);
       setSelectedFiles(nextState.selectedFiles);
-      
+
       addNotification('info', `Redid: ${undoManager.getRedoDescription() || 'action'}`);
     }
   }, [undoManager, addNotification]);
 
   // Save state to undo manager
-  const saveState = useCallback((description: string) => {
-    if (!undoManager) return;
-    
-    undoManager.push(
-      { files, archiveStack, selectedFiles },
-      description
-    );
-  }, [undoManager, files, archiveStack, selectedFiles]);
+  const saveState = useCallback(
+    (description: string) => {
+      if (!undoManager) return;
+
+      undoManager.push({ files, archiveStack, selectedFiles }, description);
+    },
+    [undoManager, files, archiveStack, selectedFiles]
+  );
 
   // Export handlers
   const handleExportErrors = useCallback(() => {
@@ -257,11 +255,8 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
       <div className="flex flex-col h-full gap-4 p-4">
         {/* Header with controls */}
         <div className="flex items-center justify-between">
-          <ArchiveBreadcrumbs 
-            stack={archiveStack} 
-            onJump={handleJumpToLevel} 
-          />
-          
+          <ArchiveBreadcrumbs stack={archiveStack} onJump={handleJumpToLevel} />
+
           <div className="flex items-center gap-2">
             {/* Undo/Redo */}
             {enableUndo && undoManager && (
@@ -290,22 +285,10 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
             {/* Processing controls */}
             {isProcessing && (
               <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleTogglePause}
-                >
-                  {isPaused ? (
-                    <Play className="h-4 w-4" />
-                  ) : (
-                    <Pause className="h-4 w-4" />
-                  )}
+                <Button variant="outline" size="sm" onClick={handleTogglePause}>
+                  {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCancel}
-                >
+                <Button variant="outline" size="sm" onClick={handleCancel}>
                   <X className="h-4 w-4" />
                 </Button>
               </>
@@ -313,21 +296,13 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
 
             {/* Export buttons */}
             {errors.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportErrors}
-              >
+              <Button variant="outline" size="sm" onClick={handleExportErrors}>
                 <FileDown className="h-4 w-4 mr-2" />
                 Export Errors
               </Button>
             )}
             {(errors.length > 0 || recoveries.length > 0) && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportFullReport}
-              >
+              <Button variant="outline" size="sm" onClick={handleExportFullReport}>
                 <Download className="h-4 w-4 mr-2" />
                 Full Report
               </Button>
@@ -339,31 +314,21 @@ export const ArchiveManager: React.FC<ArchiveManagerProps> = ({
         <ArchiveDashboard stats={stats} />
 
         {/* Search */}
-        <ArchiveSearchBar 
-          onSearch={handleSearch}
-          onFilterChange={handleFilterChange}
-        />
+        <ArchiveSearchBar onSearch={handleSearch} onFilterChange={handleFilterChange} />
 
         {/* Main content area */}
         <div className="flex-1 flex gap-4 min-h-0">
           {/* File tree */}
           <Card className="flex-1 overflow-hidden">
             <CardContent className="p-4 h-full">
-              <HugeFileTree 
-                files={filteredFiles}
-                onFileClick={handleFileClick}
-                height={600}
-              />
+              <HugeFileTree files={filteredFiles} onFileClick={handleFileClick} height={600} />
             </CardContent>
           </Card>
 
           {/* Collaboration panel */}
           {enableCollaboration && (
             <div className="w-80 flex-shrink-0">
-              <CollaborationPanel 
-                changes={changes}
-                notifications={notifications}
-              />
+              <CollaborationPanel changes={changes} notifications={notifications} />
             </div>
           )}
         </div>

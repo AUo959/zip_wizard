@@ -4,11 +4,11 @@
  * Uses simple virtualization for efficient rendering of huge lists.
  */
 
-import React, { useRef, useEffect, useState, useCallback } from "react";
-import { FileNode } from "@/lib/archiveHandlers";
-import { File, Folder, AlertTriangle } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { FileNode } from '@/lib/archiveHandlers';
+import { File, Folder, AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export interface HugeFileTreeProps {
   files: FileNode[];
@@ -27,9 +27,9 @@ export const HugeFileTree: React.FC<HugeFileTreeProps> = ({
   files,
   onFileClick,
   height = 600,
-  width = "100%",
+  width = '100%',
   itemSize = 32,
-  className
+  className,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
@@ -37,12 +37,12 @@ export const HugeFileTree: React.FC<HugeFileTreeProps> = ({
   // Calculate visible range based on scroll position
   const handleScroll = useCallback(() => {
     if (!scrollRef.current) return;
-    
+
     const scrollTop = scrollRef.current.scrollTop;
     const visibleCount = Math.ceil(height / itemSize);
     const start = Math.floor(scrollTop / itemSize);
     const end = start + visibleCount + 10; // Add buffer
-    
+
     setVisibleRange({ start: Math.max(0, start - 10), end: Math.min(files.length, end) });
   }, [height, itemSize, files.length]);
 
@@ -71,11 +71,11 @@ export const HugeFileTree: React.FC<HugeFileTreeProps> = ({
           top: index * itemSize,
           left: 0,
           right: 0,
-          height: itemSize
+          height: itemSize,
         }}
         className={cn(
-          "flex items-center gap-2 px-2 cursor-pointer hover:bg-accent transition-colors",
-          hasError && "bg-red-50 dark:bg-red-900/20",
+          'flex items-center gap-2 px-2 cursor-pointer hover:bg-accent transition-colors',
+          hasError && 'bg-red-50 dark:bg-red-900/20',
           className
         )}
         onClick={handleClick}
@@ -92,10 +92,7 @@ export const HugeFileTree: React.FC<HugeFileTreeProps> = ({
 
         {/* File name */}
         <span
-          className={cn(
-            "flex-1 truncate text-sm",
-            hasError && "text-red-600 dark:text-red-400"
-          )}
+          className={cn('flex-1 truncate text-sm', hasError && 'text-red-600 dark:text-red-400')}
         >
           {file.name}
         </span>
@@ -109,9 +106,7 @@ export const HugeFileTree: React.FC<HugeFileTreeProps> = ({
 
         {/* Error indicator */}
         {hasError && (
-          <span className="text-xs text-red-600 dark:text-red-400 flex-shrink-0">
-            ⚠️
-          </span>
+          <span className="text-xs text-red-600 dark:text-red-400 flex-shrink-0">⚠️</span>
         )}
       </div>
     );
@@ -120,22 +115,18 @@ export const HugeFileTree: React.FC<HugeFileTreeProps> = ({
   const visibleFiles = files.slice(visibleRange.start, visibleRange.end);
 
   return (
-    <div className={cn("border rounded-md", className)} style={{ width, height }}>
-      <div 
+    <div className={cn('border rounded-md', className)} style={{ width, height }}>
+      <div
         ref={scrollRef}
-        style={{ 
+        style={{
           height: '100%',
           overflow: 'auto',
-          position: 'relative'
+          position: 'relative',
         }}
       >
         <div style={{ height: files.length * itemSize, position: 'relative' }}>
           {visibleFiles.map((file, i) => (
-            <FileRow 
-              key={visibleRange.start + i} 
-              file={file} 
-              index={visibleRange.start + i} 
-            />
+            <FileRow key={visibleRange.start + i} file={file} index={visibleRange.start + i} />
           ))}
         </div>
       </div>

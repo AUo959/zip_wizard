@@ -3,10 +3,10 @@
  * Should trigger search/filter/extract server- or worker-side for huge sets.
  */
 
-import React, { useState } from "react";
-import { Search, X, Filter, FileType } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
+import { Search, X, Filter, FileType } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,8 +14,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 
 export interface SearchFilters {
   fileTypes?: string[];
@@ -38,20 +38,38 @@ export interface ArchiveSearchBarProps {
 export const ArchiveSearchBar: React.FC<ArchiveSearchBarProps> = ({
   onSearch,
   onFilterChange,
-  placeholder = "Search files...",
-  className
+  placeholder = 'Search files...',
+  className,
 }) => {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<SearchFilters>({});
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
 
   const commonFileTypes = [
-    "js", "ts", "jsx", "tsx",
-    "py", "java", "cpp", "c",
-    "html", "css", "json", "xml",
-    "md", "txt", "pdf", "doc",
-    "png", "jpg", "svg", "gif",
-    "zip", "tar", "gz", "rar"
+    'js',
+    'ts',
+    'jsx',
+    'tsx',
+    'py',
+    'java',
+    'cpp',
+    'c',
+    'html',
+    'css',
+    'json',
+    'xml',
+    'md',
+    'txt',
+    'pdf',
+    'doc',
+    'png',
+    'jpg',
+    'svg',
+    'gif',
+    'zip',
+    'tar',
+    'gz',
+    'rar',
   ];
 
   const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,29 +79,29 @@ export const ArchiveSearchBar: React.FC<ArchiveSearchBarProps> = ({
   };
 
   const handleClear = () => {
-    setQuery("");
-    onSearch("");
+    setQuery('');
+    onSearch('');
   };
 
   const handleTypeToggle = (type: string) => {
     const newTypes = selectedTypes.includes(type)
       ? selectedTypes.filter(t => t !== type)
       : [...selectedTypes, type];
-    
+
     setSelectedTypes(newTypes);
-    
+
     const newFilters = {
       ...filters,
-      fileTypes: newTypes.length > 0 ? newTypes : undefined
+      fileTypes: newTypes.length > 0 ? newTypes : undefined,
     };
     setFilters(newFilters);
-    
+
     if (onFilterChange) {
       onFilterChange(newFilters);
     }
   };
 
-  const activeFilterCount = 
+  const activeFilterCount =
     (selectedTypes.length > 0 ? 1 : 0) +
     (filters.dateRange ? 1 : 0) +
     (filters.sizeRange ? 1 : 0) +
@@ -120,8 +138,8 @@ export const ArchiveSearchBar: React.FC<ArchiveSearchBarProps> = ({
             <Button variant="outline" size="icon" className="relative">
               <Filter className="h-4 w-4" />
               {activeFilterCount > 0 && (
-                <Badge 
-                  variant="destructive" 
+                <Badge
+                  variant="destructive"
                   className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
                 >
                   {activeFilterCount}
@@ -133,14 +151,13 @@ export const ArchiveSearchBar: React.FC<ArchiveSearchBarProps> = ({
             <DropdownMenuLabel>Filter by File Type</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <div className="max-h-[300px] overflow-y-auto">
-              {commonFileTypes.map((type) => (
+              {commonFileTypes.map(type => (
                 <DropdownMenuCheckboxItem
                   key={type}
                   checked={selectedTypes.includes(type)}
                   onCheckedChange={() => handleTypeToggle(type)}
                 >
-                  <FileType className="h-3 w-3 mr-2" />
-                  .{type}
+                  <FileType className="h-3 w-3 mr-2" />.{type}
                 </DropdownMenuCheckboxItem>
               ))}
             </div>
@@ -151,7 +168,7 @@ export const ArchiveSearchBar: React.FC<ArchiveSearchBarProps> = ({
       {/* Active filters display */}
       {selectedTypes.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
-          {selectedTypes.map((type) => (
+          {selectedTypes.map(type => (
             <Badge key={type} variant="secondary" className="text-xs">
               .{type}
               <button

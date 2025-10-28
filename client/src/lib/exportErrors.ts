@@ -24,7 +24,7 @@ export interface RecoveryLog {
 
 /**
  * Export errors and recovery logs as JSON file.
- * 
+ *
  * @param errors - Array of error logs
  * @param archiveName - Name of the archive for filename
  */
@@ -35,20 +35,20 @@ export function exportErrors(errors: ErrorLog[], archiveName: string): void {
     totalErrors: errors.length,
     errors: errors.map(err => ({
       ...err,
-      timestamp: err.timestamp.toISOString()
-    }))
+      timestamp: err.timestamp.toISOString(),
+    })),
   };
 
-  const blob = new Blob([JSON.stringify(data, null, 2)], { 
-    type: 'application/json' 
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: 'application/json',
   });
-  
+
   downloadBlob(blob, `${sanitizeFilename(archiveName)}-errors.json`);
 }
 
 /**
  * Export recovery logs as JSON file.
- * 
+ *
  * @param recoveries - Array of recovery logs
  * @param archiveName - Name of the archive for filename
  */
@@ -60,20 +60,20 @@ export function exportRecoveryLogs(recoveries: RecoveryLog[], archiveName: strin
     successRate: calculateSuccessRate(recoveries),
     recoveries: recoveries.map(rec => ({
       ...rec,
-      timestamp: rec.timestamp.toISOString()
-    }))
+      timestamp: rec.timestamp.toISOString(),
+    })),
   };
 
-  const blob = new Blob([JSON.stringify(data, null, 2)], { 
-    type: 'application/json' 
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: 'application/json',
   });
-  
+
   downloadBlob(blob, `${sanitizeFilename(archiveName)}-recovery.json`);
 }
 
 /**
  * Export combined report (errors + recoveries) as text file.
- * 
+ *
  * @param errors - Array of error logs
  * @param recoveries - Array of recovery logs
  * @param archiveName - Name of the archive for filename
@@ -84,7 +84,7 @@ export function exportFullReport(
   archiveName: string
 ): void {
   const lines: string[] = [];
-  
+
   // Header
   lines.push('='.repeat(80));
   lines.push(`ARCHIVE PROCESSING REPORT`);
@@ -105,14 +105,14 @@ export function exportFullReport(
   if (errors.length > 0) {
     lines.push('ERRORS');
     lines.push('-'.repeat(80));
-    
+
     // Group by severity
     const bySeverity = groupBy(errors, 'severity');
-    
+
     for (const [severity, errs] of Object.entries(bySeverity)) {
       lines.push(`\n${severity.toUpperCase()} (${errs.length})`);
       lines.push('');
-      
+
       for (const err of errs) {
         lines.push(`  File: ${err.file}`);
         lines.push(`  Time: ${err.timestamp.toISOString()}`);
@@ -132,7 +132,7 @@ export function exportFullReport(
   if (recoveries.length > 0) {
     lines.push('RECOVERIES');
     lines.push('-'.repeat(80));
-    
+
     for (const rec of recoveries) {
       lines.push(`\nFile: ${rec.file}`);
       lines.push(`Time: ${rec.timestamp.toISOString()}`);
@@ -141,7 +141,7 @@ export function exportFullReport(
       lines.push(`Original Size: ${formatBytes(rec.originalSize)}`);
       lines.push(`Recovered Size: ${formatBytes(rec.recoveredSize)}`);
       lines.push(`Recovery Rate: ${((rec.recoveredSize / rec.originalSize) * 100).toFixed(1)}%`);
-      
+
       if (rec.changes.length > 0) {
         lines.push(`Changes Applied:`);
         rec.changes.forEach(change => {
@@ -159,13 +159,13 @@ export function exportFullReport(
 
   const text = lines.join('\n');
   const blob = new Blob([text], { type: 'text/plain' });
-  
+
   downloadBlob(blob, `${sanitizeFilename(archiveName)}-report.txt`);
 }
 
 /**
  * Export as CSV for spreadsheet analysis.
- * 
+ *
  * @param errors - Array of error logs
  * @param archiveName - Name of the archive for filename
  */
@@ -177,13 +177,10 @@ export function exportErrorsAsCSV(errors: ErrorLog[], archiveName: string): void
     `"${err.error.replace(/"/g, '""')}"`, // Escape quotes
     err.severity,
     err.recovered ? 'Yes' : 'No',
-    err.recoveryNotes ? `"${err.recoveryNotes.join('; ').replace(/"/g, '""')}"` : ''
+    err.recoveryNotes ? `"${err.recoveryNotes.join('; ').replace(/"/g, '""')}"` : '',
   ]);
 
-  const csv = [
-    headers.join(','),
-    ...rows.map(row => row.join(','))
-  ].join('\n');
+  const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
 
   const blob = new Blob([csv], { type: 'text/csv' });
   downloadBlob(blob, `${sanitizeFilename(archiveName)}-errors.csv`);
@@ -218,7 +215,7 @@ function sanitizeFilename(filename: string): string {
  */
 function calculateSuccessRate(recoveries: RecoveryLog[]): number {
   if (recoveries.length === 0) return 0;
-  
+
   const totalConfidence = recoveries.reduce((sum, rec) => sum + rec.confidence, 0);
   return (totalConfidence / recoveries.length) * 100;
 }
@@ -227,14 +224,17 @@ function calculateSuccessRate(recoveries: RecoveryLog[]): number {
  * Helper: Group array by property.
  */
 function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
-  return array.reduce((result, item) => {
-    const group = String(item[key]);
-    if (!result[group]) {
-      result[group] = [];
-    }
-    result[group].push(item);
-    return result;
-  }, {} as Record<string, T[]>);
+  return array.reduce(
+    (result, item) => {
+      const group = String(item[key]);
+      if (!result[group]) {
+        result[group] = [];
+      }
+      result[group].push(item);
+      return result;
+    },
+    {} as Record<string, T[]>
+  );
 }
 
 /**

@@ -4,10 +4,10 @@
  * Never crash the whole app or lose partial progress.
  */
 
-import React from "react";
-import { AlertTriangle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import React from 'react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -31,24 +31,24 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     this.state = {
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     };
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return {
       hasError: true,
-      error
+      error,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error to console
-    console.error("Archive Error Caught by Boundary:", error, errorInfo);
+    console.error('Archive Error Caught by Boundary:', error, errorInfo);
 
     // Store error info
     this.setState({
-      errorInfo
+      errorInfo,
     });
 
     // Call optional error handler
@@ -64,7 +64,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     this.setState({
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     });
   };
 
@@ -83,8 +83,8 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Archive Loading Failed</AlertTitle>
               <AlertDescription>
-                An error occurred while processing the archive. 
-                This may be due to a corrupted file or unsupported format.
+                An error occurred while processing the archive. This may be due to a corrupted file
+                or unsupported format.
               </AlertDescription>
             </Alert>
 
