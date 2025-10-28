@@ -47,6 +47,9 @@ import { AnalyticsView } from '@/components/analytics-view';
 import { AIToolsView } from '@/components/ai-tools-view';
 import { SymbolicInterface } from '@/components/symbolic-interface';
 import { EnhancedArchiveManager } from '@/components/enhanced-archive-manager';
+import { AdvancedArchiveManager } from '@/components/advanced-archive-manager';
+import { ArchiveManager } from '@/components/ArchiveManager';
+import { convertSchemaArchive } from '@/lib/archive-converter';
 import { PrivacyShield } from '@/components/privacy-shield';
 import { MultilingualSupport } from '@/components/multilingual-support';
 import { FlowStateManager } from '@/components/flow-state-manager';
@@ -70,7 +73,6 @@ import { BreadcrumbNavigation } from '@/components/breadcrumb-navigation';
 import { ShortcutsDialog } from '@/components/shortcuts-dialog';
 import { PreferencesDialog } from '@/components/preferences-dialog';
 import { MainNavigation } from '@/components/main-navigation';
-import { EnhancedViewTabs } from '@/components/enhanced-view-tabs';
 import {
   useKeyboardShortcuts,
   defaultShortcuts,
@@ -78,6 +80,7 @@ import {
 } from '@/hooks/use-keyboard-shortcuts';
 import type { Archive as ArchiveType, File } from '@shared/schema';
 import { type ViewType, ALL_VIEWS, VIEW_METADATA } from '@shared/views';
+import { EnhancedViewTabs } from '@/components/enhanced-view-tabs';
 
 /**
  * Main application component for ZipWizard.
@@ -507,10 +510,22 @@ export default function Home() {
               </Button>
             </div>
             <div className="p-6">
-              <EnhancedArchiveManager
-                archives={archives}
-                onArchiveProcess={handleArchiveProcess}
-                onBatchOperation={handleBatchOperation}
+              <AdvancedArchiveManager
+                archives={archives.map(a => convertSchemaArchive(a))}
+                onArchiveAction={async (archiveId, action, params) => {
+                  console.log(
+                    'Archive action:',
+                    action,
+                    'on archive:',
+                    archiveId,
+                    'with params:',
+                    params
+                  );
+                  // Handle actions here
+                }}
+                selectedArchiveId={selectedArchive?.id.toString()}
+                enableRepair={true}
+                enableComparison={true}
               />
             </div>
           </div>
