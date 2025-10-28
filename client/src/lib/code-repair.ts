@@ -110,7 +110,8 @@ export const tagCompletionStrategy: CodeRepairStrategy = {
     // - Tags split across multiple lines
     // - Tags in strings or comments
     // For robust HTML parsing, integrate a proper HTML parser library
-    const openTagRegex = /<(\w+)(?:\s[^>]*)?>(?!.*<\/\1>)/g;
+    // Pattern uses bounded lookahead to prevent catastrophic backtracking
+    const openTagRegex = /<(\w+)(?:\s[^>]*)?>(?![\s\S]{0,1000}<\/\1>)/g;
     const selfClosingTags = new Set(['br', 'hr', 'img', 'input', 'link', 'meta', 'area', 'base', 'col', 'command', 'embed', 'keygen', 'param', 'source', 'track', 'wbr']);
 
     const lines = content.split('\n');

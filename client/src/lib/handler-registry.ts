@@ -95,9 +95,15 @@ export const createZipHandler = (): ArchiveHandler => {
 
         const nodes: FileNode[] = [];
         const folderMap = new Map<string, FileNode>();
-
-        // Create folder structure
+        
+        // First pass: collect all entries with their metadata
+        const entries: Array<{ path: string; entry: any }> = [];
         zip.forEach((relativePath, zipEntry) => {
+          entries.push({ path: relativePath, entry: zipEntry });
+        });
+
+        // Process entries to build tree structure
+        for (const { path: relativePath, entry: zipEntry } of entries) {
           const parts = relativePath.split('/').filter(Boolean);
           const name = parts[parts.length - 1];
           const isDir = zipEntry.dir;
@@ -134,12 +140,32 @@ export const createZipHandler = (): ArchiveHandler => {
 
           // Add file or folder node
           if (name) {
+            // For files, attempt to get size from metadata
+            // JSZip stores metadata in internal properties, but we can get size
+            // by checking the entry's internal state or reading the data
+            let fileSize: number | undefined;
+            if (!isDir) {
+              // Try to get size from the entry's metadata if available
+              // This is safer than accessing private properties
+              try {
+                // JSZip's public API doesn't expose uncompressed size directly
+                // but we can infer it's available in the object
+                const entryData = (zipEntry as any)._data;
+                if (entryData && typeof entryData.uncompressedSize === 'number') {
+                  fileSize = entryData.uncompressedSize;
+                }
+              } catch {
+                // If metadata access fails, leave size undefined
+                fileSize = undefined;
+              }
+            }
+            
             const node: FileNode = {
               id: relativePath,
               name,
               type: isDir ? 'folder' : 'file',
               path: relativePath,
-              size: isDir ? undefined : (zipEntry as any)._data?.uncompressedSize,
+              size: fileSize,
               children: isDir ? [] : undefined,
             };
 
@@ -158,7 +184,7 @@ export const createZipHandler = (): ArchiveHandler => {
               nodes.push(node);
             }
           }
-        });
+        }
 
         return nodes;
       } catch (error) {
@@ -194,12 +220,25 @@ export const createZipHandler = (): ArchiveHandler => {
 
         zip.forEach((relativePath, zipEntry) => {
           try {
+            // Try to get size from metadata safely
+            let fileSize: number | undefined;
+            if (!zipEntry.dir) {
+              try {
+                const entryData = (zipEntry as any)._data;
+                if (entryData && typeof entryData.uncompressedSize === 'number') {
+                  fileSize = entryData.uncompressedSize;
+                }
+              } catch {
+                fileSize = undefined;
+              }
+            }
+            
             const node: FileNode = {
               id: relativePath,
               name: relativePath.split('/').pop() || relativePath,
               type: zipEntry.dir ? 'folder' : 'file',
               path: relativePath,
-              size: (zipEntry as any)._data?.uncompressedSize,
+              size: fileSize,
             };
             fileTree.push(node);
             log.push(`Recovered: ${relativePath}`);

@@ -103,13 +103,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   };
 
   handleGetHelp = (): void => {
-    // Could open help docs or support modal
+    // TODO: Implement proper help/support modal or notification system.
+    // This should integrate with the app's modal/toast notification system.
+    // For now, error information is logged to console for debugging purposes.
     console.log('Help requested for error:', this.state.error);
-    // TODO: Replace with proper modal/toast system
-    // For now, just log to console - this should be integrated with the app's notification system
+    
     if (typeof window !== 'undefined') {
-      // This is a placeholder - should be replaced with app's modal system
-      console.info('Help documentation would open here. Error has been logged to console.');
+      console.info('Help system not yet implemented. Error details logged above.');
     }
   };
 

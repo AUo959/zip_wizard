@@ -42,7 +42,7 @@ import type {
   ArchiveManagerProps,
   FileNode,
 } from '@shared/archive-types';
-import { cn } from '@/lib/utils';
+import { cn, capitalizeFirst } from '@/lib/utils';
 
 /**
  * Archive card component showing individual archive
@@ -167,7 +167,7 @@ const ArchiveCard: React.FC<ArchiveCardProps> = ({
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center space-x-2">
               <span className={cn('font-medium', getStatusColor(archive.status))}>
-                {archive.status.charAt(0).toUpperCase() + archive.status.slice(1)}
+                {capitalizeFirst(archive.status)}
               </span>
               {archive.status === 'processing' && archive.progress !== undefined && (
                 <span className="text-muted-foreground">({archive.progress}%)</span>
