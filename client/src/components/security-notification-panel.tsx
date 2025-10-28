@@ -73,7 +73,7 @@ export function SecurityNotificationPanel() {
 
     // Call API to acknowledge
     try {
-      await fetch(`/api/v1/notifications/${id}/acknowledge`, {
+      await fetch(`/api/v1/security/notifications/${id}/acknowledge`, {
         method: 'POST'
       });
     } catch (error) {
