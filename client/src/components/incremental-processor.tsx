@@ -51,7 +51,7 @@ export function IncrementalProcessor({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [chunks, setChunks] = useState<ChunkData[]>([]);
-  const [currentChunk, setCurrentChunk] = useState<number>(0);
+  const [_currentChunk, setCurrentChunk] = useState<number>(0);
   const [overallProgress, setOverallProgress] = useState(0);
   const [processingResult, setProcessingResult] = useState<ProcessingResult | null>(null);
   const [errors, setErrors] = useState<string[]>([]);

@@ -189,8 +189,8 @@ function fixMissingQuotes(code: string): {
 
     // Simple check for unclosed string literals
     const singleQuotes = (line.match(/'/g) || []).length;
-    const doubleQuotes = (line.match(/"/g) || []).length;
-    const backticks = (line.match(/`/g) || []).length;
+    const _doubleQuotes = (line.match(/"/g) || []).length;
+    const _backticks = (line.match(/`/g) || []).length;
 
     // If odd number of quotes, likely unclosed
     if (singleQuotes % 2 !== 0 && !line.includes('//') && !line.includes('/*')) {

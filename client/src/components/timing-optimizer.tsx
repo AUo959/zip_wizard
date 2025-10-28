@@ -108,7 +108,7 @@ export function TimingOptimizer({
   const [systemLoad, setSystemLoad] = useState(0);
   const [throughput, setThroughput] = useState(0);
 
-  const queueRef = useRef<QueueItem[]>([]);
+  const _queueRef = useRef<QueueItem[]>([]);
   const runningRef = useRef<number>(0);
   const metricsRef = useRef<Map<string, OperationMetrics>>(new Map());
 

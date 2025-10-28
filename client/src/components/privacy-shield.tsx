@@ -58,7 +58,7 @@ export function PrivacyShield({ isActive, onToggle, onSettingsChange }: PrivacyS
   const [scanProgress, setScanProgress] = useState(0);
   const [scanResults, setScanResults] = useState<SecurityScan[]>([]);
   const [isScanning, setIsScanning] = useState(false);
-  const [complianceScore, setComplianceScore] = useState(85);
+  const [complianceScore, _setComplianceScore] = useState(85);
 
   const exportAuditLogs = () => {
     const auditData = [

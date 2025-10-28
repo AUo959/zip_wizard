@@ -223,7 +223,7 @@ export function MultilingualSupport({
   };
 
   const generateFileNameSuggestion = (originalName: string): string => {
-    const context = culturalContexts[currentLanguage];
+    const _context = culturalContexts[currentLanguage];
     const now = new Date();
 
     switch (currentLanguage) {

@@ -29,7 +29,7 @@ export const bracketBalancingStrategy: CodeRepairStrategy = {
     };
 
     const stack: Array<{ char: string; line: number; col: number }> = [];
-    const missingClosers: Array<{ char: string; line: number; col: number }> = [];
+    const _missingClosers: Array<{ char: string; line: number; col: number }> = [];
 
     // Analyze bracket structure
     for (let lineNum = 0; lineNum < lines.length; lineNum++) {
