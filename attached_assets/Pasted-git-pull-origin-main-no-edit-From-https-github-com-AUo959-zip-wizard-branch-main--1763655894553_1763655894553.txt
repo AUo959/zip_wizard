@@ -1,0 +1,65 @@
+git pull origin main --no-edit
+
+From https://github.com/AUo959/zip_wizard
+ * branch            main       -> FETCH_HEAD
+Auto-merging client/src/components/enhanced-view-tabs.tsx
+Merge made by the 'ort' strategy.
+ .codacy.yml                                    |  74 +++
+ .codacy/cli.sh                                 | 149 +++++
+ .codacy/codacy.yaml                            |  15 +
+ .gitignore                                     |   5 +-
+ PR_INTEGRATION_SUMMARY.md                      | 590 ++++++++++++++++++
+ client/src/__tests__/setup.ts                  |  16 +-
+ .../src/__tests__/use-tab-navigation.test.ts   |  10 +-
+ client/src/components/ArchiveBreadcrumbs.tsx   |   2 +-
+ client/src/components/ArchiveManager.tsx       |  49 +-
+ client/src/components/ArchiveSearchBar.tsx     |   4 +-
+ client/src/components/ErrorBoundary.tsx        |   2 +-
+ client/src/components/HugeFileTree.tsx         |   3 +-
+ .../components/advanced-archive-manager.tsx    |  13 +-
+ client/src/components/advanced-file-tree.tsx   |   8 +-
+ client/src/components/ai-exploration-panel.tsx |  26 +-
+ client/src/components/ai-tools-view.tsx        |   3 +-
+ client/src/components/analysis-panel.tsx       |   1 -
+ client/src/components/analytics-view.tsx       |   3 +-
+ client/src/components/archive-comparison.tsx   |  36 +-
+ .../src/components/breadcrumb-navigation.tsx   |   4 +-
+ .../src/components/circuit-breaker-monitor.tsx |   3 -
+ client/src/components/code-editor.tsx          |  22 +-
+ .../src/components/code-metrics-analyzer.tsx   |  33 +-
+ .../src/components/cognitive-load-reducer.tsx  |   2 +-
+ client/src/components/dependency-graph.tsx     |   4 -
+ .../components/enhanced-archive-manager.tsx    |   5 -
+ client/src/components/enhanced-file-tree.tsx   |   6 +-
+ client/src/components/enhanced-view-tabs.tsx   |  25 +-
+ client/src/components/error-boundary.tsx       |   4 +-
+ client/src/components/file-tree.tsx            |   4 -
+ client/src/components/flow-state-manager.tsx   |   1 -
+ .../src/components/incremental-processor.tsx   |   4 +-
+ client/src/components/main-navigation.tsx      |   1 -
+ client/src/components/memory-compression.tsx   |   7 +-
+ client/src/components/multilingual-support.tsx |  11 +-
+ .../components/pattern-recognition-engine.tsx  |  35 +-
+ client/src/components/preferences-dialog.tsx   |   1 -
+ client/src/components/privacy-shield.tsx       |   6 +-
+ client/src/components/security-badge.tsx       |   1 -
+ client/src/components/status-dashboard.tsx     |  29 +-
+ client/src/components/timing-optimizer.tsx     |  80 +--
+ client/src/components/wu-wei-interface.tsx     |   3 +-
+ client/src/lib/aiRepair.ts                     |   4 +-
+ client/src/lib/circuit-breaker.ts              |   4 +-
+ client/src/lib/code-repair.ts                  |   2 +-
+ client/src/lib/file-parser.ts                  |  25 +-
+ client/src/lib/handler-registry.ts             |   2 +-
+ client/src/pages/home.tsx                      |  84 ++-
+ docs/NAVIGATION-INTEGRATION-EXAMPLES.tsx       |  14 +-
+ eslint.config.js                               |   7 +
+ package.json                                   |   2 +
+ server/observer.ts                             |   1 -
+ server/routes.ts                               |  48 +-
+ 53 files changed, 1169 insertions(+), 324 deletions(-)
+ create mode 100644 .codacy.yml
+ create mode 100755 .codacy/cli.sh
+ create mode 100644 .codacy/codacy.yaml
+ create mode 100644 PR_INTEGRATION_SUMMARY.md
+~/workspace$ 
