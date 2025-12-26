@@ -15,10 +15,12 @@ import {
 import { normalizeTags, normalizeDependencies } from '@shared/validation';
 import { db } from './db';
 import { eq, and, desc } from 'drizzle-orm';
+import { auditLog } from './audit-log';
 
 export interface IStorage {
   // Archive operations
   createArchive(archive: InsertArchive): Promise<Archive>;
+  updateArchive(id: string, updates: Partial<Archive>): Promise<Archive | undefined>;
   getArchive(id: string): Promise<Archive | undefined>;
   getAllArchives(): Promise<Archive[]>;
   deleteArchive(id: string): Promise<void>;
@@ -50,6 +52,11 @@ export class DatabaseStorage implements IStorage {
     return archive;
   }
 
+  async updateArchive(id: string, updates: Partial<Archive>): Promise<Archive | undefined> {
+    const [archive] = await db.update(archives).set(updates).where(eq(archives.id, id)).returning();
+    return archive || undefined;
+  }
+
   async getArchive(id: string): Promise<Archive | undefined> {
     const [archive] = await db.select().from(archives).where(eq(archives.id, id));
     return archive || undefined;
@@ -60,22 +67,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteArchive(id: string): Promise<void> {
-    // First, get all files for this archive to delete their mutations
-    const archiveFiles = await this.getFilesByArchiveId(id);
+    try {
+      await db.transaction(async tx => {
+        const archiveFiles = await tx.select().from(files).where(eq(files.archiveId, id));
 
-    // Delete file mutations for all files in this archive
-    for (const file of archiveFiles) {
-      await this.deleteFileMutationsByFileId(file.id);
+        for (const file of archiveFiles) {
+          await tx.delete(fileMutations).where(eq(fileMutations.fileId, file.id));
+        }
+
+        await tx.delete(observerEvents).where(eq(observerEvents.archiveId, id));
+        await tx.delete(files).where(eq(files.archiveId, id));
+        await tx.delete(archives).where(eq(archives.id, id));
+      });
+    } catch (error) {
+      await auditLog.log('critical', 'modification', 'Archive deletion rolled back', {
+        resource: 'archive',
+        resourceId: id,
+        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+      });
+      throw error;
     }
-
-    // Delete observer events for this archive
-    await this.deleteObserverEventsByArchiveId(id);
-
-    // Delete associated files
-    await this.deleteFilesByArchiveId(id);
-
-    // Finally delete the archive
-    await db.delete(archives).where(eq(archives.id, id));
   }
 
   /**

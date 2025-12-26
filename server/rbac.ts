@@ -305,10 +305,17 @@ export const rbac = new RBACService();
 /**
  * Middleware to check RBAC permissions
  */
-export function requirePermission(permission: Permission) {
+export function requirePermission(permission: Permission, resourceTypeOverride?: 'file' | 'archive') {
   return async (req: any, res: any, next: any) => {
-    const resourceId = req.params.id || req.params.archiveId || req.params.fileId;
-    const resourceType = req.path.includes('/files/') ? 'file' : 'archive';
+    const resourceId = req.params.fileId || req.params.id || req.params.archiveId;
+    const resourceType =
+      resourceTypeOverride || (req.params.fileId || req.path.includes('/files/') ? 'file' : 'archive');
+
+    if (!resourceId) {
+      return res.status(400).json({
+        error: 'Resource identifier missing',
+      });
+    }
     const userId = req.user?.id || 'anonymous';
 
     const context: AccessContext = {
@@ -319,6 +326,14 @@ export function requirePermission(permission: Permission) {
     };
 
     try {
+      if (!rbac.getResourcePermissions(resourceId)) {
+        rbac.setResourcePermissions(resourceId, {
+          resourceId,
+          resourceType,
+          ownerId: userId,
+          permissions: new Map([[userId, 'owner']]),
+        });
+      }
       await rbac.requireAccess(resourceId, resourceType, userId, permission, context);
       next();
     } catch (error) {

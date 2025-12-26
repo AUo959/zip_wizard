@@ -1,4 +1,4 @@
-import type { Express, Request } from 'express';
+import type { Express, Request, Response, NextFunction } from 'express';
 import { createServer, type Server } from 'http';
 import multer from 'multer';
 import JSZip from 'jszip';
@@ -8,8 +8,11 @@ import { type File } from '@shared/schema';
 import path from 'path';
 import cors from 'cors';
 import crypto from 'crypto';
-
-const upload = multer({ storage: multer.memoryStorage() });
+import { auditLog } from './audit-log';
+import { rbac, requirePermission } from './rbac';
+import { buildCorsOptions } from './utils/cors';
+import { redactContent } from './utils/redaction';
+import { authenticateRequest, type AuthenticatedRequest } from './middleware/auth';
 
 // Extract code snippets from text/chat content
 function extractCodeFromText(content: string): { snippets: string[]; languages: string[] } {
@@ -391,17 +394,31 @@ const API_CONFIG: ApiConfig = {
   version: 'v1',
   maxFileSize: 100 * 1024 * 1024, // 100MB
   supportedFormats: ['.zip', '.rar', '.7z', '.tar', '.gz'],
-  cors: {
-    origin: process.env.CORS_ORIGIN || '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
-    credentials: true,
-  },
+  cors: buildCorsOptions(),
 };
+
+const ARCHIVE_LIMITS = {
+  maxEntries: parseInt(process.env.MAX_ARCHIVE_FILES || '512', 10),
+  maxEntryBytes: parseInt(process.env.MAX_ARCHIVE_ENTRY_BYTES || `${5 * 1024 * 1024}`, 10), // 5MB default per entry
+};
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: API_CONFIG.maxFileSize,
+  },
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Apply CORS middleware
-  app.use(cors(API_CONFIG.cors));
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    cors(API_CONFIG.cors)(req, res, err => {
+      if (err) {
+        return res.status(403).json({ error: err.message });
+      }
+      next();
+    });
+  });
 
   // API versioning middleware
   app.use('/api/:version/*', (req: Request<{ version: string }>, res, next) => {
@@ -485,204 +502,282 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload and process any file type - now supports comprehensive parsing
-  app.post('/api/v1/archives', upload.single('archive'), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded' });
-      }
-
-      // Detect file type
-      const fileType = req.file.mimetype || 'application/octet-stream';
-      const isArchive =
-        fileType.includes('zip') ||
-        fileType.includes('tar') ||
-        fileType.includes('rar') ||
-        fileType.includes('7z') ||
-        fileType.includes('gzip') ||
-        req.file.originalname.includes('.tar.');
-
-      let contents: any = null;
-      let fileCount = 0;
-      let processedFiles = [];
-
-      // Try to process as archive first if it looks like one
-      if (isArchive || req.file.originalname.endsWith('.zip')) {
-        try {
-          const zip = new JSZip();
-          contents = await zip.loadAsync(req.file.buffer);
-        } catch (_error) {
-          // Not a valid ZIP, will process as single file
-          console.log('Not a valid ZIP archive, processing as single file');
+  app.post(
+    '/api/v1/archives',
+    authenticateRequest,
+    upload.single('archive'),
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: 'No file uploaded' });
         }
-      }
 
-      // Create archive record with enhanced metadata
-      const symbolicChain = `T1_CHAIN::ZIPWizard::v2.2.6b::${req.body.from || 'USER'}::${req.body.operation || 'Upload'}`;
-      const threadTag = `Thread_${req.body.tag || 'Upload'}_${Date.now()}`;
+        if (req.file.size > API_CONFIG.maxFileSize) {
+          return res.status(413).json({ message: 'File exceeds configured size limit' });
+        }
 
-      const archive = await storage.createArchive({
-        name: req.file.originalname,
-        originalSize: req.file.size,
-        fileCount: contents && contents.files ? Object.keys(contents.files).length : 1,
-        symbolicChain,
-        threadTag,
-        ethicsLock: req.body?.ethicsLock || 'Picard_Delta_3',
-        trustAnchor: req.body?.trustAnchor || 'SN1-AS3-TRUSTED',
-        replayable: true,
-        monitoringWindow: parseInt(req.body?.monitoringWindow) || 48,
-      });
+        const requesterId = req.user?.id || 'anonymous';
 
-      // Track upload event
-      await observer.trackUpload(archive.id, archive.name, archive.fileCount);
+        // Detect file type
+        const fileType = req.file.mimetype || 'application/octet-stream';
+        const isArchive =
+          fileType.includes('zip') ||
+          fileType.includes('tar') ||
+          fileType.includes('rar') ||
+          fileType.includes('7z') ||
+          fileType.includes('gzip') ||
+          req.file.originalname.includes('.tar.');
 
-      // Process files based on type
-      if (contents && contents.files) {
-        // ZIP archive processing
-        for (const [relativePath, zipEntry] of Object.entries(contents.files)) {
-          const entry = zipEntry as JSZip.JSZipObject;
-          if (entry.dir) {
-            // Directory entry
-            const file = await storage.createFile({
-              archiveId: archive.id,
-              path: relativePath,
-              name: path.basename(relativePath) || relativePath,
-              size: 0,
-              isDirectory: 'true',
-              parentPath: path.dirname(relativePath) === '.' ? null : path.dirname(relativePath),
-              extension: null,
-              content: null,
-              language: null,
-              description: 'Directory containing project files',
-              tags: ['directory'],
-              complexity: null,
-              dependencies: [],
+        // Create archive record with enhanced metadata
+        const symbolicChain = `T1_CHAIN::ZIPWizard::v2.2.6b::${req.body.from || 'USER'}::${req.body.operation || 'Upload'}`;
+        const threadTag = `Thread_${req.body.tag || 'Upload'}_${Date.now()}`;
+
+        const archive = await storage.createArchive({
+          name: req.file.originalname,
+          originalSize: req.file.size,
+          fileCount: 0,
+          symbolicChain,
+          threadTag,
+          ethicsLock: req.body?.ethicsLock || 'Picard_Delta_3',
+          trustAnchor: req.body?.trustAnchor || 'SN1-AS3-TRUSTED',
+          replayable: true,
+          monitoringWindow: parseInt(req.body?.monitoringWindow) || 48,
+        });
+
+        rbac.setResourcePermissions(archive.id, {
+          resourceId: archive.id,
+          resourceType: 'archive',
+          ownerId: requesterId,
+          permissions: new Map([[requesterId, 'owner']]),
+        });
+
+        const processedFiles: File[] = [];
+
+        const persistDirectory = async (relativePath: string) => {
+          const dirFile = await storage.createFile({
+            archiveId: archive.id,
+            path: relativePath,
+            name: path.basename(relativePath) || relativePath,
+            size: 0,
+            isDirectory: 'true',
+            parentPath: path.dirname(relativePath) === '.' ? null : path.dirname(relativePath),
+            extension: null,
+            content: null,
+            redactedPreview: null,
+            language: null,
+            description: 'Directory containing project files',
+            tags: ['directory'],
+            complexity: null,
+            dependencies: [],
+          });
+          rbac.setResourcePermissions(dirFile.id, {
+            resourceId: dirFile.id,
+            resourceType: 'file',
+            ownerId: requesterId,
+            permissions: new Map([[requesterId, 'owner']]),
+          });
+          processedFiles.push(dirFile);
+        };
+
+        const persistFile = async (options: {
+          relativePath: string;
+          buffer: Buffer;
+          extension: string;
+          name: string;
+          parentPath: string | null;
+        }) => {
+          const { relativePath, buffer, extension, name, parentPath } = options;
+          const content = buffer.toString('utf-8');
+          let analysis: {
+            language: string | null;
+            tags: string[];
+            complexity: string | null;
+            dependencies: string[];
+            description: string;
+          } = {
+            language: null,
+            tags: [],
+            complexity: null,
+            dependencies: [],
+            description: 'Binary or non-text file',
+          };
+
+          if (content) {
+            if (
+              extension &&
+              [
+                '.js',
+                '.jsx',
+                '.ts',
+                '.tsx',
+                '.py',
+                '.java',
+                '.cpp',
+                '.c',
+                '.css',
+                '.json',
+                '.php',
+                '.rb',
+                '.go',
+                '.rs',
+              ].includes(extension)
+            ) {
+              analysis = analyzeCodeFile(name, content, extension);
+            } else if (extension && ['.txt', '.log', '.html', '.md', '.xml'].includes(extension)) {
+              analysis = analyzeChatContent(name, content);
+            } else if (!extension || content.match(/[\x20-\x7E\n\r\t]/)) {
+              analysis = analyzeChatContent(name, content);
+            }
+          }
+
+          const redaction = redactContent(content);
+          const contentHash = crypto.createHash('sha256').update(content).digest('hex');
+
+          let cleanContent = content.replace(/\x00/g, '');
+          if (cleanContent.length > 50000) {
+            cleanContent = cleanContent.substring(0, 50000) + '...';
+          }
+
+          const file = await storage.createFile({
+            archiveId: archive.id,
+            path: relativePath,
+            name,
+            size: content.length,
+            isDirectory: 'false',
+            parentPath,
+            extension,
+            content: cleanContent,
+            redactedPreview: redaction.preview,
+            language: analysis.language,
+            description: analysis.description,
+            tags: Array.isArray(analysis.tags)
+              ? [...analysis.tags, ...(redaction.findings.length ? ['pii-redacted'] : [])]
+              : [],
+            complexity: analysis.complexity,
+            dependencies: Array.isArray(analysis.dependencies) ? analysis.dependencies : [],
+            originalHash: contentHash,
+            currentHash: contentHash,
+          });
+
+          rbac.setResourcePermissions(file.id, {
+            resourceId: file.id,
+            resourceType: 'file',
+            ownerId: requesterId,
+            permissions: new Map([[requesterId, 'owner']]),
+          });
+
+          if (analysis.language) {
+            await observer.trackAnalysis(archive.id, file.id, name, analysis);
+          }
+
+          processedFiles.push(file);
+        };
+
+        if (isArchive && req.file.originalname.endsWith('.zip')) {
+          const zip = await JSZip.loadAsync(req.file.buffer, { createFolders: true });
+
+          for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
+            if (processedFiles.length >= ARCHIVE_LIMITS.maxEntries) {
+              break;
+            }
+
+            const entry = zipEntry as JSZip.JSZipObject;
+
+            if (entry.dir) {
+              await persistDirectory(relativePath);
+              continue;
+            }
+
+            let bytesRead = 0;
+            const chunks: Buffer[] = [];
+            let skipped = false;
+
+            const stream = entry.nodeStream();
+
+            const fileBuffer: Buffer | null = await new Promise(resolve => {
+              stream.on('data', (chunk: Buffer) => {
+                bytesRead += chunk.length;
+                if (bytesRead > ARCHIVE_LIMITS.maxEntryBytes) {
+                  skipped = true;
+                  stream.destroy();
+                  return;
+                }
+                chunks.push(chunk);
+              });
+
+              stream.on('error', () => resolve(null));
+              stream.on('close', () => resolve(skipped ? null : Buffer.concat(chunks)));
+              stream.on('end', () => resolve(Buffer.concat(chunks)));
             });
-            processedFiles.push(file);
-          } else {
-            // File entry
-            const content = await entry.async('text');
+
+            if (skipped || !fileBuffer) {
+              continue;
+            }
+
             const extension = path.extname(relativePath);
             const name = path.basename(relativePath);
             const parentPath =
               path.dirname(relativePath) === '.' ? null : path.dirname(relativePath);
 
-            let analysis: {
-              language: string | null;
-              tags: string[];
-              complexity: string | null;
-              dependencies: string[];
-              description: string;
-            } = {
-              language: null,
-              tags: [],
-              complexity: null,
-              dependencies: [],
-              description: 'Binary or non-text file',
-            };
-
-            // Analyze all text-based files
-            if (content) {
-              // Programming files
-              if (
-                extension &&
-                [
-                  '.js',
-                  '.jsx',
-                  '.ts',
-                  '.tsx',
-                  '.py',
-                  '.java',
-                  '.cpp',
-                  '.c',
-                  '.css',
-                  '.json',
-                  '.php',
-                  '.rb',
-                  '.go',
-                  '.rs',
-                ].includes(extension)
-              ) {
-                analysis = analyzeCodeFile(name, content, extension);
-              }
-              // Text files, logs, and chat histories
-              else if (extension && ['.txt', '.log', '.html', '.md', '.xml'].includes(extension)) {
-                analysis = analyzeChatContent(name, content);
-              }
-              // Any file without extension or unknown extension - check if it contains text
-              else if (!extension || content.match(/[\x20-\x7E\n\r\t]/)) {
-                analysis = analyzeChatContent(name, content);
-              }
-            }
-
-            // Calculate hash for mutation tracking
-            const contentHash = crypto.createHash('sha256').update(content).digest('hex');
-
-            // Clean content for PostgreSQL - remove null bytes and ensure valid UTF-8
-            let cleanContent = content.replace(/\x00/g, ''); // Remove null bytes
-            if (cleanContent.length > 50000) {
-              cleanContent = cleanContent.substring(0, 50000) + '...'; // Truncate very large files
-            }
-
-            const file = await storage.createFile({
-              archiveId: archive.id,
-              path: relativePath,
-              name,
-              size: content.length,
-              isDirectory: 'false',
-              parentPath,
+            await persistFile({
+              relativePath,
+              buffer: fileBuffer,
               extension,
-              content: cleanContent,
-              language: analysis.language,
-              description: analysis.description,
-              tags: Array.isArray(analysis.tags) ? analysis.tags : [],
-              complexity: analysis.complexity,
-              dependencies: Array.isArray(analysis.dependencies) ? analysis.dependencies : [],
-              originalHash: contentHash,
-              currentHash: contentHash,
+              name,
+              parentPath,
             });
-
-            // Track analysis event
-            if (analysis.language) {
-              await observer.trackAnalysis(archive.id, file.id, name, analysis);
-            }
-
-            processedFiles.push(file);
           }
+        } else {
+          // Single file processing (non-archive)
+          const fileContent = req.file.buffer.toString('utf-8');
+          const extension = path.extname(req.file.originalname);
+          const language = detectLanguage(extension);
+          const analysis = analyzeContent(fileContent, language);
+          const redaction = redactContent(fileContent);
+
+          const file = await storage.createFile({
+            archiveId: archive.id,
+            path: req.file.originalname,
+            name: req.file.originalname,
+            size: req.file.size,
+            isDirectory: 'false',
+            parentPath: null,
+            extension,
+            content: fileContent,
+            redactedPreview: redaction.preview,
+            language,
+            description: `${req.file.mimetype} file`,
+            tags: [req.file.mimetype.split('/')[0], extension.replace('.', '')],
+            complexity: analysis.complexity,
+            dependencies: analysis.dependencies || [],
+            originalHash: crypto.createHash('sha256').update(fileContent).digest('hex'),
+            currentHash: crypto.createHash('sha256').update(fileContent).digest('hex'),
+          });
+
+          rbac.setResourcePermissions(file.id, {
+            resourceId: file.id,
+            resourceType: 'file',
+            ownerId: requesterId,
+            permissions: new Map([[requesterId, 'owner']]),
+          });
+
+          processedFiles.push(file);
         }
-      } else {
-        // Single file processing (non-archive)
-        fileCount = 1;
-        const fileContent = req.file.buffer.toString('utf-8');
-        const extension = path.extname(req.file.originalname);
-        const language = detectLanguage(extension);
-        const analysis = analyzeContent(fileContent, language);
 
-        const file = await storage.createFile({
-          archiveId: archive.id,
-          path: req.file.originalname,
-          name: req.file.originalname,
-          size: req.file.size,
-          isDirectory: 'false',
-          parentPath: null,
-          extension,
-          content: fileContent,
-          language,
-          description: `${req.file.mimetype} file`,
-          tags: [req.file.mimetype.split('/')[0], extension.replace('.', '')],
-          complexity: analysis.complexity,
-          dependencies: analysis.dependencies || [],
-          originalHash: crypto.createHash('sha256').update(fileContent).digest('hex'),
-          currentHash: crypto.createHash('sha256').update(fileContent).digest('hex'),
+        const updatedArchive = await storage.updateArchive(archive.id, {
+          fileCount: processedFiles.length,
         });
-        processedFiles.push(file);
-      }
 
-      res.json({ archive, fileCount: processedFiles.length });
-    } catch (_error) {
-      console.error('Upload error:', _error);
-      res.status(500).json({ message: 'Failed to process archive' });
+        const finalArchive = updatedArchive || archive;
+        await observer.trackUpload(finalArchive.id, finalArchive.name, processedFiles.length);
+
+        res.json({ archive: finalArchive, fileCount: processedFiles.length });
+      } catch (_error) {
+        console.error('Upload error:', _error);
+        res.status(500).json({ message: 'Failed to process archive' });
+      }
     }
-  });
+  );
 
   // Get all archives
   app.get('/api/v1/archives', async (req, res) => {
@@ -733,54 +828,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get archive files with filtering
-  app.get('/api/v1/archives/:id/files', async (req, res) => {
-    try {
-      const { language, tag, search, complexity } = req.query;
-      let files = await storage.getFilesByArchiveId(req.params.id);
+  app.get(
+    '/api/v1/archives/:id/files',
+    authenticateRequest,
+    requirePermission('read', 'archive'),
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        const { language, tag, search, complexity } = req.query;
+        let files = await storage.getFilesByArchiveId(req.params.id);
 
-      // Apply filters
-      if (language) {
-        files = files.filter(f => f.language === language);
-      }
-      if (tag) {
-        files = files.filter(f => f.tags?.includes(tag as string));
-      }
-      if (complexity) {
-        files = files.filter(f => f.complexity === complexity);
-      }
-      if (search) {
-        const searchLower = (search as string).toLowerCase();
-        files = files.filter(
-          f =>
-            f.name.toLowerCase().includes(searchLower) ||
-            f.path.toLowerCase().includes(searchLower) ||
-            f.description?.toLowerCase().includes(searchLower)
-        );
-      }
+        // Apply filters
+        if (language) {
+          files = files.filter(f => f.language === language);
+        }
+        if (tag) {
+          files = files.filter(f => f.tags?.includes(tag as string));
+        }
+        if (complexity) {
+          files = files.filter(f => f.complexity === complexity);
+        }
+        if (search) {
+          const searchLower = (search as string).toLowerCase();
+          files = files.filter(
+            f =>
+              f.name.toLowerCase().includes(searchLower) ||
+              f.path.toLowerCase().includes(searchLower) ||
+              f.description?.toLowerCase().includes(searchLower)
+          );
+        }
 
-      res.json({
-        success: true,
-        data: files,
-        meta: {
-          total: files.length,
-          filters: { language, tag, complexity, search },
-        },
-      });
-    } catch (_error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch files',
-      });
+        res.json({
+          success: true,
+          data: files.map(file => ({ ...file, content: file.redactedPreview })), // lists return previews only
+          meta: {
+            total: files.length,
+            filters: { language, tag, complexity, search },
+          },
+        });
+      } catch (_error) {
+        res.status(500).json({
+          success: false,
+          error: 'Failed to fetch files',
+        });
+      }
     }
-  });
+  );
 
   // Export archive analysis as JSON
-  app.get('/api/v1/archives/:id/export', async (req, res) => {
-    try {
-      const archive = await storage.getArchive(req.params.id);
-      if (!archive) {
-        return res.status(404).json({
-          success: false,
+  app.get(
+    '/api/v1/archives/:id/export',
+    authenticateRequest,
+    requirePermission('export'),
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        const archive = await storage.getArchive(req.params.id);
+        if (!archive) {
+          return res.status(404).json({
+            success: false,
           error: 'Archive not found',
         });
       }
@@ -838,58 +942,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       res.setHeader('Content-Type', 'application/json');
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${archive.name.replace('.zip', '')}-zipwizard-export.json"`
-      );
-      res.json(exportData);
-    } catch (_error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to export archive',
-      });
+          res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="${archive.name.replace('.zip', '')}-zipwizard-export.json"`
+          );
+          res.json(exportData);
+        } catch (_error) {
+          res.status(500).json({
+            success: false,
+            error: 'Failed to export archive',
+          });
+        }
+      }
     }
-  });
+  );
 
   // Get specific file
-  app.get('/api/v1/files/:id', async (req, res) => {
-    try {
-      const file = await storage.getFile(req.params.id);
-      if (!file) {
-        return res.status(404).json({
+  app.get(
+    '/api/v1/files/:id',
+    authenticateRequest,
+    requirePermission('read'),
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        const file = await storage.getFile(req.params.id);
+        if (!file) {
+          return res.status(404).json({
+            success: false,
+            error: 'File not found',
+          });
+        }
+
+        const includeFullContent = req.query.includeContent === 'true';
+        const redactedResponse = {
+          ...file,
+          content: file.redactedPreview,
+        };
+
+        res.json({
+          success: true,
+          data: includeFullContent ? file : redactedResponse,
+          privacy: includeFullContent ? 'full' : 'redacted-preview',
+        });
+      } catch (_error) {
+        res.status(500).json({
           success: false,
-          error: 'File not found',
+          error: 'Failed to fetch file',
         });
       }
-      res.json({
-        success: true,
-        data: file,
-      });
-    } catch (_error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch file',
-      });
     }
-  });
+  );
 
   // Delete archive
-  app.delete('/api/v1/archives/:id', async (req, res) => {
-    try {
-      await storage.deleteArchive(req.params.id);
-      res.json({
-        success: true,
-        message: 'Archive deleted successfully',
-      });
-    } catch (_error) {
-      console.error('Delete archive error:', _error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to delete archive',
-        details: _error instanceof Error ? _error.message : 'Unknown error',
-      });
+  app.delete(
+    '/api/v1/archives/:id',
+    authenticateRequest,
+    requirePermission('delete'),
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        await storage.deleteArchive(req.params.id);
+        res.json({
+          success: true,
+          message: 'Archive deleted successfully',
+        });
+      } catch (_error) {
+        console.error('Delete archive error:', _error);
+        await auditLog.log('critical', 'modification', 'Archive delete failed', {
+          userId: req.user?.id,
+          resource: 'archive',
+          resourceId: req.params.id,
+          details: { message: _error instanceof Error ? _error.message : 'Unknown error' },
+        });
+        res.status(500).json({
+          success: false,
+          error: 'Failed to delete archive',
+          details: _error instanceof Error ? _error.message : 'Unknown error',
+        });
+      }
     }
-  });
+  );
 
   // Get observer events
   app.get('/api/v1/observer/events', async (req, res) => {

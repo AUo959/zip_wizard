@@ -41,6 +41,7 @@ export const files = pgTable('files', {
   extension: text('extension'),
   size: integer('size').notNull(),
   content: text('content'),
+  redactedPreview: text('redacted_preview'),
   isDirectory: text('is_directory').notNull().default('false'),
   parentPath: text('parent_path'),
   language: text('language'),
