@@ -127,9 +127,21 @@ export function PatternRecognitionEngine({
         confidence: 91,
         structure: {
           folders: [
-            { name: 'Core Components', purpose: 'Main application components', suggestedFiles: patterns[0].files.slice(0, 5) },
-            { name: 'Business Logic', purpose: 'Business rules and domain logic', suggestedFiles: patterns[1].files.slice(0, 4) },
-            { name: 'Utilities', purpose: 'Helper functions and utilities', suggestedFiles: patterns[2].files.slice(0, 3) },
+            {
+              name: 'Core Components',
+              purpose: 'Main application components',
+              suggestedFiles: patterns[0].files.slice(0, 5),
+            },
+            {
+              name: 'Business Logic',
+              purpose: 'Business rules and domain logic',
+              suggestedFiles: patterns[1].files.slice(0, 4),
+            },
+            {
+              name: 'Utilities',
+              purpose: 'Helper functions and utilities',
+              suggestedFiles: patterns[2].files.slice(0, 3),
+            },
           ],
           rationale: 'Hierarchical organization improves code discoverability and maintainability',
         },
@@ -145,9 +157,21 @@ export function PatternRecognitionEngine({
         confidence: 87,
         structure: {
           folders: [
-            { name: 'Data Layer', purpose: 'Data access and models', suggestedFiles: patterns[1].files.slice(0, 4) },
-            { name: 'Interface Layer', purpose: 'UI components and interfaces', suggestedFiles: patterns[0].files.slice(0, 6) },
-            { name: 'Service Layer', purpose: 'Business services', suggestedFiles: patterns[2].files.slice(0, 3) },
+            {
+              name: 'Data Layer',
+              purpose: 'Data access and models',
+              suggestedFiles: patterns[1].files.slice(0, 4),
+            },
+            {
+              name: 'Interface Layer',
+              purpose: 'UI components and interfaces',
+              suggestedFiles: patterns[0].files.slice(0, 6),
+            },
+            {
+              name: 'Service Layer',
+              purpose: 'Business services',
+              suggestedFiles: patterns[2].files.slice(0, 3),
+            },
           ],
           rationale: 'Functional separation aligns with mental models and supports flow state',
         },
