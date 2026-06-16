@@ -810,6 +810,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fileCount: processedFiles.length,
         });
 
+        if (!updatedArchive) {
+          console.error('Failed to update archive fileCount', {
+            archiveId: archive.id,
+            expectedFileCount: processedFiles.length,
+          });
+        }
+
         const finalArchive = updatedArchive || archive;
         await observer.trackUpload(finalArchive.id, finalArchive.name, processedFiles.length);
 
