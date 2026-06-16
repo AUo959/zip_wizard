@@ -6,9 +6,6 @@ export const APP_CONFIG = {
     timeout: 30000,
     headers: {
       'Content-Type': 'application/json',
-      ...(import.meta.env.VITE_API_AUTH_TOKEN
-        ? { Authorization: `Bearer ${import.meta.env.VITE_API_AUTH_TOKEN}` }
-        : {}),
     },
   },
   features: {

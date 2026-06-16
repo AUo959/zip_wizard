@@ -63,4 +63,39 @@ describe('authenticateRequest', () => {
     expect(req.user).toEqual({ id: 'owner-1' });
     expect(next).toHaveBeenCalledOnce();
   });
+
+  it('rejects an invalid bearer token', () => {
+    process.env.API_AUTH_TOKEN = 'token-123';
+    const req = {
+      headers: {
+        authorization: 'Bearer token-abc',
+      },
+    } as unknown as AuthenticatedRequest;
+    const res = createResponse();
+    const next = vi.fn();
+
+    authenticateRequest(req, res as any, next);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Unauthorized' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('rejects malformed user anchors', () => {
+    process.env.API_AUTH_TOKEN = 'token-123';
+    const req = {
+      headers: {
+        authorization: 'Bearer token-123',
+        'x-zipwizard-user': 'owner 1',
+      },
+    } as unknown as AuthenticatedRequest;
+    const res = createResponse();
+    const next = vi.fn();
+
+    authenticateRequest(req, res as any, next);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid user anchor' });
+    expect(next).not.toHaveBeenCalled();
+  });
 });

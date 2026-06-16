@@ -1,10 +1,24 @@
 import type { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     roles?: string[];
   };
+}
+
+const USER_ANCHOR_PATTERN = /^[A-Za-z0-9:_@.-]{1,128}$/;
+
+function tokensMatch(providedToken: string | undefined, configuredToken: string): boolean {
+  if (!providedToken) {
+    return false;
+  }
+
+  const provided = Buffer.from(providedToken);
+  const configured = Buffer.from(configuredToken);
+
+  return provided.length === configured.length && crypto.timingSafeEqual(provided, configured);
 }
 
 /**
@@ -26,11 +40,18 @@ export function authenticateRequest(req: AuthenticatedRequest, res: Response, ne
     return res.status(503).json({ error: 'API authentication is not configured' });
   }
 
-  if (!bearerToken || bearerToken !== configuredToken) {
+  if (!tokensMatch(bearerToken, configuredToken)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const claimedUser = (req.headers['x-zipwizard-user'] as string) || 'T1_ANCHOR_SERVICE';
+  const claimedUser =
+    typeof req.headers['x-zipwizard-user'] === 'string'
+      ? req.headers['x-zipwizard-user']
+      : 'T1_ANCHOR_SERVICE';
+  if (!USER_ANCHOR_PATTERN.test(claimedUser)) {
+    return res.status(400).json({ error: 'Invalid user anchor' });
+  }
+
   req.user = {
     id: claimedUser,
   };

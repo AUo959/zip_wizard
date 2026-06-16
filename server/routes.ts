@@ -413,6 +413,11 @@ function sanitizeStoredContent(content: string): string {
   return cleanContent.length > 50000 ? `${cleanContent.substring(0, 50000)}...` : cleanContent;
 }
 
+function sanitizeDownloadName(name: string): string {
+  const baseName = path.basename(name).replace(/\.zip$/i, '');
+  return baseName.replace(/[^A-Za-z0-9._-]/g, '_') || 'archive';
+}
+
 async function readZipEntryBuffer(
   entry: JSZip.JSZipObject,
   relativePath: string
@@ -864,7 +869,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         error: 'Failed to fetch archives',
-        message: _error instanceof Error ? _error.message : 'Unknown error',
       });
     }
   });
@@ -1018,7 +1022,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.setHeader('Content-Type', 'application/json');
         res.setHeader(
           'Content-Disposition',
-          `attachment; filename="${archive.name.replace('.zip', '')}-zipwizard-export.json"`
+          `attachment; filename="${sanitizeDownloadName(archive.name)}-zipwizard-export.json"`
         );
         res.json(exportData);
       } catch (_error) {
@@ -1084,12 +1088,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId: req.user?.id,
           resource: 'archive',
           resourceId: req.params.id,
-          details: { message: _error instanceof Error ? _error.message : 'Unknown error' },
+          details: { errorName: _error instanceof Error ? _error.name : 'UnknownError' },
         });
         res.status(500).json({
           success: false,
           error: 'Failed to delete archive',
-          details: _error instanceof Error ? _error.message : 'Unknown error',
         });
       }
     }

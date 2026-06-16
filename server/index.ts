@@ -42,22 +42,23 @@ app.use((req, res, next) => {
 
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || 'Internal Server Error';
+    const responseMessage =
+      status >= 500 ? 'Internal Server Error' : err.message || 'Request failed';
 
     auditLog
-      .log('critical', 'system', message, {
+      .log('critical', 'system', 'HTTP request failed', {
         userId: (req as any).user?.id,
         resource: 'http',
         details: {
           status,
           path: req.path,
           method: req.method,
-          stack: err?.stack,
+          errorName: err?.name,
         },
       })
       .catch(console.error);
 
-    res.status(status).json({ message });
+    res.status(status).json({ message: responseMessage });
   });
 
   // importantly only setup vite in development and after
