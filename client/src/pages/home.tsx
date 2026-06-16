@@ -84,7 +84,7 @@ import { type ViewType, ALL_VIEWS, VIEW_METADATA } from '@shared/views';
 import { EnhancedViewTabs } from '@/components/enhanced-view-tabs';
 import { useArchiveNavigation } from '@/hooks/useArchiveNavigation';
 import { useWorkbenchState } from '@/hooks/useWorkbenchState';
-import { usePrivacyControls } from '@/hooks/usePrivacyControls';
+import { type PrivacySettings, usePrivacyControls } from '@/hooks/usePrivacyControls';
 
 /**
  * Convert database File to FileNode format
@@ -136,8 +136,11 @@ export default function Home() {
     handleTabClose,
   } = useWorkbenchState();
 
-  const { privacyShieldActive, handlePrivacyToggle, handlePrivacySettingsChange } =
-    usePrivacyControls(true);
+  const {
+    privacyShieldActive,
+    handlePrivacyToggle,
+    handlePrivacySettingsChange: updatePrivacySettings,
+  } = usePrivacyControls(true);
 
   // Badge state for enhanced navigation
   const [vulnerabilityCount, _setVulnerabilityCount] = useState(0);
@@ -199,9 +202,13 @@ export default function Home() {
 
   const handleFileSelect = useCallback(
     async (file: File) => {
-      if (!privacyShieldActive) {
+      const fullContentConsent = !privacyShieldActive;
+      if (fullContentConsent) {
         try {
-          const response = await apiRequest('GET', `files/${file.id}?includeContent=true`);
+          const response = await apiRequest(
+            'GET',
+            `files/${file.id}?includeContent=true&fullContentConsent=true`
+          );
           const payload = await response.json();
           if (payload?.data) {
             workbenchHandleFileSelect(payload.data);
@@ -295,17 +302,31 @@ export default function Home() {
     [privacyShieldActive]
   );
 
-  const _handleArchiveProcess = useCallback((archiveId: string, operation: string, params?: any) => {
-    console.log('Archive operation:', operation, 'on archive:', archiveId, 'with params:', params);
-  }, []);
+  const _handleArchiveProcess = useCallback(
+    (archiveId: string, operation: string, params?: any) => {
+      console.log(
+        'Archive operation:',
+        operation,
+        'on archive:',
+        archiveId,
+        'with params:',
+        params
+      );
+    },
+    []
+  );
 
   const _handleBatchOperation = useCallback((archiveIds: string[], operation: string) => {
     console.log('Batch operation:', operation, 'on archives:', archiveIds);
   }, []);
 
-  const handlePrivacySettingsChange = useCallback((settings: any) => {
-    console.log('Privacy settings changed:', settings);
-  }, []);
+  const handlePrivacySettingsChange = useCallback(
+    (settings: PrivacySettings) => {
+      updatePrivacySettings(settings);
+      console.log('Privacy settings changed:', settings);
+    },
+    [updatePrivacySettings]
+  );
 
   const handleLanguageChange = useCallback((language: string) => {
     setCurrentLanguage(language);
@@ -561,15 +582,15 @@ export default function Home() {
                 ← Back to Files
               </Button>
             </div>
-              <div className="p-6">
-                <PrivacyShield
-                  isActive={privacyShieldActive}
-                  onToggle={handlePrivacyToggle}
-                  onSettingsChange={handlePrivacySettingsChange}
-                />
-              </div>
+            <div className="p-6">
+              <PrivacyShield
+                isActive={privacyShieldActive}
+                onToggle={handlePrivacyToggle}
+                onSettingsChange={handlePrivacySettingsChange}
+              />
             </div>
-          );
+          </div>
+        );
 
       case 'multilingual':
         return (

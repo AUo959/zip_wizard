@@ -1,7 +1,9 @@
 import type { CorsOptions } from 'cors';
 
 function parseOrigins(raw?: string): string[] {
-  if (!raw) return ['http://localhost:5000'];
+  if (!raw) {
+    return process.env.NODE_ENV === 'production' ? [] : ['http://localhost:5000'];
+  }
   return raw
     .split(',')
     .map(origin => origin.trim())
@@ -14,7 +16,12 @@ export function buildCorsOptions(): CorsOptions {
 
   return {
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
+      if (!origin) {
+        if (process.env.CORS_ALLOW_NO_ORIGIN === 'true') {
+          return callback(null, true);
+        }
+        return callback(new Error('Origin required by CORS policy'));
+      }
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }

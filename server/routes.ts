@@ -402,6 +402,54 @@ const ARCHIVE_LIMITS = {
   maxEntryBytes: parseInt(process.env.MAX_ARCHIVE_ENTRY_BYTES || `${5 * 1024 * 1024}`, 10), // 5MB default per entry
 };
 
+type SkippedArchiveEntry = {
+  path: string;
+  reason: 'entry-limit' | 'entry-size-limit' | 'stream-error';
+  bytesRead?: number;
+};
+
+function sanitizeStoredContent(content: string): string {
+  const cleanContent = content.replace(/\x00/g, '');
+  return cleanContent.length > 50000 ? `${cleanContent.substring(0, 50000)}...` : cleanContent;
+}
+
+async function readZipEntryBuffer(
+  entry: JSZip.JSZipObject,
+  relativePath: string
+): Promise<{ buffer: Buffer | null; skipped?: SkippedArchiveEntry }> {
+  let bytesRead = 0;
+  const chunks: Buffer[] = [];
+  const stream = entry.nodeStream() as NodeJS.ReadableStream & { destroy: () => void };
+
+  return new Promise(resolve => {
+    let settled = false;
+
+    const settle = (buffer: Buffer | null, skipped?: SkippedArchiveEntry) => {
+      if (settled) return;
+      settled = true;
+      stream.removeAllListeners();
+      resolve({ buffer, skipped });
+    };
+
+    stream.on('data', (chunk: Buffer) => {
+      bytesRead += chunk.length;
+      if (bytesRead > ARCHIVE_LIMITS.maxEntryBytes) {
+        stream.destroy();
+        settle(null, { path: relativePath, reason: 'entry-size-limit', bytesRead });
+        return;
+      }
+      chunks.push(chunk);
+    });
+
+    stream.once('error', error => {
+      console.error(`Failed to read zip entry ${relativePath}:`, error);
+      settle(null, { path: relativePath, reason: 'stream-error', bytesRead });
+    });
+
+    stream.once('end', () => settle(Buffer.concat(chunks)));
+  });
+}
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -411,12 +459,13 @@ const upload = multer({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Apply CORS middleware
+  const corsMiddleware = cors(API_CONFIG.cors);
   app.use((req: Request, res: Response, next: NextFunction) => {
-    cors(API_CONFIG.cors)(req, res, err => {
+    corsMiddleware(req, res, err => {
       if (err) {
         return res.status(403).json({ error: err.message });
       }
-      next();
+      return next();
     });
   });
 
@@ -507,6 +556,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     authenticateRequest,
     upload.single('archive'),
     async (req: AuthenticatedRequest, res) => {
+      let createdArchiveId: string | undefined;
+
       try {
         if (!req.file) {
           return res.status(400).json({ message: 'No file uploaded' });
@@ -528,6 +579,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fileType.includes('gzip') ||
           req.file.originalname.includes('.tar.');
 
+        const isZipArchive = isArchive && req.file.originalname.endsWith('.zip');
+        if (!isZipArchive && req.file.size > ARCHIVE_LIMITS.maxEntryBytes) {
+          return res.status(413).json({
+            message: 'File exceeds configured per-entry size limit',
+            limitBytes: ARCHIVE_LIMITS.maxEntryBytes,
+          });
+        }
+
         // Create archive record with enhanced metadata
         const symbolicChain = `T1_CHAIN::ZIPWizard::v2.2.6b::${req.body.from || 'USER'}::${req.body.operation || 'Upload'}`;
         const threadTag = `Thread_${req.body.tag || 'Upload'}_${Date.now()}`;
@@ -543,6 +602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           replayable: true,
           monitoringWindow: parseInt(req.body?.monitoringWindow) || 48,
         });
+        createdArchiveId = archive.id;
 
         rbac.setResourcePermissions(archive.id, {
           resourceId: archive.id,
@@ -552,6 +612,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         const processedFiles: File[] = [];
+        const skippedEntries: SkippedArchiveEntry[] = [];
+        let archiveTruncated = false;
 
         const persistDirectory = async (relativePath: string) => {
           const dirFile = await storage.createFile({
@@ -633,11 +695,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const redaction = redactContent(content);
           const contentHash = crypto.createHash('sha256').update(content).digest('hex');
 
-          let cleanContent = content.replace(/\x00/g, '');
-          if (cleanContent.length > 50000) {
-            cleanContent = cleanContent.substring(0, 50000) + '...';
-          }
-
           const file = await storage.createFile({
             archiveId: archive.id,
             path: relativePath,
@@ -646,7 +703,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             isDirectory: 'false',
             parentPath,
             extension,
-            content: cleanContent,
+            content: sanitizeStoredContent(content),
             redactedPreview: redaction.preview,
             language: analysis.language,
             description: analysis.description,
@@ -673,12 +730,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           processedFiles.push(file);
         };
 
-        if (isArchive && req.file.originalname.endsWith('.zip')) {
+        if (isZipArchive) {
           const zip = await JSZip.loadAsync(req.file.buffer, { createFolders: true });
 
           for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
             if (processedFiles.length >= ARCHIVE_LIMITS.maxEntries) {
-              break;
+              archiveTruncated = true;
+              skippedEntries.push({ path: relativePath, reason: 'entry-limit' });
+              continue;
             }
 
             const entry = zipEntry as JSZip.JSZipObject;
@@ -688,29 +747,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               continue;
             }
 
-            let bytesRead = 0;
-            const chunks: Buffer[] = [];
-            let skipped = false;
-
-            const stream = entry.nodeStream();
-
-            const fileBuffer: Buffer | null = await new Promise(resolve => {
-              stream.on('data', (chunk: Buffer) => {
-                bytesRead += chunk.length;
-                if (bytesRead > ARCHIVE_LIMITS.maxEntryBytes) {
-                  skipped = true;
-                  stream.destroy();
-                  return;
-                }
-                chunks.push(chunk);
-              });
-
-              stream.on('error', () => resolve(null));
-              stream.on('close', () => resolve(skipped ? null : Buffer.concat(chunks)));
-              stream.on('end', () => resolve(Buffer.concat(chunks)));
-            });
-
-            if (skipped || !fileBuffer) {
+            const { buffer: fileBuffer, skipped } = await readZipEntryBuffer(entry, relativePath);
+            if (skipped) {
+              skippedEntries.push(skipped);
+              continue;
+            }
+            if (!fileBuffer) {
               continue;
             }
 
@@ -743,7 +785,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             isDirectory: 'false',
             parentPath: null,
             extension,
-            content: fileContent,
+            content: sanitizeStoredContent(fileContent),
             redactedPreview: redaction.preview,
             language,
             description: `${req.file.mimetype} file`,
@@ -771,16 +813,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const finalArchive = updatedArchive || archive;
         await observer.trackUpload(finalArchive.id, finalArchive.name, processedFiles.length);
 
-        res.json({ archive: finalArchive, fileCount: processedFiles.length });
+        if (archiveTruncated) {
+          res.setHeader('X-ZipWizard-Archive-Truncated', 'true');
+        }
+        if (skippedEntries.length > 0) {
+          res.setHeader('X-ZipWizard-Skipped-Entries', String(skippedEntries.length));
+        }
+
+        res.json({
+          archive: finalArchive,
+          fileCount: processedFiles.length,
+          truncated: archiveTruncated,
+          skippedEntries,
+          limits: ARCHIVE_LIMITS,
+        });
       } catch (_error) {
         console.error('Upload error:', _error);
+        if (createdArchiveId) {
+          try {
+            await storage.deleteArchive(createdArchiveId);
+          } catch (cleanupError) {
+            console.error('Failed to clean up archive after upload error:', cleanupError);
+          }
+        }
         res.status(500).json({ message: 'Failed to process archive' });
       }
     }
   );
 
   // Get all archives
-  app.get('/api/v1/archives', async (req, res) => {
+  app.get('/api/v1/archives', authenticateRequest, async (_req: AuthenticatedRequest, res) => {
     try {
       const archives = await storage.getAllArchives();
       res.json({
@@ -801,31 +863,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get specific archive
-  app.get('/api/v1/archives/:id', async (req, res) => {
-    try {
-      const archive = await storage.getArchive(req.params.id);
-      if (!archive) {
-        return res.status(404).json({
+  app.get(
+    '/api/v1/archives/:id',
+    authenticateRequest,
+    requirePermission('read', 'archive'),
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        const archive = await storage.getArchive(req.params.id);
+        if (!archive) {
+          return res.status(404).json({
+            success: false,
+            error: 'Archive not found',
+          });
+        }
+        const files = await storage.getFilesByArchiveId(req.params.id);
+        res.json({
+          success: true,
+          data: {
+            ...archive,
+            fileCount: files.length,
+            analysis: analyzeFiles(files),
+          },
+        });
+      } catch (_error) {
+        res.status(500).json({
           success: false,
-          error: 'Archive not found',
+          error: 'Failed to fetch archive',
         });
       }
-      const files = await storage.getFilesByArchiveId(req.params.id);
-      res.json({
-        success: true,
-        data: {
-          ...archive,
-          fileCount: files.length,
-          analysis: analyzeFiles(files),
-        },
-      });
-    } catch (_error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch archive',
-      });
     }
-  });
+  );
 
   // Get archive files with filtering
   app.get(
@@ -885,74 +952,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!archive) {
           return res.status(404).json({
             success: false,
-          error: 'Archive not found',
-        });
-      }
-
-      const files = await storage.getFilesByArchiveId(req.params.id);
-      const analysis = analyzeFiles(files);
-      const observerEvents = await storage.getObserverEvents(req.params.id, 1000);
-
-      const exportData = {
-        metadata: {
-          archiveName: archive.name,
-          exportedAt: new Date().toISOString(),
-          version: API_CONFIG.version,
-          zipWizardVersion: 'v2.2.6b',
-          totalFiles: files.length,
-          analysisComplete: true,
-        },
-        archive: {
-          ...archive,
-          quantumFeatures: {
-            symbolicChain: archive.symbolicChain,
-            threadTag: archive.threadTag,
-            ethicsLock: archive.ethicsLock,
-            trustAnchor: archive.trustAnchor,
-            replayable: archive.replayable,
-          },
-        },
-        analysis: {
-          ...analysis,
-          aiOptimizedSummary: {
-            codeFiles: files.filter(f => f.language && f.language !== 'Text').length,
-            languages: Object.keys(analysis.languages),
-            complexityDistribution: {
-              high: files.filter(f => f.complexity === 'High').length,
-              medium: files.filter(f => f.complexity === 'Medium').length,
-              low: files.filter(f => f.complexity === 'Low').length,
-            },
-            keyInsights: extractKeyInsights(files),
-          },
-        },
-        fileStructure: buildExportFileStructure(files),
-        observerEvents: observerEvents.map(e => ({
-          type: e.type,
-          target: e.target,
-          timestamp: e.timestamp,
-          metadata: e.metadata,
-        })),
-        exportedAt: new Date().toISOString(),
-        aiInstructions: {
-          note: 'This archive has been processed by ZipWizard v2.2.6b quantum analysis engine',
-          recommendations:
-            'Focus on files with High complexity for technical review, JavaScript modules contain encryption logic',
-          explorationPaths: generateExplorationPaths(files),
-        },
-      };
-
-      res.setHeader('Content-Type', 'application/json');
-          res.setHeader(
-            'Content-Disposition',
-            `attachment; filename="${archive.name.replace('.zip', '')}-zipwizard-export.json"`
-          );
-          res.json(exportData);
-        } catch (_error) {
-          res.status(500).json({
-            success: false,
-            error: 'Failed to export archive',
+            error: 'Archive not found',
           });
         }
+
+        const files = await storage.getFilesByArchiveId(req.params.id);
+        const analysis = analyzeFiles(files);
+        const observerEvents = await storage.getObserverEvents(req.params.id, 1000);
+
+        const exportData = {
+          metadata: {
+            archiveName: archive.name,
+            exportedAt: new Date().toISOString(),
+            version: API_CONFIG.version,
+            zipWizardVersion: 'v2.2.6b',
+            totalFiles: files.length,
+            analysisComplete: true,
+          },
+          archive: {
+            ...archive,
+            quantumFeatures: {
+              symbolicChain: archive.symbolicChain,
+              threadTag: archive.threadTag,
+              ethicsLock: archive.ethicsLock,
+              trustAnchor: archive.trustAnchor,
+              replayable: archive.replayable,
+            },
+          },
+          analysis: {
+            ...analysis,
+            aiOptimizedSummary: {
+              codeFiles: files.filter(f => f.language && f.language !== 'Text').length,
+              languages: Object.keys(analysis.languages),
+              complexityDistribution: {
+                high: files.filter(f => f.complexity === 'High').length,
+                medium: files.filter(f => f.complexity === 'Medium').length,
+                low: files.filter(f => f.complexity === 'Low').length,
+              },
+              keyInsights: extractKeyInsights(files),
+            },
+          },
+          fileStructure: buildExportFileStructure(files),
+          observerEvents: observerEvents.map(e => ({
+            type: e.type,
+            target: e.target,
+            timestamp: e.timestamp,
+            metadata: e.metadata,
+          })),
+          exportedAt: new Date().toISOString(),
+          aiInstructions: {
+            note: 'This archive has been processed by ZipWizard v2.2.6b quantum analysis engine',
+            recommendations:
+              'Focus on files with High complexity for technical review, JavaScript modules contain encryption logic',
+            explorationPaths: generateExplorationPaths(files),
+          },
+        };
+
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="${archive.name.replace('.zip', '')}-zipwizard-export.json"`
+        );
+        res.json(exportData);
+      } catch (_error) {
+        res.status(500).json({
+          success: false,
+          error: 'Failed to export archive',
+        });
       }
     }
   );
@@ -972,7 +1038,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        const includeFullContent = req.query.includeContent === 'true';
+        const includeFullContent =
+          req.query.includeContent === 'true' && req.query.fullContentConsent === 'true';
         const redactedResponse = {
           ...file,
           content: file.redactedPreview,

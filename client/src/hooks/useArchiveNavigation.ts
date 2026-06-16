@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { Archive as ArchiveType, File } from '@shared/schema';
 import { convertSchemaArchive } from '@/lib/archive-converter';
+import { apiRequest } from '@/lib/queryClient';
 
 export function useArchiveNavigation(showUpload: boolean) {
   const [selectedArchive, setSelectedArchive] = useState<ArchiveType | null>(null);
@@ -18,8 +19,15 @@ export function useArchiveNavigation(showUpload: boolean) {
   }, [archives, selectedArchive]);
 
   const { data: files = [] } = useQuery<File[]>({
-    queryKey: [`archives/${selectedArchive?.id}/files?redacted=true`],
+    queryKey: ['archive-files', selectedArchive?.id, { redacted: true }],
     enabled: !!selectedArchive,
+    queryFn: async () => {
+      if (!selectedArchive) return [];
+
+      const response = await apiRequest('GET', `archives/${selectedArchive.id}/files`);
+      const payload = await response.json();
+      return payload?.data ?? [];
+    },
   });
 
   const convertedArchive = selectedArchive ? convertSchemaArchive(selectedArchive) : undefined;

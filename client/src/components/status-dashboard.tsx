@@ -17,6 +17,21 @@ interface CriticalEvent {
 }
 
 interface StatusData {
+  symbolicChain?: string;
+  threadTag?: string;
+  ethicsLock?: string;
+  trustAnchor?: string;
+  deploymentStatus?: {
+    guiHabitat: boolean;
+    glyphcardExport: boolean;
+    zipBundle: string;
+    monitoring: string;
+    acknowledgment: boolean;
+  };
+  replayState?: {
+    replayable: boolean;
+    continuityAnchors: string;
+  };
   health?: {
     score: number;
     status: 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
@@ -58,12 +73,21 @@ export function StatusDashboard({ archiveId }: StatusDashboardProps) {
   if (!response?.data) return null;
 
   const {
-    symbolicChain,
-    threadTag,
-    ethicsLock,
-    trustAnchor,
-    deploymentStatus,
-    replayState,
+    symbolicChain = 'Unavailable',
+    threadTag = 'Unavailable',
+    ethicsLock = 'Unavailable',
+    trustAnchor = 'Unavailable',
+    deploymentStatus = {
+      guiHabitat: false,
+      glyphcardExport: false,
+      zipBundle: 'Unavailable',
+      monitoring: 'Inactive',
+      acknowledgment: false,
+    },
+    replayState = {
+      replayable: response.data.recovery?.replayable ?? false,
+      continuityAnchors: response.data.recovery?.continuityAnchors ?? 'Unavailable',
+    },
     activitySummary,
   } = response.data;
 

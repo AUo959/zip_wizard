@@ -305,11 +305,15 @@ export const rbac = new RBACService();
 /**
  * Middleware to check RBAC permissions
  */
-export function requirePermission(permission: Permission, resourceTypeOverride?: 'file' | 'archive') {
+export function requirePermission(
+  permission: Permission,
+  resourceTypeOverride?: 'file' | 'archive'
+) {
   return async (req: any, res: any, next: any) => {
     const resourceId = req.params.fileId || req.params.id || req.params.archiveId;
     const resourceType =
-      resourceTypeOverride || (req.params.fileId || req.path.includes('/files/') ? 'file' : 'archive');
+      resourceTypeOverride ||
+      (req.params.fileId || req.path.includes('/files/') ? 'file' : 'archive');
 
     if (!resourceId) {
       return res.status(400).json({
@@ -326,12 +330,10 @@ export function requirePermission(permission: Permission, resourceTypeOverride?:
     };
 
     try {
-      if (!rbac.getResourcePermissions(resourceId)) {
-        rbac.setResourcePermissions(resourceId, {
-          resourceId,
-          resourceType,
-          ownerId: userId,
-          permissions: new Map([[userId, 'owner']]),
+      const permissions = rbac.getResourcePermissions(resourceId);
+      if (!permissions || permissions.resourceType !== resourceType) {
+        return res.status(404).json({
+          error: 'Resource authorization context not found',
         });
       }
       await rbac.requireAccess(resourceId, resourceType, userId, permission, context);

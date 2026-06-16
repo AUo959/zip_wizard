@@ -18,8 +18,9 @@ export function authenticateRequest(req: AuthenticatedRequest, res: Response, ne
   const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
 
   if (!configuredToken) {
-    if (process.env.NODE_ENV !== 'production') {
-      req.user = { id: 'DEV_ANCHOR' };
+    const devBypassUserId = process.env.DEV_AUTH_BYPASS_USER_ID;
+    if (process.env.NODE_ENV !== 'production' && devBypassUserId) {
+      req.user = { id: devBypassUserId };
       return next();
     }
     return res.status(503).json({ error: 'API authentication is not configured' });
