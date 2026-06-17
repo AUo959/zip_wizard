@@ -35,7 +35,8 @@ export function authenticateRequest(req: AuthenticatedRequest, res: Response, ne
     const devBypassUserId = process.env.DEV_AUTH_BYPASS_USER_ID;
     if (process.env.NODE_ENV !== 'production' && devBypassUserId) {
       req.user = { id: devBypassUserId };
-      return next();
+      next();
+      return;
     }
     return res.status(503).json({ error: 'API authentication is not configured' });
   }

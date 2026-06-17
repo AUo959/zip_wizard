@@ -3,6 +3,23 @@ import { registerRoutes } from './routes';
 import { setupVite, serveStatic, log } from './vite';
 import { auditLog } from './audit-log';
 
+type HttpError = {
+  status?: number;
+  statusCode?: number;
+  message?: string;
+  name?: string;
+};
+
+type RequestWithUser = Request & {
+  user?: {
+    id?: string;
+  };
+};
+
+function normalizeHttpError(error: unknown): HttpError {
+  return typeof error === 'object' && error !== null ? (error as HttpError) : {};
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -10,7 +27,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+  let capturedJsonResponse: unknown;
 
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
@@ -40,23 +57,27 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
+  app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
+    void next;
+    const httpError = normalizeHttpError(err);
+    const status = httpError.status ?? httpError.statusCode ?? 500;
     const responseMessage =
-      status >= 500 ? 'Internal Server Error' : err.message || 'Request failed';
+      status >= 500 ? 'Internal Server Error' : httpError.message || 'Request failed';
 
     auditLog
       .log('critical', 'system', 'HTTP request failed', {
-        userId: (req as any).user?.id,
+        userId: (req as RequestWithUser).user?.id,
         resource: 'http',
         details: {
           status,
           path: req.path,
           method: req.method,
-          errorName: err?.name,
+          errorName: httpError.name,
         },
       })
-      .catch(console.error);
+      .catch((logError: unknown) => {
+        console.error('Audit log write failed:', logError);
+      });
 
     res.status(status).json({ message: responseMessage });
   });

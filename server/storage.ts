@@ -20,6 +20,7 @@ import { auditLog } from './audit-log';
 export interface IStorage {
   // Archive operations
   createArchive(archive: InsertArchive): Promise<Archive>;
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-redundant-type-constituents
   updateArchive(id: string, updates: Partial<Archive>): Promise<Archive | undefined>;
   getArchive(id: string): Promise<Archive | undefined>;
   getAllArchives(): Promise<Archive[]>;
@@ -52,9 +53,10 @@ export class DatabaseStorage implements IStorage {
     return archive;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   async updateArchive(id: string, updates: Partial<Archive>): Promise<Archive | undefined> {
     const [archive] = await db.update(archives).set(updates).where(eq(archives.id, id)).returning();
-    return archive || undefined;
+    return archive ?? undefined;
   }
 
   async getArchive(id: string): Promise<Archive | undefined> {

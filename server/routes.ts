@@ -398,8 +398,8 @@ const API_CONFIG: ApiConfig = {
 };
 
 const ARCHIVE_LIMITS = {
-  maxEntries: parseInt(process.env.MAX_ARCHIVE_FILES || '512', 10),
-  maxEntryBytes: parseInt(process.env.MAX_ARCHIVE_ENTRY_BYTES || `${5 * 1024 * 1024}`, 10), // 5MB default per entry
+  maxEntries: parseInt(process.env.MAX_ARCHIVE_FILES ?? '512', 10),
+  maxEntryBytes: parseInt(process.env.MAX_ARCHIVE_ENTRY_BYTES ?? `${5 * 1024 * 1024}`, 10), // 5MB default per entry
 };
 
 type SkippedArchiveEntry = {
@@ -408,8 +408,20 @@ type SkippedArchiveEntry = {
   bytesRead?: number;
 };
 
+type AsyncRouteHandler = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => Promise<unknown>;
+
+function asyncHandler(handler: AsyncRouteHandler) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    void handler(req as AuthenticatedRequest, res, next).catch(next);
+  };
+}
+
 function sanitizeStoredContent(content: string): string {
-  const cleanContent = content.replace(/\x00/g, '');
+  const cleanContent = content.split(String.fromCharCode(0)).join('');
   return cleanContent.length > 50000 ? `${cleanContent.substring(0, 50000)}...` : cleanContent;
 }
 
@@ -451,7 +463,9 @@ async function readZipEntryBuffer(
       settle(null, { path: relativePath, reason: 'stream-error', bytesRead });
     });
 
-    stream.once('end', () => settle(Buffer.concat(chunks)));
+    stream.once('end', () => {
+      settle(Buffer.concat(chunks));
+    });
   });
 }
 
@@ -468,9 +482,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use((req: Request, res: Response, next: NextFunction) => {
     corsMiddleware(req, res, err => {
       if (err) {
-        return res.status(403).json({ error: err.message });
+        res.status(403).json({ error: err.message });
+        return;
       }
-      return next();
+      next();
     });
   });
 
@@ -560,7 +575,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     '/api/v1/archives',
     authenticateRequest,
     upload.single('archive'),
-    async (req: AuthenticatedRequest, res) => {
+    asyncHandler(async (req: AuthenticatedRequest, res) => {
       let createdArchiveId: string | undefined;
 
       try {
@@ -572,10 +587,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(413).json({ message: 'File exceeds configured size limit' });
         }
 
-        const requesterId = req.user?.id || 'anonymous';
+        const requesterId = req.user?.id ?? 'anonymous';
 
         // Detect file type
-        const fileType = req.file.mimetype || 'application/octet-stream';
+        const fileType = req.file.mimetype ?? 'application/octet-stream';
         const isArchive =
           fileType.includes('zip') ||
           fileType.includes('tar') ||
@@ -850,35 +865,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         res.status(500).json({ message: 'Failed to process archive' });
       }
-    }
+    })
   );
 
   // Get all archives
-  app.get('/api/v1/archives', authenticateRequest, async (_req: AuthenticatedRequest, res) => {
-    try {
-      const archives = await storage.getAllArchives();
-      res.json({
-        success: true,
-        data: archives,
-        meta: {
-          total: archives.length,
-          version: API_CONFIG.version,
-        },
-      });
-    } catch (_error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch archives',
-      });
-    }
-  });
+  app.get(
+    '/api/v1/archives',
+    authenticateRequest,
+    asyncHandler(async (_req, res) => {
+      try {
+        const archives = await storage.getAllArchives();
+        res.json({
+          success: true,
+          data: archives,
+          meta: {
+            total: archives.length,
+            version: API_CONFIG.version,
+          },
+        });
+      } catch (_error) {
+        res.status(500).json({
+          success: false,
+          error: 'Failed to fetch archives',
+        });
+      }
+    })
+  );
 
   // Get specific archive
   app.get(
     '/api/v1/archives/:id',
     authenticateRequest,
     requirePermission('read', 'archive'),
-    async (req: AuthenticatedRequest, res) => {
+    asyncHandler(async (req: AuthenticatedRequest, res) => {
       try {
         const archive = await storage.getArchive(req.params.id);
         if (!archive) {
@@ -902,7 +921,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error: 'Failed to fetch archive',
         });
       }
-    }
+    })
   );
 
   // Get archive files with filtering
@@ -910,7 +929,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     '/api/v1/archives/:id/files',
     authenticateRequest,
     requirePermission('read', 'archive'),
-    async (req: AuthenticatedRequest, res) => {
+    asyncHandler(async (req: AuthenticatedRequest, res) => {
       try {
         const { language, tag, search, complexity } = req.query;
         let files = await storage.getFilesByArchiveId(req.params.id);
@@ -949,7 +968,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error: 'Failed to fetch files',
         });
       }
-    }
+    })
   );
 
   // Export archive analysis as JSON
@@ -957,7 +976,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     '/api/v1/archives/:id/export',
     authenticateRequest,
     requirePermission('export'),
-    async (req: AuthenticatedRequest, res) => {
+    asyncHandler(async (req: AuthenticatedRequest, res) => {
       try {
         const archive = await storage.getArchive(req.params.id);
         if (!archive) {
@@ -1031,7 +1050,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error: 'Failed to export archive',
         });
       }
-    }
+    })
   );
 
   // Get specific file
@@ -1039,7 +1058,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     '/api/v1/files/:id',
     authenticateRequest,
     requirePermission('read'),
-    async (req: AuthenticatedRequest, res) => {
+    asyncHandler(async (req: AuthenticatedRequest, res) => {
       try {
         const file = await storage.getFile(req.params.id);
         if (!file) {
@@ -1067,7 +1086,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error: 'Failed to fetch file',
         });
       }
-    }
+    })
   );
 
   // Delete archive
@@ -1075,7 +1094,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     '/api/v1/archives/:id',
     authenticateRequest,
     requirePermission('delete'),
-    async (req: AuthenticatedRequest, res) => {
+    asyncHandler(async (req: AuthenticatedRequest, res) => {
       try {
         await storage.deleteArchive(req.params.id);
         res.json({
@@ -1095,7 +1114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error: 'Failed to delete archive',
         });
       }
-    }
+    })
   );
 
   // Get observer events

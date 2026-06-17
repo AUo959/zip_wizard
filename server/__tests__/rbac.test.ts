@@ -15,6 +15,10 @@ function createResponse() {
   };
 }
 
+async function waitForMiddleware() {
+  await new Promise(resolve => setTimeout(resolve, 0));
+}
+
 describe('requirePermission', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -32,7 +36,8 @@ describe('requirePermission', () => {
     const res = createResponse();
     const next = vi.fn();
 
-    await middleware(req, res, next);
+    middleware(req as any, res as any, next);
+    await waitForMiddleware();
 
     expect(rbac.getResourcePermissions('missing-archive')).toBeUndefined();
     expect(res.status).toHaveBeenCalledWith(404);
@@ -62,7 +67,8 @@ describe('requirePermission', () => {
     const res = createResponse();
     const next = vi.fn();
 
-    await middleware(req, res, next);
+    middleware(req as any, res as any, next);
+    await waitForMiddleware();
 
     expect(next).toHaveBeenCalledOnce();
     expect(res.status).not.toHaveBeenCalled();

@@ -7,6 +7,14 @@
  */
 
 import { auditLog } from './audit-log';
+import type { NextFunction, Request, RequestHandler, Response } from 'express';
+
+type RequestWithAuthContext = Request & {
+  user?: {
+    id?: string;
+  };
+  sessionID?: string;
+};
 
 export type Role = 'reader' | 'editor' | 'owner' | 'admin';
 export type Permission =
@@ -308,41 +316,46 @@ export const rbac = new RBACService();
 export function requirePermission(
   permission: Permission,
   resourceTypeOverride?: 'file' | 'archive'
-) {
-  return async (req: any, res: any, next: any) => {
-    const resourceId = req.params.fileId || req.params.id || req.params.archiveId;
-    const resourceType =
-      resourceTypeOverride ||
-      (req.params.fileId || req.path.includes('/files/') ? 'file' : 'archive');
+): RequestHandler {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    void (async () => {
+      const authReq = req as RequestWithAuthContext;
+      const resourceId = req.params.fileId ?? req.params.id ?? req.params.archiveId;
+      const inferredResourceType =
+        req.params.fileId !== undefined || req.path.includes('/files/') ? 'file' : 'archive';
+      const resourceType = resourceTypeOverride ?? inferredResourceType;
 
-    if (!resourceId) {
-      return res.status(400).json({
-        error: 'Resource identifier missing',
-      });
-    }
-    const userId = req.user?.id || 'anonymous';
+      if (!resourceId) {
+        res.status(400).json({
+          error: 'Resource identifier missing',
+        });
+        return;
+      }
+      const userId = authReq.user?.id ?? 'anonymous';
 
-    const context: AccessContext = {
-      userId,
-      sessionId: req.sessionID,
-      ipAddress: req.ip || req.connection.remoteAddress,
-      userAgent: req.headers['user-agent'],
-    };
+      const context: AccessContext = {
+        userId,
+        sessionId: authReq.sessionID,
+        ipAddress: req.ip ?? req.socket?.remoteAddress,
+        userAgent: req.headers['user-agent'],
+      };
 
-    try {
-      const permissions = rbac.getResourcePermissions(resourceId);
-      if (!permissions || permissions.resourceType !== resourceType) {
-        return res.status(404).json({
-          error: 'Resource authorization context not found',
+      try {
+        const permissions = rbac.getResourcePermissions(resourceId);
+        if (!permissions || permissions.resourceType !== resourceType) {
+          res.status(404).json({
+            error: 'Resource authorization context not found',
+          });
+          return;
+        }
+        await rbac.requireAccess(resourceId, resourceType, userId, permission, context);
+        next();
+      } catch (error) {
+        res.status(403).json({
+          error: 'Access denied',
+          message: error instanceof Error ? error.message : 'Insufficient permissions',
         });
       }
-      await rbac.requireAccess(resourceId, resourceType, userId, permission, context);
-      next();
-    } catch (error) {
-      res.status(403).json({
-        error: 'Access denied',
-        message: error instanceof Error ? error.message : 'Insufficient permissions',
-      });
-    }
+    })().catch(next);
   };
 }

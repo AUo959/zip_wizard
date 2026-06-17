@@ -302,20 +302,6 @@ export default function Home() {
     [privacyShieldActive]
   );
 
-  const _handleArchiveProcess = useCallback(
-    (archiveId: string, operation: string, params?: any) => {
-      console.log(
-        'Archive operation:',
-        operation,
-        'on archive:',
-        archiveId,
-        'with params:',
-        params
-      );
-    },
-    []
-  );
-
   const _handleBatchOperation = useCallback((archiveIds: string[], operation: string) => {
     console.log('Batch operation:', operation, 'on archives:', archiveIds);
   }, []);

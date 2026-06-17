@@ -11,21 +11,24 @@ function parseOrigins(raw?: string): string[] {
 }
 
 export function buildCorsOptions(): CorsOptions {
-  const allowedOrigins = parseOrigins(process.env.CORS_ALLOWED_ORIGINS || process.env.CORS_ORIGIN);
+  const allowedOrigins = parseOrigins(process.env.CORS_ALLOWED_ORIGINS ?? process.env.CORS_ORIGIN);
   const allowCredentials = process.env.CORS_ALLOW_CREDENTIALS === 'true';
 
   return {
     origin: (origin, callback) => {
       if (!origin) {
         if (process.env.CORS_ALLOW_NO_ORIGIN === 'true') {
-          return callback(null, true);
+          callback(null, true);
+          return;
         }
-        return callback(new Error('Origin required by CORS policy'));
+        callback(new Error('Origin required by CORS policy'));
+        return;
       }
       if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
+        callback(null, true);
+        return;
       }
-      return callback(new Error('Origin not allowed by CORS policy'));
+      callback(new Error('Origin not allowed by CORS policy'));
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-ZipWizard-User'],

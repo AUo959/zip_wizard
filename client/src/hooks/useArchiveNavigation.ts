@@ -5,6 +5,7 @@ import { convertSchemaArchive } from '@/lib/archive-converter';
 import { apiRequest } from '@/lib/queryClient';
 
 export function useArchiveNavigation(showUpload: boolean) {
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   const [selectedArchive, setSelectedArchive] = useState<ArchiveType | null>(null);
 
   const { data: archives = [], refetch: refetchArchives } = useQuery<ArchiveType[]>({

@@ -81,6 +81,17 @@ interface CircuitBreaker {
   nextRetryTime?: Date;
 }
 
+function secureJitter(maxExclusive: number): number {
+  const cryptoApi = globalThis.crypto;
+  if (!cryptoApi?.getRandomValues) {
+    return maxExclusive / 2;
+  }
+
+  const values = new Uint32Array(1);
+  cryptoApi.getRandomValues(values);
+  return (values[0] / 0xffffffff) * maxExclusive;
+}
+
 export function TimingOptimizer({
   onOptimizationApplied,
   onTimeoutPrevented,
@@ -155,7 +166,7 @@ export function TimingOptimizer({
       const maxDelay = 30000;
       const delay = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
       // Add jitter to prevent thundering herd
-      return delay + Math.random() * 1000;
+      return delay + secureJitter(1000);
     },
     [config.retryDelay]
   );
