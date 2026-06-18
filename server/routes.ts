@@ -4,7 +4,7 @@ import multer from 'multer';
 import JSZip from 'jszip';
 import { storage } from './storage';
 import { observer } from './observer';
-import { type File } from '@shared/schema';
+import { type Archive, type File, type InsertFile } from '@shared/schema';
 import path from 'path';
 import cors from 'cors';
 import crypto from 'crypto';
@@ -253,60 +253,6 @@ function analyzeCodeFile(filename: string, content: string, extension: string) {
   };
 }
 
-// Helper function to detect language from extension
-function detectLanguage(extension: string): string {
-  const languageMap: Record<string, string> = {
-    '.js': 'JavaScript',
-    '.jsx': 'React',
-    '.ts': 'TypeScript',
-    '.tsx': 'React TypeScript',
-    '.py': 'Python',
-    '.java': 'Java',
-    '.cpp': 'C++',
-    '.c': 'C',
-    '.css': 'CSS',
-    '.html': 'HTML',
-    '.json': 'JSON',
-    '.md': 'Markdown',
-    '.php': 'PHP',
-    '.rb': 'Ruby',
-    '.go': 'Go',
-    '.rs': 'Rust',
-  };
-  return languageMap[extension] || 'Unknown';
-}
-
-// Helper function to analyze content
-function analyzeContent(
-  content: string,
-  language: string
-): { complexity: string | null; dependencies: string[] } {
-  const dependencies: string[] = [];
-
-  // Extract imports/dependencies
-  const importRegex = /(?:import|require|from|#include)\s+['"']([^'"']+)['"']/g;
-  let match;
-  while ((match = importRegex.exec(content)) !== null) {
-    dependencies.push(match[1]);
-  }
-
-  // Determine complexity based on content
-  const lines = content.split('\n').length;
-  const functions = (content.match(/function|def |class |const \w+\s*=/g) || []).length;
-
-  let complexity = 'Low';
-  if (lines > 100 || functions > 10) {
-    complexity = 'High';
-  } else if (lines > 50 || functions > 5) {
-    complexity = 'Medium';
-  }
-
-  return {
-    complexity,
-    dependencies: dependencies.slice(0, 10), // Limit dependencies
-  };
-}
-
 // Helper functions for enhanced export
 function extractKeyInsights(files: File[]): string[] {
   const insights: string[] = [];
@@ -408,15 +354,70 @@ type SkippedArchiveEntry = {
   bytesRead?: number;
 };
 
+type FileAnalysis = {
+  language: string | null;
+  tags: string[];
+  complexity: string | null;
+  dependencies: string[];
+  description: string;
+};
+
+type UploadProcessingResult = {
+  processedFiles: File[];
+  skippedEntries: SkippedArchiveEntry[];
+  archiveTruncated: boolean;
+};
+
+type PersistDirectoryOptions = {
+  archiveId: string;
+  requesterId: string;
+  relativePath: string;
+};
+
+type PersistFileOptions = {
+  archiveId: string;
+  requesterId: string;
+  relativePath: string;
+  buffer: Buffer;
+  extension: string;
+  name: string;
+  parentPath: string | null;
+};
+
+type ProcessUploadOptions = {
+  archive: Archive;
+  requesterId: string;
+  uploadedFile: Express.Multer.File;
+  isZipArchive: boolean;
+};
+
+const CODE_ANALYSIS_EXTENSIONS = new Set([
+  '.js',
+  '.jsx',
+  '.ts',
+  '.tsx',
+  '.py',
+  '.java',
+  '.cpp',
+  '.c',
+  '.css',
+  '.json',
+  '.php',
+  '.rb',
+  '.go',
+  '.rs',
+]);
+
+const TEXT_ANALYSIS_EXTENSIONS = new Set(['.txt', '.log', '.html', '.md', '.xml']);
+const ARCHIVE_MIME_MARKERS = ['zip', 'tar', 'rar', '7z', 'gzip'];
+
 type AsyncRouteHandler = (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
+  ...args: [AuthenticatedRequest, Response, NextFunction]
 ) => Promise<unknown>;
 
 function asyncHandler(handler: AsyncRouteHandler) {
   return (req: Request, res: Response, next: NextFunction): void => {
-    void handler(req as AuthenticatedRequest, res, next).catch(next);
+    void handler(req as AuthenticatedRequest, res, next).catch((error: unknown) => next(error));
   };
 }
 
@@ -428,6 +429,324 @@ function sanitizeStoredContent(content: string): string {
 function sanitizeDownloadName(name: string): string {
   const baseName = path.basename(name).replace(/\.zip$/i, '');
   return baseName.replace(/[^A-Za-z0-9._-]/g, '_') || 'archive';
+}
+
+function getRequestBodyValue(req: Request, key: string, fallback: string): string {
+  const value = (req.body as Record<string, unknown> | undefined)?.[key];
+  return typeof value === 'string' && value.length > 0 ? value : fallback;
+}
+
+function parseMonitoringWindow(req: Request): number {
+  const value = (req.body as Record<string, unknown> | undefined)?.monitoringWindow;
+  const parsed = Number.parseInt(String(value ?? ''), 10);
+  return Number.isFinite(parsed) ? parsed : 48;
+}
+
+function getUploadKind(uploadedFile: Express.Multer.File): { isZipArchive: boolean } {
+  const fileType = uploadedFile.mimetype ?? 'application/octet-stream';
+  const isArchive =
+    ARCHIVE_MIME_MARKERS.some(marker => fileType.includes(marker)) ||
+    uploadedFile.originalname.includes('.tar.');
+
+  return {
+    isZipArchive: isArchive && uploadedFile.originalname.endsWith('.zip'),
+  };
+}
+
+function setOwnerPermission(resourceId: string, resourceType: 'file' | 'archive', ownerId: string) {
+  rbac.setResourcePermissions(resourceId, {
+    resourceId,
+    resourceType,
+    ownerId,
+    permissions: new Map([[ownerId, 'owner']]),
+  });
+}
+
+function shouldAnalyzeAsText(content: string, extension: string): boolean {
+  return !extension || TEXT_ANALYSIS_EXTENSIONS.has(extension) || /[\x20-\x7E\n\r\t]/.test(content);
+}
+
+function analyzeUploadedFile(name: string, content: string, extension: string): FileAnalysis {
+  if (!content) {
+    return {
+      language: null,
+      tags: [],
+      complexity: null,
+      dependencies: [],
+      description: 'Binary or non-text file',
+    };
+  }
+
+  if (extension && CODE_ANALYSIS_EXTENSIONS.has(extension)) {
+    return analyzeCodeFile(name, content, extension);
+  }
+
+  return shouldAnalyzeAsText(content, extension)
+    ? analyzeChatContent(name, content)
+    : {
+        language: null,
+        tags: [],
+        complexity: null,
+        dependencies: [],
+        description: 'Binary or non-text file',
+      };
+}
+
+function buildFileTags(analysis: FileAnalysis, redactionFindings: string[]): string[] {
+  return [...analysis.tags, ...(redactionFindings.length ? ['pii-redacted'] : [])];
+}
+
+async function createUploadArchive(
+  req: AuthenticatedRequest,
+  uploadedFile: Express.Multer.File,
+  requesterId: string
+): Promise<Archive> {
+  const archive = await storage.createArchive({
+    name: uploadedFile.originalname,
+    originalSize: uploadedFile.size,
+    fileCount: 0,
+    symbolicChain: `T1_CHAIN::ZIPWizard::v2.2.6b::${getRequestBodyValue(req, 'from', 'USER')}::${getRequestBodyValue(req, 'operation', 'Upload')}`,
+    threadTag: `Thread_${getRequestBodyValue(req, 'tag', 'Upload')}_${Date.now()}`,
+    ethicsLock: getRequestBodyValue(req, 'ethicsLock', 'Picard_Delta_3'),
+    trustAnchor: getRequestBodyValue(req, 'trustAnchor', 'SN1-AS3-TRUSTED'),
+    replayable: true,
+    monitoringWindow: parseMonitoringWindow(req),
+  });
+
+  setOwnerPermission(archive.id, 'archive', requesterId);
+  return archive;
+}
+
+async function persistUploadDirectory(options: PersistDirectoryOptions): Promise<File> {
+  const { archiveId, requesterId, relativePath } = options;
+  const dirFile = await storage.createFile({
+    archiveId,
+    path: relativePath,
+    name: path.basename(relativePath) || relativePath,
+    size: 0,
+    isDirectory: 'true',
+    parentPath: path.dirname(relativePath) === '.' ? null : path.dirname(relativePath),
+    extension: null,
+    content: null,
+    redactedPreview: null,
+    language: null,
+    description: 'Directory containing project files',
+    tags: ['directory'],
+    complexity: null,
+    dependencies: [],
+  });
+
+  setOwnerPermission(dirFile.id, 'file', requesterId);
+  return dirFile;
+}
+
+function buildStoredFileInput(options: PersistFileOptions, analysis: FileAnalysis): InsertFile {
+  const content = options.buffer.toString('utf-8');
+  const redaction = redactContent(content);
+  const contentHash = crypto.createHash('sha256').update(content).digest('hex');
+
+  return {
+    archiveId: options.archiveId,
+    path: options.relativePath,
+    name: options.name,
+    size: content.length,
+    isDirectory: 'false',
+    parentPath: options.parentPath,
+    extension: options.extension,
+    content: sanitizeStoredContent(content),
+    redactedPreview: redaction.preview,
+    language: analysis.language,
+    description: analysis.description,
+    tags: buildFileTags(analysis, redaction.findings),
+    complexity: analysis.complexity,
+    dependencies: analysis.dependencies,
+    originalHash: contentHash,
+    currentHash: contentHash,
+  };
+}
+
+async function persistUploadFile(options: PersistFileOptions): Promise<File> {
+  const content = options.buffer.toString('utf-8');
+  const analysis = analyzeUploadedFile(options.name, content, options.extension);
+  const file = await storage.createFile(buildStoredFileInput(options, analysis));
+
+  setOwnerPermission(file.id, 'file', options.requesterId);
+  if (analysis.language) {
+    await observer.trackAnalysis(options.archiveId, file.id, options.name, analysis);
+  }
+  return file;
+}
+
+async function processZipUpload(options: ProcessUploadOptions): Promise<UploadProcessingResult> {
+  const processedFiles: File[] = [];
+  const skippedEntries: SkippedArchiveEntry[] = [];
+  let archiveTruncated = false;
+  const zip = await JSZip.loadAsync(options.uploadedFile.buffer, { createFolders: true });
+
+  for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
+    if (processedFiles.length >= ARCHIVE_LIMITS.maxEntries) {
+      archiveTruncated = true;
+      skippedEntries.push({ path: relativePath, reason: 'entry-limit' });
+      continue;
+    }
+
+    const entry = zipEntry as JSZip.JSZipObject;
+    if (entry.dir) {
+      processedFiles.push(
+        await persistUploadDirectory({
+          archiveId: options.archive.id,
+          requesterId: options.requesterId,
+          relativePath,
+        })
+      );
+      continue;
+    }
+
+    const { buffer: fileBuffer, skipped } = await readZipEntryBuffer(entry, relativePath);
+    if (skipped) {
+      skippedEntries.push(skipped);
+      continue;
+    }
+    if (!fileBuffer) continue;
+
+    processedFiles.push(
+      await persistUploadFile({
+        archiveId: options.archive.id,
+        requesterId: options.requesterId,
+        relativePath,
+        buffer: fileBuffer,
+        extension: path.extname(relativePath),
+        name: path.basename(relativePath),
+        parentPath: path.dirname(relativePath) === '.' ? null : path.dirname(relativePath),
+      })
+    );
+  }
+
+  return { processedFiles, skippedEntries, archiveTruncated };
+}
+
+async function processSingleFileUpload(
+  options: ProcessUploadOptions
+): Promise<UploadProcessingResult> {
+  const uploadedFile = options.uploadedFile;
+  const processedFile = await persistUploadFile({
+    archiveId: options.archive.id,
+    requesterId: options.requesterId,
+    relativePath: uploadedFile.originalname,
+    buffer: uploadedFile.buffer,
+    extension: path.extname(uploadedFile.originalname),
+    name: uploadedFile.originalname,
+    parentPath: null,
+  });
+
+  return {
+    processedFiles: [processedFile],
+    skippedEntries: [],
+    archiveTruncated: false,
+  };
+}
+
+async function processUploadedArchive(
+  options: ProcessUploadOptions
+): Promise<UploadProcessingResult> {
+  return options.isZipArchive ? processZipUpload(options) : processSingleFileUpload(options);
+}
+
+async function cleanupCreatedArchive(createdArchiveId: string | undefined): Promise<void> {
+  if (!createdArchiveId) return;
+  try {
+    await storage.deleteArchive(createdArchiveId);
+  } catch (cleanupError) {
+    console.error('Failed to clean up archive after upload error:', cleanupError);
+  }
+}
+
+function setUploadMetadataHeaders(res: Response, result: UploadProcessingResult): void {
+  if (result.archiveTruncated) {
+    res.setHeader('X-ZipWizard-Archive-Truncated', 'true');
+  }
+  if (result.skippedEntries.length > 0) {
+    res.setHeader('X-ZipWizard-Skipped-Entries', String(result.skippedEntries.length));
+  }
+}
+
+function validateUploadRequest(
+  req: AuthenticatedRequest,
+  res: Response
+): { uploadedFile: Express.Multer.File; isZipArchive: boolean } | undefined {
+  const uploadedFile = req.file;
+  if (!uploadedFile) {
+    res.status(400).json({ message: 'No file uploaded' });
+    return undefined;
+  }
+
+  const { isZipArchive } = getUploadKind(uploadedFile);
+  if (uploadedFile.size > API_CONFIG.maxFileSize) {
+    res.status(413).json({ message: 'File exceeds configured size limit' });
+    return undefined;
+  }
+
+  if (!isZipArchive && uploadedFile.size > ARCHIVE_LIMITS.maxEntryBytes) {
+    res.status(413).json({
+      message: 'File exceeds configured per-entry size limit',
+      limitBytes: ARCHIVE_LIMITS.maxEntryBytes,
+    });
+    return undefined;
+  }
+
+  return { uploadedFile, isZipArchive };
+}
+
+async function finalizeUploadArchive(
+  archive: Archive,
+  result: UploadProcessingResult
+): Promise<Archive> {
+  const updatedArchive = await storage.updateArchive(archive.id, {
+    fileCount: result.processedFiles.length,
+  });
+
+  if (!updatedArchive) {
+    console.error('Failed to update archive fileCount', {
+      archiveId: archive.id,
+      expectedFileCount: result.processedFiles.length,
+    });
+  }
+
+  const finalArchive = updatedArchive ?? archive;
+  await observer.trackUpload(finalArchive.id, finalArchive.name, result.processedFiles.length);
+  return finalArchive;
+}
+
+function sendUploadResponse(res: Response, archive: Archive, result: UploadProcessingResult): void {
+  setUploadMetadataHeaders(res, result);
+  res.json({
+    archive,
+    fileCount: result.processedFiles.length,
+    truncated: result.archiveTruncated,
+    skippedEntries: result.skippedEntries,
+    limits: ARCHIVE_LIMITS,
+  });
+}
+
+async function handleArchiveUpload(req: AuthenticatedRequest, res: Response): Promise<void> {
+  let createdArchiveId: string | undefined;
+
+  try {
+    const validation = validateUploadRequest(req, res);
+    if (!validation) return;
+
+    const requesterId = req.user?.id ?? 'anonymous';
+    const archive = await createUploadArchive(req, validation.uploadedFile, requesterId);
+    createdArchiveId = archive.id;
+
+    const result = await processUploadedArchive({ archive, requesterId, ...validation });
+    const finalArchive = await finalizeUploadArchive(archive, result);
+    sendUploadResponse(res, finalArchive, result);
+  } catch (_error) {
+    console.error('Upload error:', _error);
+    await cleanupCreatedArchive(createdArchiveId);
+    res.status(500).json({ message: 'Failed to process archive' });
+  }
 }
 
 async function readZipEntryBuffer(
@@ -575,297 +894,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     '/api/v1/archives',
     authenticateRequest,
     upload.single('archive'),
-    asyncHandler(async (req: AuthenticatedRequest, res) => {
-      let createdArchiveId: string | undefined;
-
-      try {
-        if (!req.file) {
-          return res.status(400).json({ message: 'No file uploaded' });
-        }
-
-        if (req.file.size > API_CONFIG.maxFileSize) {
-          return res.status(413).json({ message: 'File exceeds configured size limit' });
-        }
-
-        const requesterId = req.user?.id ?? 'anonymous';
-
-        // Detect file type
-        const fileType = req.file.mimetype ?? 'application/octet-stream';
-        const isArchive =
-          fileType.includes('zip') ||
-          fileType.includes('tar') ||
-          fileType.includes('rar') ||
-          fileType.includes('7z') ||
-          fileType.includes('gzip') ||
-          req.file.originalname.includes('.tar.');
-
-        const isZipArchive = isArchive && req.file.originalname.endsWith('.zip');
-        if (!isZipArchive && req.file.size > ARCHIVE_LIMITS.maxEntryBytes) {
-          return res.status(413).json({
-            message: 'File exceeds configured per-entry size limit',
-            limitBytes: ARCHIVE_LIMITS.maxEntryBytes,
-          });
-        }
-
-        // Create archive record with enhanced metadata
-        const symbolicChain = `T1_CHAIN::ZIPWizard::v2.2.6b::${req.body.from || 'USER'}::${req.body.operation || 'Upload'}`;
-        const threadTag = `Thread_${req.body.tag || 'Upload'}_${Date.now()}`;
-
-        const archive = await storage.createArchive({
-          name: req.file.originalname,
-          originalSize: req.file.size,
-          fileCount: 0,
-          symbolicChain,
-          threadTag,
-          ethicsLock: req.body?.ethicsLock || 'Picard_Delta_3',
-          trustAnchor: req.body?.trustAnchor || 'SN1-AS3-TRUSTED',
-          replayable: true,
-          monitoringWindow: parseInt(req.body?.monitoringWindow) || 48,
-        });
-        createdArchiveId = archive.id;
-
-        rbac.setResourcePermissions(archive.id, {
-          resourceId: archive.id,
-          resourceType: 'archive',
-          ownerId: requesterId,
-          permissions: new Map([[requesterId, 'owner']]),
-        });
-
-        const processedFiles: File[] = [];
-        const skippedEntries: SkippedArchiveEntry[] = [];
-        let archiveTruncated = false;
-
-        const persistDirectory = async (relativePath: string) => {
-          const dirFile = await storage.createFile({
-            archiveId: archive.id,
-            path: relativePath,
-            name: path.basename(relativePath) || relativePath,
-            size: 0,
-            isDirectory: 'true',
-            parentPath: path.dirname(relativePath) === '.' ? null : path.dirname(relativePath),
-            extension: null,
-            content: null,
-            redactedPreview: null,
-            language: null,
-            description: 'Directory containing project files',
-            tags: ['directory'],
-            complexity: null,
-            dependencies: [],
-          });
-          rbac.setResourcePermissions(dirFile.id, {
-            resourceId: dirFile.id,
-            resourceType: 'file',
-            ownerId: requesterId,
-            permissions: new Map([[requesterId, 'owner']]),
-          });
-          processedFiles.push(dirFile);
-        };
-
-        const persistFile = async (options: {
-          relativePath: string;
-          buffer: Buffer;
-          extension: string;
-          name: string;
-          parentPath: string | null;
-        }) => {
-          const { relativePath, buffer, extension, name, parentPath } = options;
-          const content = buffer.toString('utf-8');
-          let analysis: {
-            language: string | null;
-            tags: string[];
-            complexity: string | null;
-            dependencies: string[];
-            description: string;
-          } = {
-            language: null,
-            tags: [],
-            complexity: null,
-            dependencies: [],
-            description: 'Binary or non-text file',
-          };
-
-          if (content) {
-            if (
-              extension &&
-              [
-                '.js',
-                '.jsx',
-                '.ts',
-                '.tsx',
-                '.py',
-                '.java',
-                '.cpp',
-                '.c',
-                '.css',
-                '.json',
-                '.php',
-                '.rb',
-                '.go',
-                '.rs',
-              ].includes(extension)
-            ) {
-              analysis = analyzeCodeFile(name, content, extension);
-            } else if (extension && ['.txt', '.log', '.html', '.md', '.xml'].includes(extension)) {
-              analysis = analyzeChatContent(name, content);
-            } else if (!extension || content.match(/[\x20-\x7E\n\r\t]/)) {
-              analysis = analyzeChatContent(name, content);
-            }
-          }
-
-          const redaction = redactContent(content);
-          const contentHash = crypto.createHash('sha256').update(content).digest('hex');
-
-          const file = await storage.createFile({
-            archiveId: archive.id,
-            path: relativePath,
-            name,
-            size: content.length,
-            isDirectory: 'false',
-            parentPath,
-            extension,
-            content: sanitizeStoredContent(content),
-            redactedPreview: redaction.preview,
-            language: analysis.language,
-            description: analysis.description,
-            tags: Array.isArray(analysis.tags)
-              ? [...analysis.tags, ...(redaction.findings.length ? ['pii-redacted'] : [])]
-              : [],
-            complexity: analysis.complexity,
-            dependencies: Array.isArray(analysis.dependencies) ? analysis.dependencies : [],
-            originalHash: contentHash,
-            currentHash: contentHash,
-          });
-
-          rbac.setResourcePermissions(file.id, {
-            resourceId: file.id,
-            resourceType: 'file',
-            ownerId: requesterId,
-            permissions: new Map([[requesterId, 'owner']]),
-          });
-
-          if (analysis.language) {
-            await observer.trackAnalysis(archive.id, file.id, name, analysis);
-          }
-
-          processedFiles.push(file);
-        };
-
-        if (isZipArchive) {
-          const zip = await JSZip.loadAsync(req.file.buffer, { createFolders: true });
-
-          for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
-            if (processedFiles.length >= ARCHIVE_LIMITS.maxEntries) {
-              archiveTruncated = true;
-              skippedEntries.push({ path: relativePath, reason: 'entry-limit' });
-              continue;
-            }
-
-            const entry = zipEntry as JSZip.JSZipObject;
-
-            if (entry.dir) {
-              await persistDirectory(relativePath);
-              continue;
-            }
-
-            const { buffer: fileBuffer, skipped } = await readZipEntryBuffer(entry, relativePath);
-            if (skipped) {
-              skippedEntries.push(skipped);
-              continue;
-            }
-            if (!fileBuffer) {
-              continue;
-            }
-
-            const extension = path.extname(relativePath);
-            const name = path.basename(relativePath);
-            const parentPath =
-              path.dirname(relativePath) === '.' ? null : path.dirname(relativePath);
-
-            await persistFile({
-              relativePath,
-              buffer: fileBuffer,
-              extension,
-              name,
-              parentPath,
-            });
-          }
-        } else {
-          // Single file processing (non-archive)
-          const fileContent = req.file.buffer.toString('utf-8');
-          const extension = path.extname(req.file.originalname);
-          const language = detectLanguage(extension);
-          const analysis = analyzeContent(fileContent, language);
-          const redaction = redactContent(fileContent);
-
-          const file = await storage.createFile({
-            archiveId: archive.id,
-            path: req.file.originalname,
-            name: req.file.originalname,
-            size: req.file.size,
-            isDirectory: 'false',
-            parentPath: null,
-            extension,
-            content: sanitizeStoredContent(fileContent),
-            redactedPreview: redaction.preview,
-            language,
-            description: `${req.file.mimetype} file`,
-            tags: [req.file.mimetype.split('/')[0], extension.replace('.', '')],
-            complexity: analysis.complexity,
-            dependencies: analysis.dependencies || [],
-            originalHash: crypto.createHash('sha256').update(fileContent).digest('hex'),
-            currentHash: crypto.createHash('sha256').update(fileContent).digest('hex'),
-          });
-
-          rbac.setResourcePermissions(file.id, {
-            resourceId: file.id,
-            resourceType: 'file',
-            ownerId: requesterId,
-            permissions: new Map([[requesterId, 'owner']]),
-          });
-
-          processedFiles.push(file);
-        }
-
-        const updatedArchive = await storage.updateArchive(archive.id, {
-          fileCount: processedFiles.length,
-        });
-
-        if (!updatedArchive) {
-          console.error('Failed to update archive fileCount', {
-            archiveId: archive.id,
-            expectedFileCount: processedFiles.length,
-          });
-        }
-
-        const finalArchive = updatedArchive || archive;
-        await observer.trackUpload(finalArchive.id, finalArchive.name, processedFiles.length);
-
-        if (archiveTruncated) {
-          res.setHeader('X-ZipWizard-Archive-Truncated', 'true');
-        }
-        if (skippedEntries.length > 0) {
-          res.setHeader('X-ZipWizard-Skipped-Entries', String(skippedEntries.length));
-        }
-
-        res.json({
-          archive: finalArchive,
-          fileCount: processedFiles.length,
-          truncated: archiveTruncated,
-          skippedEntries,
-          limits: ARCHIVE_LIMITS,
-        });
-      } catch (_error) {
-        console.error('Upload error:', _error);
-        if (createdArchiveId) {
-          try {
-            await storage.deleteArchive(createdArchiveId);
-          } catch (cleanupError) {
-            console.error('Failed to clean up archive after upload error:', cleanupError);
-          }
-        }
-        res.status(500).json({ message: 'Failed to process archive' });
-      }
-    })
+    asyncHandler(handleArchiveUpload)
   );
 
   // Get all archives

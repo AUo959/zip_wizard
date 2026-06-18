@@ -62,7 +62,7 @@ app.use((req, res, next) => {
     const httpError = normalizeHttpError(err);
     const status = httpError.status ?? httpError.statusCode ?? 500;
     const responseMessage =
-      status >= 500 ? 'Internal Server Error' : httpError.message || 'Request failed';
+      status >= 500 ? 'Internal Server Error' : (httpError.message ?? 'Request failed');
 
     auditLog
       .log('critical', 'system', 'HTTP request failed', {

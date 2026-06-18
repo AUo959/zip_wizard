@@ -16,6 +16,13 @@ type RequestWithAuthContext = Request & {
   sessionID?: string;
 };
 
+type RouteResourceParams = Partial<Record<'fileId' | 'id' | 'archiveId', string>>;
+
+type ResolvedRouteResource = {
+  resourceId?: string;
+  resourceType: 'file' | 'archive';
+};
+
 export type Role = 'reader' | 'editor' | 'owner' | 'admin';
 export type Permission =
   | 'read'
@@ -289,7 +296,7 @@ class RBACService {
     resourceId: string,
     resourceType: 'file' | 'archive',
     context: AccessContext,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     const level = operation === 'delete' ? 'warning' : 'info';
 
@@ -310,6 +317,79 @@ class RBACService {
 // Singleton instance
 export const rbac = new RBACService();
 
+function routeTargetsFile(req: Request, routeParams: RouteResourceParams): boolean {
+  return routeParams.fileId !== undefined || req.path.includes('/files/');
+}
+
+function resolveRouteResource(
+  req: Request,
+  resourceTypeOverride?: 'file' | 'archive'
+): ResolvedRouteResource {
+  const routeParams = req.params as RouteResourceParams;
+  return {
+    resourceId: routeParams.fileId ?? routeParams.id ?? routeParams.archiveId,
+    resourceType: resourceTypeOverride ?? (routeTargetsFile(req, routeParams) ? 'file' : 'archive'),
+  };
+}
+
+function createAccessContext(req: Request, authReq: RequestWithAuthContext): AccessContext {
+  return {
+    userId: authReq.user?.id ?? 'anonymous',
+    sessionId: authReq.sessionID,
+    ipAddress: req.ip,
+    userAgent: req.headers['user-agent'],
+  };
+}
+
+function sendMissingResourceId(res: Response): void {
+  res.status(400).json({
+    error: 'Resource identifier missing',
+  });
+}
+
+function sendMissingAuthorizationContext(res: Response): void {
+  res.status(404).json({
+    error: 'Resource authorization context not found',
+  });
+}
+
+function sendAccessDenied(res: Response, error: unknown): void {
+  res.status(403).json({
+    error: 'Access denied',
+    message: error instanceof Error ? error.message : 'Insufficient permissions',
+  });
+}
+
+async function authorizePermissionRequest(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+  permission: Permission,
+  resourceTypeOverride?: 'file' | 'archive'
+): Promise<void> {
+  const authReq = req as RequestWithAuthContext;
+  const { resourceId, resourceType } = resolveRouteResource(req, resourceTypeOverride);
+
+  if (!resourceId) {
+    sendMissingResourceId(res);
+    return;
+  }
+
+  const permissions = rbac.getResourcePermissions(resourceId);
+  if (!permissions || permissions.resourceType !== resourceType) {
+    sendMissingAuthorizationContext(res);
+    return;
+  }
+
+  try {
+    const context = createAccessContext(req, authReq);
+    await rbac.requireAccess(resourceId, resourceType, context.userId, permission, context);
+    next();
+  } catch (error) {
+    sendAccessDenied(res, error);
+  }
+}
+
 /**
  * Middleware to check RBAC permissions
  */
@@ -318,44 +398,8 @@ export function requirePermission(
   resourceTypeOverride?: 'file' | 'archive'
 ): RequestHandler {
   return (req: Request, res: Response, next: NextFunction): void => {
-    void (async () => {
-      const authReq = req as RequestWithAuthContext;
-      const resourceId = req.params.fileId ?? req.params.id ?? req.params.archiveId;
-      const inferredResourceType =
-        req.params.fileId !== undefined || req.path.includes('/files/') ? 'file' : 'archive';
-      const resourceType = resourceTypeOverride ?? inferredResourceType;
-
-      if (!resourceId) {
-        res.status(400).json({
-          error: 'Resource identifier missing',
-        });
-        return;
-      }
-      const userId = authReq.user?.id ?? 'anonymous';
-
-      const context: AccessContext = {
-        userId,
-        sessionId: authReq.sessionID,
-        ipAddress: req.ip ?? req.socket?.remoteAddress,
-        userAgent: req.headers['user-agent'],
-      };
-
-      try {
-        const permissions = rbac.getResourcePermissions(resourceId);
-        if (!permissions || permissions.resourceType !== resourceType) {
-          res.status(404).json({
-            error: 'Resource authorization context not found',
-          });
-          return;
-        }
-        await rbac.requireAccess(resourceId, resourceType, userId, permission, context);
-        next();
-      } catch (error) {
-        res.status(403).json({
-          error: 'Access denied',
-          message: error instanceof Error ? error.message : 'Insufficient permissions',
-        });
-      }
-    })().catch(next);
+    void authorizePermissionRequest(req, res, next, permission, resourceTypeOverride).catch(
+      (error: unknown) => next(error)
+    );
   };
 }

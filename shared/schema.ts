@@ -122,9 +122,44 @@ export const insertFileMutationSchema = createInsertSchema(fileMutations).omit({
 export const insertAuditLogSchema = createInsertSchema(auditLogs);
 
 export type InsertArchive = z.infer<typeof insertArchiveSchema>;
-export type Archive = typeof archives.$inferSelect;
+
+export interface Archive {
+  id: string;
+  name: string;
+  originalSize: number;
+  fileCount: number;
+  uploadedAt: Date;
+  symbolicChain: string | null;
+  threadTag: string | null;
+  ethicsLock: string | null;
+  trustAnchor: string | null;
+  replayable: boolean | null;
+  monitoringWindow: number | null;
+}
+
 export type InsertFile = z.infer<typeof insertFileSchema>;
-export type File = typeof files.$inferSelect;
+
+export interface File {
+  id: string;
+  archiveId: string;
+  path: string;
+  name: string;
+  extension: string | null;
+  size: number;
+  content: string | null;
+  redactedPreview: string | null;
+  isDirectory: string;
+  parentPath: string | null;
+  language: string | null;
+  description: string | null;
+  tags: string[] | null;
+  complexity: string | null;
+  dependencies: string[] | null;
+  originalHash: string | null;
+  currentHash: string | null;
+  lastMutated: Date | null;
+}
+
 export type ObserverEvent = typeof observerEvents.$inferSelect;
 export type InsertObserverEvent = z.infer<typeof insertObserverEventSchema>;
 export type FileMutation = typeof fileMutations.$inferSelect;

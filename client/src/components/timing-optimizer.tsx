@@ -81,14 +81,19 @@ interface CircuitBreaker {
   nextRetryTime?: Date;
 }
 
+type RandomValueProvider = {
+  getRandomValues(values: Uint32Array): Uint32Array;
+};
+
 function secureJitter(maxExclusive: number): number {
-  const cryptoApi = globalThis.crypto;
-  if (!cryptoApi?.getRandomValues) {
+  const cryptoApi = (globalThis as typeof globalThis & { crypto?: RandomValueProvider }).crypto;
+  const getRandomValues = cryptoApi?.getRandomValues.bind(cryptoApi);
+  if (!getRandomValues) {
     return maxExclusive / 2;
   }
 
   const values = new Uint32Array(1);
-  cryptoApi.getRandomValues(values);
+  getRandomValues(values);
   return (values[0] / 0xffffffff) * maxExclusive;
 }
 

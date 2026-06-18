@@ -9,7 +9,7 @@ const DEFAULT_PREVIEW_LENGTH = 1200;
 
 type RedactionPattern = {
   label: string;
-  redact: (input: string) => { redacted: string; matched: boolean };
+  redact: (_input: string) => { redacted: string; matched: boolean };
 };
 
 function normalizePreviewLength(previewLength: number): number {
@@ -54,6 +54,28 @@ function replaceRegexMatches(input: string, regex: RegExp, replacement: string) 
   return { redacted, matched: redacted !== input };
 }
 
+function isCardCandidateChar(char: string): boolean {
+  return isDigit(char) || char === ' ' || char === '-';
+}
+
+function readCardCandidate(
+  input: string,
+  start: number
+): { raw: string; digits: string; end: number } {
+  let raw = '';
+  let digits = '';
+  let cursor = start;
+
+  while (cursor < input.length && raw.length < 32 && isCardCandidateChar(input.charAt(cursor))) {
+    const char = input.charAt(cursor);
+    raw += char;
+    if (isDigit(char)) digits += char;
+    cursor += 1;
+  }
+
+  return { raw, digits, end: cursor };
+}
+
 function redactCreditCards(input: string) {
   let redacted = '';
   let matched = false;
@@ -68,29 +90,15 @@ function redactCreditCards(input: string) {
       continue;
     }
 
-    let raw = '';
-    let digits = '';
-    let cursor = index;
-
-    while (cursor < input.length && raw.length < 32) {
-      const char = input.charAt(cursor);
-      if (isDigit(char)) {
-        digits += char;
-      } else if (char !== ' ' && char !== '-') {
-        break;
-      }
-      raw += char;
-      cursor += 1;
-    }
-
-    if (isValidLuhn(digits)) {
+    const candidate = readCardCandidate(input, index);
+    if (isValidLuhn(candidate.digits)) {
       redacted += '[REDACTED_CARD]';
       matched = true;
     } else {
-      redacted += raw;
+      redacted += candidate.raw;
     }
 
-    index = cursor;
+    index = candidate.end;
   }
 
   return { redacted, matched };
@@ -110,34 +118,42 @@ function isPhoneSeparator(char: string, nextChar: string): boolean {
   );
 }
 
-function readPhoneCandidate(
+function shouldContinuePhoneScan(input: string, start: number, cursor: number): boolean {
+  return cursor < input.length && cursor - start < 24;
+}
+
+function scanPhoneCandidate(
   input: string,
   start: number
-): { matchLength: number; scanLength: number } {
+): { digits: string; hasSeparator: boolean; scanLength: number } {
   let digits = '';
   let hasSeparator = false;
   let cursor = start;
 
-  while (cursor < input.length && cursor - start < 24) {
+  while (shouldContinuePhoneScan(input, start, cursor)) {
     const char = input.charAt(cursor);
     const nextChar = input.charAt(cursor + 1);
 
-    if (isDigit(char)) {
-      digits += char;
-    } else if (isPhoneSeparator(char, nextChar)) {
-      hasSeparator = true;
-    } else {
-      break;
-    }
-
+    if (!isDigit(char) && !isPhoneSeparator(char, nextChar)) break;
+    if (isDigit(char)) digits += char;
+    if (isPhoneSeparator(char, nextChar)) hasSeparator = true;
     cursor += 1;
   }
 
-  const hasPhoneDigits = digits.length === 10 || (digits.length === 11 && digits.charAt(0) === '1');
-  const scanLength = cursor - start;
+  return { digits, hasSeparator, scanLength: cursor - start };
+}
+
+function readPhoneCandidate(
+  input: string,
+  start: number
+): { matchLength: number; scanLength: number } {
+  const candidate = scanPhoneCandidate(input, start);
+  const hasPhoneDigits =
+    candidate.digits.length === 10 ||
+    (candidate.digits.length === 11 && candidate.digits.charAt(0) === '1');
   return {
-    matchLength: hasSeparator && hasPhoneDigits ? scanLength : 0,
-    scanLength,
+    matchLength: candidate.hasSeparator && hasPhoneDigits ? candidate.scanLength : 0,
+    scanLength: candidate.scanLength,
   };
 }
 
