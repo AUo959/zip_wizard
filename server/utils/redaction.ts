@@ -9,7 +9,7 @@ const DEFAULT_PREVIEW_LENGTH = 1200;
 
 type RedactionPattern = {
   label: string;
-  redact(input: string): { redacted: string; matched: boolean };
+  redact: typeof redactCreditCards;
 };
 
 function normalizePreviewLength(previewLength: number): number {

@@ -420,9 +420,11 @@ const CODE_ANALYSIS_EXTENSIONS = new Set([
 const TEXT_ANALYSIS_EXTENSIONS = new Set(['.txt', '.log', '.html', '.md', '.xml']);
 const ARCHIVE_MIME_MARKERS = ['zip', 'tar', 'rar', '7z', 'gzip'];
 
+/* eslint-disable no-unused-vars -- Signature-only route arguments define async handler shape. */
 type AsyncRouteHandler = (
-  ..._args: [AuthenticatedRequest, Response, NextFunction]
+  ...args: [AuthenticatedRequest, Response, NextFunction]
 ) => Promise<unknown>;
+/* eslint-enable no-unused-vars */
 
 function asyncHandler(handler: AsyncRouteHandler) {
   return (req: Request, res: Response, next: NextFunction): void => {

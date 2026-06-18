@@ -81,9 +81,7 @@ interface CircuitBreaker {
   nextRetryTime?: Date;
 }
 
-type RandomValueProvider = {
-  getRandomValues(_values: Uint32Array): Uint32Array;
-};
+type RandomValueProvider = Pick<typeof globalThis.crypto, 'getRandomValues'>;
 
 type GlobalWithOptionalCrypto = Omit<typeof globalThis, 'crypto'> & {
   crypto?: RandomValueProvider;

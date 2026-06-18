@@ -53,10 +53,10 @@ type StoredFile = {
 type StoredArchiveUpdate = Partial<StoredArchive>;
 type StoredFileUpdate = Partial<StoredFile>;
 
+/* eslint-disable no-unused-vars -- Interface method arguments define the storage contract. */
 export interface IStorage {
   // Archive operations
   createArchive(archive: InsertArchive): Promise<StoredArchive>;
-  // eslint-disable-next-line no-unused-vars
   updateArchive(id: string, updates: StoredArchiveUpdate): Promise<StoredArchive | undefined>;
   getArchive(id: string): Promise<StoredArchive | undefined>;
   getAllArchives(): Promise<StoredArchive[]>;
@@ -82,6 +82,7 @@ export interface IStorage {
   getRecentMutations(limit?: number): Promise<FileMutation[]>;
   deleteFileMutationsByFileId(fileId: string): Promise<void>;
 }
+/* eslint-enable no-unused-vars */
 
 export class DatabaseStorage implements IStorage {
   async createArchive(insertArchive: InsertArchive): Promise<StoredArchive> {
