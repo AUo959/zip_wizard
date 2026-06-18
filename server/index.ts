@@ -20,6 +20,38 @@ function normalizeHttpError(error: unknown): HttpError {
   return typeof error === 'object' && error !== null ? (error as HttpError) : {};
 }
 
+function getHttpStatus(httpError: HttpError): number {
+  return httpError.status ?? httpError.statusCode ?? 500;
+}
+
+function getHttpResponseMessage(httpError: HttpError, status: number): string {
+  return status >= 500 ? 'Internal Server Error' : (httpError.message ?? 'Request failed');
+}
+
+function logHttpError(req: Request, httpError: HttpError, status: number): void {
+  auditLog
+    .log('critical', 'system', 'HTTP request failed', {
+      userId: (req as RequestWithUser).user?.id,
+      resource: 'http',
+      details: {
+        status,
+        path: req.path,
+        method: req.method,
+        errorName: httpError.name,
+      },
+    })
+    .catch((logError: unknown) => {
+      console.error('Audit log write failed:', logError);
+    });
+}
+
+function handleHttpError(err: unknown, req: Request, res: Response): void {
+  const httpError = normalizeHttpError(err);
+  const status = getHttpStatus(httpError);
+  logHttpError(req, httpError, status);
+  res.status(status).json({ message: getHttpResponseMessage(httpError, status) });
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -59,27 +91,7 @@ app.use((req, res, next) => {
 
   app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
     void next;
-    const httpError = normalizeHttpError(err);
-    const status = httpError.status ?? httpError.statusCode ?? 500;
-    const responseMessage =
-      status >= 500 ? 'Internal Server Error' : (httpError.message ?? 'Request failed');
-
-    auditLog
-      .log('critical', 'system', 'HTTP request failed', {
-        userId: (req as RequestWithUser).user?.id,
-        resource: 'http',
-        details: {
-          status,
-          path: req.path,
-          method: req.method,
-          errorName: httpError.name,
-        },
-      })
-      .catch((logError: unknown) => {
-        console.error('Audit log write failed:', logError);
-      });
-
-    res.status(status).json({ message: responseMessage });
+    handleHttpError(err, req, res);
   });
 
   // importantly only setup vite in development and after

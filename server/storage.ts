@@ -3,9 +3,7 @@ import {
   files,
   observerEvents,
   fileMutations,
-  type Archive,
   type InsertArchive,
-  type File,
   type InsertFile,
   type ObserverEvent,
   type InsertObserverEvent,
@@ -17,21 +15,59 @@ import { db } from './db';
 import { eq, and, desc } from 'drizzle-orm';
 import { auditLog } from './audit-log';
 
+type StoredArchive = {
+  id: string;
+  name: string;
+  originalSize: number;
+  fileCount: number;
+  uploadedAt: Date;
+  symbolicChain: string | null;
+  threadTag: string | null;
+  ethicsLock: string | null;
+  trustAnchor: string | null;
+  replayable: boolean | null;
+  monitoringWindow: number | null;
+};
+
+type StoredFile = {
+  id: string;
+  archiveId: string;
+  path: string;
+  name: string;
+  extension: string | null;
+  size: number;
+  content: string | null;
+  redactedPreview: string | null;
+  isDirectory: string;
+  parentPath: string | null;
+  language: string | null;
+  description: string | null;
+  tags: string[] | null;
+  complexity: string | null;
+  dependencies: string[] | null;
+  originalHash: string | null;
+  currentHash: string | null;
+  lastMutated: Date | null;
+};
+
+type StoredArchiveUpdate = Partial<StoredArchive>;
+type StoredFileUpdate = Partial<StoredFile>;
+
 export interface IStorage {
   // Archive operations
-  createArchive(archive: InsertArchive): Promise<Archive>;
+  createArchive(archive: InsertArchive): Promise<StoredArchive>;
   // eslint-disable-next-line no-unused-vars
-  updateArchive(id: string, updates: Partial<Archive>): Promise<Archive | undefined>;
-  getArchive(id: string): Promise<Archive | undefined>;
-  getAllArchives(): Promise<Archive[]>;
+  updateArchive(id: string, updates: StoredArchiveUpdate): Promise<StoredArchive | undefined>;
+  getArchive(id: string): Promise<StoredArchive | undefined>;
+  getAllArchives(): Promise<StoredArchive[]>;
   deleteArchive(id: string): Promise<void>;
 
   // File operations
-  createFile(file: InsertFile): Promise<File>;
-  getFilesByArchiveId(archiveId: string): Promise<File[]>;
-  getFile(id: string): Promise<File | undefined>;
-  getFileByPath(archiveId: string, path: string): Promise<File | undefined>;
-  updateFile(id: string, updates: Partial<File>): Promise<File | undefined>;
+  createFile(file: InsertFile): Promise<StoredFile>;
+  getFilesByArchiveId(archiveId: string): Promise<StoredFile[]>;
+  getFile(id: string): Promise<StoredFile | undefined>;
+  getFileByPath(archiveId: string, path: string): Promise<StoredFile | undefined>;
+  updateFile(id: string, updates: StoredFileUpdate): Promise<StoredFile | undefined>;
   deleteFilesByArchiveId(archiveId: string): Promise<void>;
 
   // Observer event operations
@@ -48,22 +84,25 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  async createArchive(insertArchive: InsertArchive): Promise<Archive> {
+  async createArchive(insertArchive: InsertArchive): Promise<StoredArchive> {
     const [archive] = await db.insert(archives).values([insertArchive]).returning();
     return archive;
   }
 
-  async updateArchive(id: string, updates: Partial<Archive>): Promise<Archive | undefined> {
+  async updateArchive(
+    id: string,
+    updates: StoredArchiveUpdate
+  ): Promise<StoredArchive | undefined> {
     const [archive] = await db.update(archives).set(updates).where(eq(archives.id, id)).returning();
     return archive ?? undefined;
   }
 
-  async getArchive(id: string): Promise<Archive | undefined> {
+  async getArchive(id: string): Promise<StoredArchive | undefined> {
     const [archive] = await db.select().from(archives).where(eq(archives.id, id));
     return archive || undefined;
   }
 
-  async getAllArchives(): Promise<Archive[]> {
+  async getAllArchives(): Promise<StoredArchive[]> {
     return await db.select().from(archives);
   }
 
@@ -99,7 +138,7 @@ export class DatabaseStorage implements IStorage {
    * @see normalizeTags - For tags array validation
    * @see normalizeDependencies - For dependencies array validation
    */
-  async createFile(insertFile: InsertFile): Promise<File> {
+  async createFile(insertFile: InsertFile): Promise<StoredFile> {
     // Ensure tags and dependencies are properly typed as string arrays
     const fileToInsert = {
       ...insertFile,
@@ -114,16 +153,16 @@ export class DatabaseStorage implements IStorage {
     return file;
   }
 
-  async getFilesByArchiveId(archiveId: string): Promise<File[]> {
+  async getFilesByArchiveId(archiveId: string): Promise<StoredFile[]> {
     return await db.select().from(files).where(eq(files.archiveId, archiveId));
   }
 
-  async getFile(id: string): Promise<File | undefined> {
+  async getFile(id: string): Promise<StoredFile | undefined> {
     const [file] = await db.select().from(files).where(eq(files.id, id));
     return file || undefined;
   }
 
-  async getFileByPath(archiveId: string, path: string): Promise<File | undefined> {
+  async getFileByPath(archiveId: string, path: string): Promise<StoredFile | undefined> {
     const [file] = await db
       .select()
       .from(files)
@@ -131,7 +170,7 @@ export class DatabaseStorage implements IStorage {
     return file || undefined;
   }
 
-  async updateFile(id: string, updates: Partial<File>): Promise<File | undefined> {
+  async updateFile(id: string, updates: StoredFileUpdate): Promise<StoredFile | undefined> {
     const [updatedFile] = await db.update(files).set(updates).where(eq(files.id, id)).returning();
     return updatedFile || undefined;
   }

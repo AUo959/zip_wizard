@@ -391,6 +391,15 @@ type ProcessUploadOptions = {
   isZipArchive: boolean;
 };
 
+type ObserverEventRecord = {
+  type: string;
+  target: string;
+  timestamp: Date;
+  metadata: unknown;
+};
+
+type UploadBodyField = 'from' | 'operation' | 'tag' | 'ethicsLock' | 'trustAnchor';
+
 const CODE_ANALYSIS_EXTENSIONS = new Set([
   '.js',
   '.jsx',
@@ -412,12 +421,14 @@ const TEXT_ANALYSIS_EXTENSIONS = new Set(['.txt', '.log', '.html', '.md', '.xml'
 const ARCHIVE_MIME_MARKERS = ['zip', 'tar', 'rar', '7z', 'gzip'];
 
 type AsyncRouteHandler = (
-  ...args: [AuthenticatedRequest, Response, NextFunction]
+  ..._args: [AuthenticatedRequest, Response, NextFunction]
 ) => Promise<unknown>;
 
 function asyncHandler(handler: AsyncRouteHandler) {
   return (req: Request, res: Response, next: NextFunction): void => {
-    void handler(req as AuthenticatedRequest, res, next).catch((error: unknown) => next(error));
+    void handler(req as AuthenticatedRequest, res, next).catch((error: unknown) => {
+      next(error);
+    });
   };
 }
 
@@ -431,8 +442,26 @@ function sanitizeDownloadName(name: string): string {
   return baseName.replace(/[^A-Za-z0-9._-]/g, '_') || 'archive';
 }
 
-function getRequestBodyValue(req: Request, key: string, fallback: string): string {
-  const value = (req.body as Record<string, unknown> | undefined)?.[key];
+function getUploadBodyField(req: Request, key: UploadBodyField): unknown {
+  const body = req.body as Record<UploadBodyField, unknown> | undefined;
+  if (!body) return undefined;
+
+  switch (key) {
+    case 'from':
+      return body.from;
+    case 'operation':
+      return body.operation;
+    case 'tag':
+      return body.tag;
+    case 'ethicsLock':
+      return body.ethicsLock;
+    case 'trustAnchor':
+      return body.trustAnchor;
+  }
+}
+
+function getRequestBodyValue(req: Request, key: UploadBodyField, fallback: string): string {
+  const value = getUploadBodyField(req, key);
   return typeof value === 'string' && value.length > 0 ? value : fallback;
 }
 
@@ -728,25 +757,95 @@ function sendUploadResponse(res: Response, archive: Archive, result: UploadProce
   });
 }
 
-async function handleArchiveUpload(req: AuthenticatedRequest, res: Response): Promise<void> {
+function buildAiOptimizedSummary(files: File[], analysis: ReturnType<typeof analyzeFiles>) {
+  return {
+    codeFiles: files.filter(f => f.language && f.language !== 'Text').length,
+    languages: Object.keys(analysis.languages),
+    complexityDistribution: {
+      high: files.filter(f => f.complexity === 'High').length,
+      medium: files.filter(f => f.complexity === 'Medium').length,
+      low: files.filter(f => f.complexity === 'Low').length,
+    },
+    keyInsights: extractKeyInsights(files),
+  };
+}
+
+function buildArchiveExportData(
+  archive: Archive,
+  files: File[],
+  observerEvents: ObserverEventRecord[]
+) {
+  const analysis = analyzeFiles(files);
+  return {
+    metadata: {
+      archiveName: archive.name,
+      exportedAt: new Date().toISOString(),
+      version: API_CONFIG.version,
+      zipWizardVersion: 'v2.2.6b',
+      totalFiles: files.length,
+      analysisComplete: true,
+    },
+    archive: {
+      ...archive,
+      quantumFeatures: {
+        symbolicChain: archive.symbolicChain,
+        threadTag: archive.threadTag,
+        ethicsLock: archive.ethicsLock,
+        trustAnchor: archive.trustAnchor,
+        replayable: archive.replayable,
+      },
+    },
+    analysis: {
+      ...analysis,
+      aiOptimizedSummary: buildAiOptimizedSummary(files, analysis),
+    },
+    fileStructure: buildExportFileStructure(files),
+    observerEvents: observerEvents.map(event => ({
+      type: event.type,
+      target: event.target,
+      timestamp: event.timestamp,
+      metadata: event.metadata,
+    })),
+    exportedAt: new Date().toISOString(),
+    aiInstructions: {
+      note: 'This archive has been processed by ZipWizard v2.2.6b quantum analysis engine',
+      recommendations:
+        'Focus on files with High complexity for technical review, JavaScript modules contain encryption logic',
+      explorationPaths: generateExplorationPaths(files),
+    },
+  };
+}
+
+function sendArchiveExportResponse(res: Response, archive: Archive, exportData: unknown): void {
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="${sanitizeDownloadName(archive.name)}-zipwizard-export.json"`
+  );
+  res.json(exportData);
+}
+
+function handleArchiveUpload(req: AuthenticatedRequest, res: Response): Promise<void> {
   let createdArchiveId: string | undefined;
+  const validation = validateUploadRequest(req, res);
+  if (!validation) return Promise.resolve();
 
-  try {
-    const validation = validateUploadRequest(req, res);
-    if (!validation) return;
-
-    const requesterId = req.user?.id ?? 'anonymous';
-    const archive = await createUploadArchive(req, validation.uploadedFile, requesterId);
-    createdArchiveId = archive.id;
-
-    const result = await processUploadedArchive({ archive, requesterId, ...validation });
-    const finalArchive = await finalizeUploadArchive(archive, result);
-    sendUploadResponse(res, finalArchive, result);
-  } catch (_error) {
-    console.error('Upload error:', _error);
-    await cleanupCreatedArchive(createdArchiveId);
-    res.status(500).json({ message: 'Failed to process archive' });
-  }
+  const requesterId = req.user?.id ?? 'anonymous';
+  return createUploadArchive(req, validation.uploadedFile, requesterId)
+    .then(archive => {
+      createdArchiveId = archive.id;
+      return processUploadedArchive({ archive, requesterId, ...validation }).then(result =>
+        finalizeUploadArchive(archive, result).then(finalArchive => {
+          sendUploadResponse(res, finalArchive, result);
+        })
+      );
+    })
+    .catch((_error: unknown) => {
+      console.error('Upload error:', _error);
+      return cleanupCreatedArchive(createdArchiveId).then(() => {
+        res.status(500).json({ message: 'Failed to process archive' });
+      });
+    });
 }
 
 async function readZipEntryBuffer(
@@ -1009,70 +1108,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const archive = await storage.getArchive(req.params.id);
         if (!archive) {
-          return res.status(404).json({
+          res.status(404).json({
             success: false,
             error: 'Archive not found',
           });
+          return;
         }
 
         const files = await storage.getFilesByArchiveId(req.params.id);
-        const analysis = analyzeFiles(files);
         const observerEvents = await storage.getObserverEvents(req.params.id, 1000);
-
-        const exportData = {
-          metadata: {
-            archiveName: archive.name,
-            exportedAt: new Date().toISOString(),
-            version: API_CONFIG.version,
-            zipWizardVersion: 'v2.2.6b',
-            totalFiles: files.length,
-            analysisComplete: true,
-          },
-          archive: {
-            ...archive,
-            quantumFeatures: {
-              symbolicChain: archive.symbolicChain,
-              threadTag: archive.threadTag,
-              ethicsLock: archive.ethicsLock,
-              trustAnchor: archive.trustAnchor,
-              replayable: archive.replayable,
-            },
-          },
-          analysis: {
-            ...analysis,
-            aiOptimizedSummary: {
-              codeFiles: files.filter(f => f.language && f.language !== 'Text').length,
-              languages: Object.keys(analysis.languages),
-              complexityDistribution: {
-                high: files.filter(f => f.complexity === 'High').length,
-                medium: files.filter(f => f.complexity === 'Medium').length,
-                low: files.filter(f => f.complexity === 'Low').length,
-              },
-              keyInsights: extractKeyInsights(files),
-            },
-          },
-          fileStructure: buildExportFileStructure(files),
-          observerEvents: observerEvents.map(e => ({
-            type: e.type,
-            target: e.target,
-            timestamp: e.timestamp,
-            metadata: e.metadata,
-          })),
-          exportedAt: new Date().toISOString(),
-          aiInstructions: {
-            note: 'This archive has been processed by ZipWizard v2.2.6b quantum analysis engine',
-            recommendations:
-              'Focus on files with High complexity for technical review, JavaScript modules contain encryption logic',
-            explorationPaths: generateExplorationPaths(files),
-          },
-        };
-
-        res.setHeader('Content-Type', 'application/json');
-        res.setHeader(
-          'Content-Disposition',
-          `attachment; filename="${sanitizeDownloadName(archive.name)}-zipwizard-export.json"`
-        );
-        res.json(exportData);
+        const exportData = buildArchiveExportData(archive, files, observerEvents);
+        sendArchiveExportResponse(res, archive, exportData);
       } catch (_error) {
         res.status(500).json({
           success: false,

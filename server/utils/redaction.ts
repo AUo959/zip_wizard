@@ -9,7 +9,7 @@ const DEFAULT_PREVIEW_LENGTH = 1200;
 
 type RedactionPattern = {
   label: string;
-  redact: (_input: string) => { redacted: string; matched: boolean };
+  redact(input: string): { redacted: string; matched: boolean };
 };
 
 function normalizePreviewLength(previewLength: number): number {

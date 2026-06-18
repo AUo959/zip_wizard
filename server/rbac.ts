@@ -399,7 +399,9 @@ export function requirePermission(
 ): RequestHandler {
   return (req: Request, res: Response, next: NextFunction): void => {
     void authorizePermissionRequest(req, res, next, permission, resourceTypeOverride).catch(
-      (error: unknown) => next(error)
+      (error: unknown) => {
+        next(error);
+      }
     );
   };
 }
