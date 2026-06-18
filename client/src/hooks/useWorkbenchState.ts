@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 import type { File } from '@shared/schema';
 
 export function useWorkbenchState() {
-  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [recentFiles, setRecentFiles] = useState<File[]>([]);
   const [openTabs, setOpenTabs] = useState<File[]>([]);
