@@ -8,9 +8,7 @@
     "stack": ["typescript", "react", "express"],
     "description": "Archive engine — ZIP/archive extraction, content analysis, metadata processing"
   },
-  "upstream": [
-    "s.tag::constellation.prime"
-  ],
+  "upstream": ["s.tag::constellation.prime"],
   "downstream": [],
   "governance": {
     "charter": "Picard_Delta_3",
