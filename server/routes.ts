@@ -1,15 +1,18 @@
-import type { Express, Request } from 'express';
+import type { Express, Request, Response, NextFunction } from 'express';
 import { createServer, type Server } from 'http';
 import multer from 'multer';
 import JSZip from 'jszip';
 import { storage } from './storage';
 import { observer } from './observer';
-import { type File } from '@shared/schema';
+import { type Archive, type File, type InsertFile } from '@shared/schema';
 import path from 'path';
 import cors from 'cors';
 import crypto from 'crypto';
-
-const upload = multer({ storage: multer.memoryStorage() });
+import { auditLog } from './audit-log';
+import { rbac, requirePermission } from './rbac';
+import { buildCorsOptions } from './utils/cors';
+import { redactContent } from './utils/redaction';
+import { authenticateRequest, type AuthenticatedRequest } from './middleware/auth';
 
 // Extract code snippets from text/chat content
 function extractCodeFromText(content: string): { snippets: string[]; languages: string[] } {
@@ -250,60 +253,6 @@ function analyzeCodeFile(filename: string, content: string, extension: string) {
   };
 }
 
-// Helper function to detect language from extension
-function detectLanguage(extension: string): string {
-  const languageMap: Record<string, string> = {
-    '.js': 'JavaScript',
-    '.jsx': 'React',
-    '.ts': 'TypeScript',
-    '.tsx': 'React TypeScript',
-    '.py': 'Python',
-    '.java': 'Java',
-    '.cpp': 'C++',
-    '.c': 'C',
-    '.css': 'CSS',
-    '.html': 'HTML',
-    '.json': 'JSON',
-    '.md': 'Markdown',
-    '.php': 'PHP',
-    '.rb': 'Ruby',
-    '.go': 'Go',
-    '.rs': 'Rust',
-  };
-  return languageMap[extension] || 'Unknown';
-}
-
-// Helper function to analyze content
-function analyzeContent(
-  content: string,
-  language: string
-): { complexity: string | null; dependencies: string[] } {
-  const dependencies: string[] = [];
-
-  // Extract imports/dependencies
-  const importRegex = /(?:import|require|from|#include)\s+['"']([^'"']+)['"']/g;
-  let match;
-  while ((match = importRegex.exec(content)) !== null) {
-    dependencies.push(match[1]);
-  }
-
-  // Determine complexity based on content
-  const lines = content.split('\n').length;
-  const functions = (content.match(/function|def |class |const \w+\s*=/g) || []).length;
-
-  let complexity = 'Low';
-  if (lines > 100 || functions > 10) {
-    complexity = 'High';
-  } else if (lines > 50 || functions > 5) {
-    complexity = 'Medium';
-  }
-
-  return {
-    complexity,
-    dependencies: dependencies.slice(0, 10), // Limit dependencies
-  };
-}
-
 // Helper functions for enhanced export
 function extractKeyInsights(files: File[]): string[] {
   const insights: string[] = [];
@@ -391,17 +340,574 @@ const API_CONFIG: ApiConfig = {
   version: 'v1',
   maxFileSize: 100 * 1024 * 1024, // 100MB
   supportedFormats: ['.zip', '.rar', '.7z', '.tar', '.gz'],
-  cors: {
-    origin: process.env.CORS_ORIGIN || '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
-    credentials: true,
-  },
+  cors: buildCorsOptions(),
 };
+
+const ARCHIVE_LIMITS = {
+  maxEntries: parseInt(process.env.MAX_ARCHIVE_FILES ?? '512', 10),
+  maxEntryBytes: parseInt(process.env.MAX_ARCHIVE_ENTRY_BYTES ?? `${5 * 1024 * 1024}`, 10), // 5MB default per entry
+};
+
+type SkippedArchiveEntry = {
+  path: string;
+  reason: 'entry-limit' | 'entry-size-limit' | 'stream-error';
+  bytesRead?: number;
+};
+
+type FileAnalysis = {
+  language: string | null;
+  tags: string[];
+  complexity: string | null;
+  dependencies: string[];
+  description: string;
+};
+
+type UploadProcessingResult = {
+  processedFiles: File[];
+  skippedEntries: SkippedArchiveEntry[];
+  archiveTruncated: boolean;
+};
+
+type PersistDirectoryOptions = {
+  archiveId: string;
+  requesterId: string;
+  relativePath: string;
+};
+
+type PersistFileOptions = {
+  archiveId: string;
+  requesterId: string;
+  relativePath: string;
+  buffer: Buffer;
+  extension: string;
+  name: string;
+  parentPath: string | null;
+};
+
+type ProcessUploadOptions = {
+  archive: Archive;
+  requesterId: string;
+  uploadedFile: Express.Multer.File;
+  isZipArchive: boolean;
+};
+
+type ObserverEventRecord = {
+  type: string;
+  target: string;
+  timestamp: Date;
+  metadata: unknown;
+};
+
+type UploadBodyField = 'from' | 'operation' | 'tag' | 'ethicsLock' | 'trustAnchor';
+
+const CODE_ANALYSIS_EXTENSIONS = new Set([
+  '.js',
+  '.jsx',
+  '.ts',
+  '.tsx',
+  '.py',
+  '.java',
+  '.cpp',
+  '.c',
+  '.css',
+  '.json',
+  '.php',
+  '.rb',
+  '.go',
+  '.rs',
+]);
+
+const TEXT_ANALYSIS_EXTENSIONS = new Set(['.txt', '.log', '.html', '.md', '.xml']);
+const ARCHIVE_MIME_MARKERS = ['zip', 'tar', 'rar', '7z', 'gzip'];
+
+/* eslint-disable no-unused-vars -- Signature-only route arguments define async handler shape. */
+type AsyncRouteHandler = (
+  ...args: [AuthenticatedRequest, Response, NextFunction]
+) => Promise<unknown>;
+/* eslint-enable no-unused-vars */
+
+function asyncHandler(handler: AsyncRouteHandler) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    void handler(req as AuthenticatedRequest, res, next).catch((error: unknown) => {
+      next(error);
+    });
+  };
+}
+
+function sanitizeStoredContent(content: string): string {
+  const cleanContent = content.split(String.fromCharCode(0)).join('');
+  return cleanContent.length > 50000 ? `${cleanContent.substring(0, 50000)}...` : cleanContent;
+}
+
+function sanitizeDownloadName(name: string): string {
+  const baseName = path.basename(name).replace(/\.zip$/i, '');
+  return baseName.replace(/[^A-Za-z0-9._-]/g, '_') || 'archive';
+}
+
+function getUploadBodyField(req: Request, key: UploadBodyField): unknown {
+  const body = req.body as Record<UploadBodyField, unknown> | undefined;
+  if (!body) return undefined;
+
+  switch (key) {
+    case 'from':
+      return body.from;
+    case 'operation':
+      return body.operation;
+    case 'tag':
+      return body.tag;
+    case 'ethicsLock':
+      return body.ethicsLock;
+    case 'trustAnchor':
+      return body.trustAnchor;
+  }
+}
+
+function getRequestBodyValue(req: Request, key: UploadBodyField, fallback: string): string {
+  const value = getUploadBodyField(req, key);
+  return typeof value === 'string' && value.length > 0 ? value : fallback;
+}
+
+function parseMonitoringWindow(req: Request): number {
+  const value = (req.body as Record<string, unknown> | undefined)?.monitoringWindow;
+  const parsed = Number.parseInt(String(value ?? ''), 10);
+  return Number.isFinite(parsed) ? parsed : 48;
+}
+
+function getUploadKind(uploadedFile: Express.Multer.File): { isZipArchive: boolean } {
+  const fileType = uploadedFile.mimetype ?? 'application/octet-stream';
+  const isArchive =
+    ARCHIVE_MIME_MARKERS.some(marker => fileType.includes(marker)) ||
+    uploadedFile.originalname.includes('.tar.');
+
+  return {
+    isZipArchive: isArchive && uploadedFile.originalname.endsWith('.zip'),
+  };
+}
+
+function setOwnerPermission(resourceId: string, resourceType: 'file' | 'archive', ownerId: string) {
+  rbac.setResourcePermissions(resourceId, {
+    resourceId,
+    resourceType,
+    ownerId,
+    permissions: new Map([[ownerId, 'owner']]),
+  });
+}
+
+function shouldAnalyzeAsText(content: string, extension: string): boolean {
+  return !extension || TEXT_ANALYSIS_EXTENSIONS.has(extension) || /[\x20-\x7E\n\r\t]/.test(content);
+}
+
+function analyzeUploadedFile(name: string, content: string, extension: string): FileAnalysis {
+  if (!content) {
+    return {
+      language: null,
+      tags: [],
+      complexity: null,
+      dependencies: [],
+      description: 'Binary or non-text file',
+    };
+  }
+
+  if (extension && CODE_ANALYSIS_EXTENSIONS.has(extension)) {
+    return analyzeCodeFile(name, content, extension);
+  }
+
+  return shouldAnalyzeAsText(content, extension)
+    ? analyzeChatContent(name, content)
+    : {
+        language: null,
+        tags: [],
+        complexity: null,
+        dependencies: [],
+        description: 'Binary or non-text file',
+      };
+}
+
+function buildFileTags(analysis: FileAnalysis, redactionFindings: string[]): string[] {
+  return [...analysis.tags, ...(redactionFindings.length ? ['pii-redacted'] : [])];
+}
+
+async function createUploadArchive(
+  req: AuthenticatedRequest,
+  uploadedFile: Express.Multer.File,
+  requesterId: string
+): Promise<Archive> {
+  const archive = await storage.createArchive({
+    name: uploadedFile.originalname,
+    originalSize: uploadedFile.size,
+    fileCount: 0,
+    symbolicChain: `T1_CHAIN::ZIPWizard::v2.2.6b::${getRequestBodyValue(req, 'from', 'USER')}::${getRequestBodyValue(req, 'operation', 'Upload')}`,
+    threadTag: `Thread_${getRequestBodyValue(req, 'tag', 'Upload')}_${Date.now()}`,
+    ethicsLock: getRequestBodyValue(req, 'ethicsLock', 'Picard_Delta_3'),
+    trustAnchor: getRequestBodyValue(req, 'trustAnchor', 'SN1-AS3-TRUSTED'),
+    replayable: true,
+    monitoringWindow: parseMonitoringWindow(req),
+  });
+
+  setOwnerPermission(archive.id, 'archive', requesterId);
+  return archive;
+}
+
+async function persistUploadDirectory(options: PersistDirectoryOptions): Promise<File> {
+  const { archiveId, requesterId, relativePath } = options;
+  const dirFile = await storage.createFile({
+    archiveId,
+    path: relativePath,
+    name: path.basename(relativePath) || relativePath,
+    size: 0,
+    isDirectory: 'true',
+    parentPath: path.dirname(relativePath) === '.' ? null : path.dirname(relativePath),
+    extension: null,
+    content: null,
+    redactedPreview: null,
+    language: null,
+    description: 'Directory containing project files',
+    tags: ['directory'],
+    complexity: null,
+    dependencies: [],
+  });
+
+  setOwnerPermission(dirFile.id, 'file', requesterId);
+  return dirFile;
+}
+
+function buildStoredFileInput(options: PersistFileOptions, analysis: FileAnalysis): InsertFile {
+  const content = options.buffer.toString('utf-8');
+  const redaction = redactContent(content);
+  const contentHash = crypto.createHash('sha256').update(content).digest('hex');
+
+  return {
+    archiveId: options.archiveId,
+    path: options.relativePath,
+    name: options.name,
+    size: content.length,
+    isDirectory: 'false',
+    parentPath: options.parentPath,
+    extension: options.extension,
+    content: sanitizeStoredContent(content),
+    redactedPreview: redaction.preview,
+    language: analysis.language,
+    description: analysis.description,
+    tags: buildFileTags(analysis, redaction.findings),
+    complexity: analysis.complexity,
+    dependencies: analysis.dependencies,
+    originalHash: contentHash,
+    currentHash: contentHash,
+  };
+}
+
+async function persistUploadFile(options: PersistFileOptions): Promise<File> {
+  const content = options.buffer.toString('utf-8');
+  const analysis = analyzeUploadedFile(options.name, content, options.extension);
+  const file = await storage.createFile(buildStoredFileInput(options, analysis));
+
+  setOwnerPermission(file.id, 'file', options.requesterId);
+  if (analysis.language) {
+    await observer.trackAnalysis(options.archiveId, file.id, options.name, analysis);
+  }
+  return file;
+}
+
+async function processZipUpload(options: ProcessUploadOptions): Promise<UploadProcessingResult> {
+  const processedFiles: File[] = [];
+  const skippedEntries: SkippedArchiveEntry[] = [];
+  let archiveTruncated = false;
+  const zip = await JSZip.loadAsync(options.uploadedFile.buffer, { createFolders: true });
+
+  for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
+    if (processedFiles.length >= ARCHIVE_LIMITS.maxEntries) {
+      archiveTruncated = true;
+      skippedEntries.push({ path: relativePath, reason: 'entry-limit' });
+      continue;
+    }
+
+    const entry = zipEntry as JSZip.JSZipObject;
+    if (entry.dir) {
+      processedFiles.push(
+        await persistUploadDirectory({
+          archiveId: options.archive.id,
+          requesterId: options.requesterId,
+          relativePath,
+        })
+      );
+      continue;
+    }
+
+    const { buffer: fileBuffer, skipped } = await readZipEntryBuffer(entry, relativePath);
+    if (skipped) {
+      skippedEntries.push(skipped);
+      continue;
+    }
+    if (!fileBuffer) continue;
+
+    processedFiles.push(
+      await persistUploadFile({
+        archiveId: options.archive.id,
+        requesterId: options.requesterId,
+        relativePath,
+        buffer: fileBuffer,
+        extension: path.extname(relativePath),
+        name: path.basename(relativePath),
+        parentPath: path.dirname(relativePath) === '.' ? null : path.dirname(relativePath),
+      })
+    );
+  }
+
+  return { processedFiles, skippedEntries, archiveTruncated };
+}
+
+async function processSingleFileUpload(
+  options: ProcessUploadOptions
+): Promise<UploadProcessingResult> {
+  const uploadedFile = options.uploadedFile;
+  const processedFile = await persistUploadFile({
+    archiveId: options.archive.id,
+    requesterId: options.requesterId,
+    relativePath: uploadedFile.originalname,
+    buffer: uploadedFile.buffer,
+    extension: path.extname(uploadedFile.originalname),
+    name: uploadedFile.originalname,
+    parentPath: null,
+  });
+
+  return {
+    processedFiles: [processedFile],
+    skippedEntries: [],
+    archiveTruncated: false,
+  };
+}
+
+async function processUploadedArchive(
+  options: ProcessUploadOptions
+): Promise<UploadProcessingResult> {
+  return options.isZipArchive ? processZipUpload(options) : processSingleFileUpload(options);
+}
+
+async function cleanupCreatedArchive(createdArchiveId: string | undefined): Promise<void> {
+  if (!createdArchiveId) return;
+  try {
+    await storage.deleteArchive(createdArchiveId);
+  } catch (cleanupError) {
+    console.error('Failed to clean up archive after upload error:', cleanupError);
+  }
+}
+
+function setUploadMetadataHeaders(res: Response, result: UploadProcessingResult): void {
+  if (result.archiveTruncated) {
+    res.setHeader('X-ZipWizard-Archive-Truncated', 'true');
+  }
+  if (result.skippedEntries.length > 0) {
+    res.setHeader('X-ZipWizard-Skipped-Entries', String(result.skippedEntries.length));
+  }
+}
+
+function validateUploadRequest(
+  req: AuthenticatedRequest,
+  res: Response
+): { uploadedFile: Express.Multer.File; isZipArchive: boolean } | undefined {
+  const uploadedFile = req.file;
+  if (!uploadedFile) {
+    res.status(400).json({ message: 'No file uploaded' });
+    return undefined;
+  }
+
+  const { isZipArchive } = getUploadKind(uploadedFile);
+  if (uploadedFile.size > API_CONFIG.maxFileSize) {
+    res.status(413).json({ message: 'File exceeds configured size limit' });
+    return undefined;
+  }
+
+  if (!isZipArchive && uploadedFile.size > ARCHIVE_LIMITS.maxEntryBytes) {
+    res.status(413).json({
+      message: 'File exceeds configured per-entry size limit',
+      limitBytes: ARCHIVE_LIMITS.maxEntryBytes,
+    });
+    return undefined;
+  }
+
+  return { uploadedFile, isZipArchive };
+}
+
+async function finalizeUploadArchive(
+  archive: Archive,
+  result: UploadProcessingResult
+): Promise<Archive> {
+  const updatedArchive = await storage.updateArchive(archive.id, {
+    fileCount: result.processedFiles.length,
+  });
+
+  if (!updatedArchive) {
+    console.error('Failed to update archive fileCount', {
+      archiveId: archive.id,
+      expectedFileCount: result.processedFiles.length,
+    });
+  }
+
+  const finalArchive = updatedArchive ?? archive;
+  await observer.trackUpload(finalArchive.id, finalArchive.name, result.processedFiles.length);
+  return finalArchive;
+}
+
+function sendUploadResponse(res: Response, archive: Archive, result: UploadProcessingResult): void {
+  setUploadMetadataHeaders(res, result);
+  res.json({
+    archive,
+    fileCount: result.processedFiles.length,
+    truncated: result.archiveTruncated,
+    skippedEntries: result.skippedEntries,
+    limits: ARCHIVE_LIMITS,
+  });
+}
+
+function buildAiOptimizedSummary(files: File[], analysis: ReturnType<typeof analyzeFiles>) {
+  return {
+    codeFiles: files.filter(f => f.language && f.language !== 'Text').length,
+    languages: Object.keys(analysis.languages),
+    complexityDistribution: {
+      high: files.filter(f => f.complexity === 'High').length,
+      medium: files.filter(f => f.complexity === 'Medium').length,
+      low: files.filter(f => f.complexity === 'Low').length,
+    },
+    keyInsights: extractKeyInsights(files),
+  };
+}
+
+function buildArchiveExportData(
+  archive: Archive,
+  files: File[],
+  observerEvents: ObserverEventRecord[]
+) {
+  const analysis = analyzeFiles(files);
+  return {
+    metadata: {
+      archiveName: archive.name,
+      exportedAt: new Date().toISOString(),
+      version: API_CONFIG.version,
+      zipWizardVersion: 'v2.2.6b',
+      totalFiles: files.length,
+      analysisComplete: true,
+    },
+    archive: {
+      ...archive,
+      quantumFeatures: {
+        symbolicChain: archive.symbolicChain,
+        threadTag: archive.threadTag,
+        ethicsLock: archive.ethicsLock,
+        trustAnchor: archive.trustAnchor,
+        replayable: archive.replayable,
+      },
+    },
+    analysis: {
+      ...analysis,
+      aiOptimizedSummary: buildAiOptimizedSummary(files, analysis),
+    },
+    fileStructure: buildExportFileStructure(files),
+    observerEvents: observerEvents.map(event => ({
+      type: event.type,
+      target: event.target,
+      timestamp: event.timestamp,
+      metadata: event.metadata,
+    })),
+    exportedAt: new Date().toISOString(),
+    aiInstructions: {
+      note: 'This archive has been processed by ZipWizard v2.2.6b quantum analysis engine',
+      recommendations:
+        'Focus on files with High complexity for technical review, JavaScript modules contain encryption logic',
+      explorationPaths: generateExplorationPaths(files),
+    },
+  };
+}
+
+function sendArchiveExportResponse(res: Response, archive: Archive, exportData: unknown): void {
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="${sanitizeDownloadName(archive.name)}-zipwizard-export.json"`
+  );
+  res.json(exportData);
+}
+
+function handleArchiveUpload(req: AuthenticatedRequest, res: Response): Promise<void> {
+  let createdArchiveId: string | undefined;
+  const validation = validateUploadRequest(req, res);
+  if (!validation) return Promise.resolve();
+
+  const requesterId = req.user?.id ?? 'anonymous';
+  return createUploadArchive(req, validation.uploadedFile, requesterId)
+    .then(archive => {
+      createdArchiveId = archive.id;
+      return processUploadedArchive({ archive, requesterId, ...validation }).then(result =>
+        finalizeUploadArchive(archive, result).then(finalArchive => {
+          sendUploadResponse(res, finalArchive, result);
+        })
+      );
+    })
+    .catch((_error: unknown) => {
+      console.error('Upload error:', _error);
+      return cleanupCreatedArchive(createdArchiveId).then(() => {
+        res.status(500).json({ message: 'Failed to process archive' });
+      });
+    });
+}
+
+async function readZipEntryBuffer(
+  entry: JSZip.JSZipObject,
+  relativePath: string
+): Promise<{ buffer: Buffer | null; skipped?: SkippedArchiveEntry }> {
+  let bytesRead = 0;
+  const chunks: Buffer[] = [];
+  const stream = entry.nodeStream() as NodeJS.ReadableStream & { destroy: () => void };
+
+  return new Promise(resolve => {
+    let settled = false;
+
+    const settle = (buffer: Buffer | null, skipped?: SkippedArchiveEntry) => {
+      if (settled) return;
+      settled = true;
+      stream.removeAllListeners();
+      resolve({ buffer, skipped });
+    };
+
+    stream.on('data', (chunk: Buffer) => {
+      bytesRead += chunk.length;
+      if (bytesRead > ARCHIVE_LIMITS.maxEntryBytes) {
+        stream.destroy();
+        settle(null, { path: relativePath, reason: 'entry-size-limit', bytesRead });
+        return;
+      }
+      chunks.push(chunk);
+    });
+
+    stream.once('error', error => {
+      console.error(`Failed to read zip entry ${relativePath}:`, error);
+      settle(null, { path: relativePath, reason: 'stream-error', bytesRead });
+    });
+
+    stream.once('end', () => {
+      settle(Buffer.concat(chunks));
+    });
+  });
+}
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: API_CONFIG.maxFileSize,
+  },
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Apply CORS middleware
-  app.use(cors(API_CONFIG.cors));
+  const corsMiddleware = cors(API_CONFIG.cors);
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    corsMiddleware(req, res, err => {
+      if (err) {
+        res.status(403).json({ error: err.message });
+        return;
+      }
+      next();
+    });
+  });
 
   // API versioning middleware
   app.use('/api/:version/*', (req: Request<{ version: string }>, res, next) => {
@@ -485,411 +991,208 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload and process any file type - now supports comprehensive parsing
-  app.post('/api/v1/archives', upload.single('archive'), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded' });
-      }
-
-      // Detect file type
-      const fileType = req.file.mimetype || 'application/octet-stream';
-      const isArchive =
-        fileType.includes('zip') ||
-        fileType.includes('tar') ||
-        fileType.includes('rar') ||
-        fileType.includes('7z') ||
-        fileType.includes('gzip') ||
-        req.file.originalname.includes('.tar.');
-
-      let contents: any = null;
-      let fileCount = 0;
-      let processedFiles = [];
-
-      // Try to process as archive first if it looks like one
-      if (isArchive || req.file.originalname.endsWith('.zip')) {
-        try {
-          const zip = new JSZip();
-          contents = await zip.loadAsync(req.file.buffer);
-        } catch (_error) {
-          // Not a valid ZIP, will process as single file
-          console.log('Not a valid ZIP archive, processing as single file');
-        }
-      }
-
-      // Create archive record with enhanced metadata
-      const symbolicChain = `T1_CHAIN::ZIPWizard::v2.2.6b::${req.body.from || 'USER'}::${req.body.operation || 'Upload'}`;
-      const threadTag = `Thread_${req.body.tag || 'Upload'}_${Date.now()}`;
-
-      const archive = await storage.createArchive({
-        name: req.file.originalname,
-        originalSize: req.file.size,
-        fileCount: contents && contents.files ? Object.keys(contents.files).length : 1,
-        symbolicChain,
-        threadTag,
-        ethicsLock: req.body?.ethicsLock || 'Picard_Delta_3',
-        trustAnchor: req.body?.trustAnchor || 'SN1-AS3-TRUSTED',
-        replayable: true,
-        monitoringWindow: parseInt(req.body?.monitoringWindow) || 48,
-      });
-
-      // Track upload event
-      await observer.trackUpload(archive.id, archive.name, archive.fileCount);
-
-      // Process files based on type
-      if (contents && contents.files) {
-        // ZIP archive processing
-        for (const [relativePath, zipEntry] of Object.entries(contents.files)) {
-          const entry = zipEntry as JSZip.JSZipObject;
-          if (entry.dir) {
-            // Directory entry
-            const file = await storage.createFile({
-              archiveId: archive.id,
-              path: relativePath,
-              name: path.basename(relativePath) || relativePath,
-              size: 0,
-              isDirectory: 'true',
-              parentPath: path.dirname(relativePath) === '.' ? null : path.dirname(relativePath),
-              extension: null,
-              content: null,
-              language: null,
-              description: 'Directory containing project files',
-              tags: ['directory'],
-              complexity: null,
-              dependencies: [],
-            });
-            processedFiles.push(file);
-          } else {
-            // File entry
-            const content = await entry.async('text');
-            const extension = path.extname(relativePath);
-            const name = path.basename(relativePath);
-            const parentPath =
-              path.dirname(relativePath) === '.' ? null : path.dirname(relativePath);
-
-            let analysis: {
-              language: string | null;
-              tags: string[];
-              complexity: string | null;
-              dependencies: string[];
-              description: string;
-            } = {
-              language: null,
-              tags: [],
-              complexity: null,
-              dependencies: [],
-              description: 'Binary or non-text file',
-            };
-
-            // Analyze all text-based files
-            if (content) {
-              // Programming files
-              if (
-                extension &&
-                [
-                  '.js',
-                  '.jsx',
-                  '.ts',
-                  '.tsx',
-                  '.py',
-                  '.java',
-                  '.cpp',
-                  '.c',
-                  '.css',
-                  '.json',
-                  '.php',
-                  '.rb',
-                  '.go',
-                  '.rs',
-                ].includes(extension)
-              ) {
-                analysis = analyzeCodeFile(name, content, extension);
-              }
-              // Text files, logs, and chat histories
-              else if (extension && ['.txt', '.log', '.html', '.md', '.xml'].includes(extension)) {
-                analysis = analyzeChatContent(name, content);
-              }
-              // Any file without extension or unknown extension - check if it contains text
-              else if (!extension || content.match(/[\x20-\x7E\n\r\t]/)) {
-                analysis = analyzeChatContent(name, content);
-              }
-            }
-
-            // Calculate hash for mutation tracking
-            const contentHash = crypto.createHash('sha256').update(content).digest('hex');
-
-            // Clean content for PostgreSQL - remove null bytes and ensure valid UTF-8
-            let cleanContent = content.replace(/\x00/g, ''); // Remove null bytes
-            if (cleanContent.length > 50000) {
-              cleanContent = cleanContent.substring(0, 50000) + '...'; // Truncate very large files
-            }
-
-            const file = await storage.createFile({
-              archiveId: archive.id,
-              path: relativePath,
-              name,
-              size: content.length,
-              isDirectory: 'false',
-              parentPath,
-              extension,
-              content: cleanContent,
-              language: analysis.language,
-              description: analysis.description,
-              tags: Array.isArray(analysis.tags) ? analysis.tags : [],
-              complexity: analysis.complexity,
-              dependencies: Array.isArray(analysis.dependencies) ? analysis.dependencies : [],
-              originalHash: contentHash,
-              currentHash: contentHash,
-            });
-
-            // Track analysis event
-            if (analysis.language) {
-              await observer.trackAnalysis(archive.id, file.id, name, analysis);
-            }
-
-            processedFiles.push(file);
-          }
-        }
-      } else {
-        // Single file processing (non-archive)
-        fileCount = 1;
-        const fileContent = req.file.buffer.toString('utf-8');
-        const extension = path.extname(req.file.originalname);
-        const language = detectLanguage(extension);
-        const analysis = analyzeContent(fileContent, language);
-
-        const file = await storage.createFile({
-          archiveId: archive.id,
-          path: req.file.originalname,
-          name: req.file.originalname,
-          size: req.file.size,
-          isDirectory: 'false',
-          parentPath: null,
-          extension,
-          content: fileContent,
-          language,
-          description: `${req.file.mimetype} file`,
-          tags: [req.file.mimetype.split('/')[0], extension.replace('.', '')],
-          complexity: analysis.complexity,
-          dependencies: analysis.dependencies || [],
-          originalHash: crypto.createHash('sha256').update(fileContent).digest('hex'),
-          currentHash: crypto.createHash('sha256').update(fileContent).digest('hex'),
-        });
-        processedFiles.push(file);
-      }
-
-      res.json({ archive, fileCount: processedFiles.length });
-    } catch (_error) {
-      console.error('Upload error:', _error);
-      res.status(500).json({ message: 'Failed to process archive' });
-    }
-  });
+  app.post(
+    '/api/v1/archives',
+    authenticateRequest,
+    upload.single('archive'),
+    asyncHandler(handleArchiveUpload)
+  );
 
   // Get all archives
-  app.get('/api/v1/archives', async (req, res) => {
-    try {
-      const archives = await storage.getAllArchives();
-      res.json({
-        success: true,
-        data: archives,
-        meta: {
-          total: archives.length,
-          version: API_CONFIG.version,
-        },
-      });
-    } catch (_error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch archives',
-        message: _error instanceof Error ? _error.message : 'Unknown error',
-      });
-    }
-  });
+  app.get(
+    '/api/v1/archives',
+    authenticateRequest,
+    asyncHandler(async (_req, res) => {
+      try {
+        const archives = await storage.getAllArchives();
+        res.json({
+          success: true,
+          data: archives,
+          meta: {
+            total: archives.length,
+            version: API_CONFIG.version,
+          },
+        });
+      } catch (_error) {
+        res.status(500).json({
+          success: false,
+          error: 'Failed to fetch archives',
+        });
+      }
+    })
+  );
 
   // Get specific archive
-  app.get('/api/v1/archives/:id', async (req, res) => {
-    try {
-      const archive = await storage.getArchive(req.params.id);
-      if (!archive) {
-        return res.status(404).json({
+  app.get(
+    '/api/v1/archives/:id',
+    authenticateRequest,
+    requirePermission('read', 'archive'),
+    asyncHandler(async (req: AuthenticatedRequest, res) => {
+      try {
+        const archive = await storage.getArchive(req.params.id);
+        if (!archive) {
+          return res.status(404).json({
+            success: false,
+            error: 'Archive not found',
+          });
+        }
+        const files = await storage.getFilesByArchiveId(req.params.id);
+        res.json({
+          success: true,
+          data: {
+            ...archive,
+            fileCount: files.length,
+            analysis: analyzeFiles(files),
+          },
+        });
+      } catch (_error) {
+        res.status(500).json({
           success: false,
-          error: 'Archive not found',
+          error: 'Failed to fetch archive',
         });
       }
-      const files = await storage.getFilesByArchiveId(req.params.id);
-      res.json({
-        success: true,
-        data: {
-          ...archive,
-          fileCount: files.length,
-          analysis: analyzeFiles(files),
-        },
-      });
-    } catch (_error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch archive',
-      });
-    }
-  });
+    })
+  );
 
   // Get archive files with filtering
-  app.get('/api/v1/archives/:id/files', async (req, res) => {
-    try {
-      const { language, tag, search, complexity } = req.query;
-      let files = await storage.getFilesByArchiveId(req.params.id);
+  app.get(
+    '/api/v1/archives/:id/files',
+    authenticateRequest,
+    requirePermission('read', 'archive'),
+    asyncHandler(async (req: AuthenticatedRequest, res) => {
+      try {
+        const { language, tag, search, complexity } = req.query;
+        let files = await storage.getFilesByArchiveId(req.params.id);
 
-      // Apply filters
-      if (language) {
-        files = files.filter(f => f.language === language);
-      }
-      if (tag) {
-        files = files.filter(f => f.tags?.includes(tag as string));
-      }
-      if (complexity) {
-        files = files.filter(f => f.complexity === complexity);
-      }
-      if (search) {
-        const searchLower = (search as string).toLowerCase();
-        files = files.filter(
-          f =>
-            f.name.toLowerCase().includes(searchLower) ||
-            f.path.toLowerCase().includes(searchLower) ||
-            f.description?.toLowerCase().includes(searchLower)
-        );
-      }
+        // Apply filters
+        if (language) {
+          files = files.filter(f => f.language === language);
+        }
+        if (tag) {
+          files = files.filter(f => f.tags?.includes(tag as string));
+        }
+        if (complexity) {
+          files = files.filter(f => f.complexity === complexity);
+        }
+        if (search) {
+          const searchLower = (search as string).toLowerCase();
+          files = files.filter(
+            f =>
+              f.name.toLowerCase().includes(searchLower) ||
+              f.path.toLowerCase().includes(searchLower) ||
+              f.description?.toLowerCase().includes(searchLower)
+          );
+        }
 
-      res.json({
-        success: true,
-        data: files,
-        meta: {
-          total: files.length,
-          filters: { language, tag, complexity, search },
-        },
-      });
-    } catch (_error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch files',
-      });
-    }
-  });
+        res.json({
+          success: true,
+          data: files.map(file => ({ ...file, content: file.redactedPreview })), // lists return previews only
+          meta: {
+            total: files.length,
+            filters: { language, tag, complexity, search },
+          },
+        });
+      } catch (_error) {
+        res.status(500).json({
+          success: false,
+          error: 'Failed to fetch files',
+        });
+      }
+    })
+  );
 
   // Export archive analysis as JSON
-  app.get('/api/v1/archives/:id/export', async (req, res) => {
-    try {
-      const archive = await storage.getArchive(req.params.id);
-      if (!archive) {
-        return res.status(404).json({
+  app.get(
+    '/api/v1/archives/:id/export',
+    authenticateRequest,
+    requirePermission('export'),
+    asyncHandler(async (req: AuthenticatedRequest, res) => {
+      try {
+        const archive = await storage.getArchive(req.params.id);
+        if (!archive) {
+          res.status(404).json({
+            success: false,
+            error: 'Archive not found',
+          });
+          return;
+        }
+
+        const files = await storage.getFilesByArchiveId(req.params.id);
+        const observerEvents = await storage.getObserverEvents(req.params.id, 1000);
+        const exportData = buildArchiveExportData(archive, files, observerEvents);
+        sendArchiveExportResponse(res, archive, exportData);
+      } catch (_error) {
+        res.status(500).json({
           success: false,
-          error: 'Archive not found',
+          error: 'Failed to export archive',
         });
       }
-
-      const files = await storage.getFilesByArchiveId(req.params.id);
-      const analysis = analyzeFiles(files);
-      const observerEvents = await storage.getObserverEvents(req.params.id, 1000);
-
-      const exportData = {
-        metadata: {
-          archiveName: archive.name,
-          exportedAt: new Date().toISOString(),
-          version: API_CONFIG.version,
-          zipWizardVersion: 'v2.2.6b',
-          totalFiles: files.length,
-          analysisComplete: true,
-        },
-        archive: {
-          ...archive,
-          quantumFeatures: {
-            symbolicChain: archive.symbolicChain,
-            threadTag: archive.threadTag,
-            ethicsLock: archive.ethicsLock,
-            trustAnchor: archive.trustAnchor,
-            replayable: archive.replayable,
-          },
-        },
-        analysis: {
-          ...analysis,
-          aiOptimizedSummary: {
-            codeFiles: files.filter(f => f.language && f.language !== 'Text').length,
-            languages: Object.keys(analysis.languages),
-            complexityDistribution: {
-              high: files.filter(f => f.complexity === 'High').length,
-              medium: files.filter(f => f.complexity === 'Medium').length,
-              low: files.filter(f => f.complexity === 'Low').length,
-            },
-            keyInsights: extractKeyInsights(files),
-          },
-        },
-        fileStructure: buildExportFileStructure(files),
-        observerEvents: observerEvents.map(e => ({
-          type: e.type,
-          target: e.target,
-          timestamp: e.timestamp,
-          metadata: e.metadata,
-        })),
-        exportedAt: new Date().toISOString(),
-        aiInstructions: {
-          note: 'This archive has been processed by ZipWizard v2.2.6b quantum analysis engine',
-          recommendations:
-            'Focus on files with High complexity for technical review, JavaScript modules contain encryption logic',
-          explorationPaths: generateExplorationPaths(files),
-        },
-      };
-
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${archive.name.replace('.zip', '')}-zipwizard-export.json"`
-      );
-      res.json(exportData);
-    } catch (_error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to export archive',
-      });
-    }
-  });
+    })
+  );
 
   // Get specific file
-  app.get('/api/v1/files/:id', async (req, res) => {
-    try {
-      const file = await storage.getFile(req.params.id);
-      if (!file) {
-        return res.status(404).json({
+  app.get(
+    '/api/v1/files/:id',
+    authenticateRequest,
+    requirePermission('read'),
+    asyncHandler(async (req: AuthenticatedRequest, res) => {
+      try {
+        const file = await storage.getFile(req.params.id);
+        if (!file) {
+          return res.status(404).json({
+            success: false,
+            error: 'File not found',
+          });
+        }
+
+        const includeFullContent =
+          req.query.includeContent === 'true' && req.query.fullContentConsent === 'true';
+        const redactedResponse = {
+          ...file,
+          content: file.redactedPreview,
+        };
+
+        res.json({
+          success: true,
+          data: includeFullContent ? file : redactedResponse,
+          privacy: includeFullContent ? 'full' : 'redacted-preview',
+        });
+      } catch (_error) {
+        res.status(500).json({
           success: false,
-          error: 'File not found',
+          error: 'Failed to fetch file',
         });
       }
-      res.json({
-        success: true,
-        data: file,
-      });
-    } catch (_error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch file',
-      });
-    }
-  });
+    })
+  );
 
   // Delete archive
-  app.delete('/api/v1/archives/:id', async (req, res) => {
-    try {
-      await storage.deleteArchive(req.params.id);
-      res.json({
-        success: true,
-        message: 'Archive deleted successfully',
-      });
-    } catch (_error) {
-      console.error('Delete archive error:', _error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to delete archive',
-        details: _error instanceof Error ? _error.message : 'Unknown error',
-      });
-    }
-  });
+  app.delete(
+    '/api/v1/archives/:id',
+    authenticateRequest,
+    requirePermission('delete'),
+    asyncHandler(async (req: AuthenticatedRequest, res) => {
+      try {
+        await storage.deleteArchive(req.params.id);
+        res.json({
+          success: true,
+          message: 'Archive deleted successfully',
+        });
+      } catch (_error) {
+        console.error('Delete archive error:', _error);
+        await auditLog.log('critical', 'modification', 'Archive delete failed', {
+          userId: req.user?.id,
+          resource: 'archive',
+          resourceId: req.params.id,
+          details: { errorName: _error instanceof Error ? _error.name : 'UnknownError' },
+        });
+        res.status(500).json({
+          success: false,
+          error: 'Failed to delete archive',
+        });
+      }
+    })
+  );
 
   // Get observer events
   app.get('/api/v1/observer/events', async (req, res) => {

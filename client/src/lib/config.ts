@@ -50,8 +50,11 @@ export function isFeatureEnabled(feature: keyof typeof APP_CONFIG.features): boo
 
 // Cross-platform headers
 export function getApiHeaders(additionalHeaders?: Record<string, string>): Record<string, string> {
+  const anchorUser = import.meta.env.VITE_API_USER_ANCHOR;
+
   return {
     ...APP_CONFIG.api.headers,
+    ...(anchorUser ? { 'X-ZipWizard-User': anchorUser } : {}),
     ...additionalHeaders,
   };
 }

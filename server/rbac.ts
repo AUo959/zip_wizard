@@ -7,6 +7,21 @@
  */
 
 import { auditLog } from './audit-log';
+import type { NextFunction, Request, RequestHandler, Response } from 'express';
+
+type RequestWithAuthContext = Request & {
+  user?: {
+    id?: string;
+  };
+  sessionID?: string;
+};
+
+type RouteResourceParams = Partial<Record<'fileId' | 'id' | 'archiveId', string>>;
+
+type ResolvedRouteResource = {
+  resourceId?: string;
+  resourceType: 'file' | 'archive';
+};
 
 export type Role = 'reader' | 'editor' | 'owner' | 'admin';
 export type Permission =
@@ -281,7 +296,7 @@ class RBACService {
     resourceId: string,
     resourceType: 'file' | 'archive',
     context: AccessContext,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     const level = operation === 'delete' ? 'warning' : 'info';
 
@@ -302,30 +317,91 @@ class RBACService {
 // Singleton instance
 export const rbac = new RBACService();
 
+function routeTargetsFile(req: Request, routeParams: RouteResourceParams): boolean {
+  return routeParams.fileId !== undefined || req.path.includes('/files/');
+}
+
+function resolveRouteResource(
+  req: Request,
+  resourceTypeOverride?: 'file' | 'archive'
+): ResolvedRouteResource {
+  const routeParams = req.params as RouteResourceParams;
+  return {
+    resourceId: routeParams.fileId ?? routeParams.id ?? routeParams.archiveId,
+    resourceType: resourceTypeOverride ?? (routeTargetsFile(req, routeParams) ? 'file' : 'archive'),
+  };
+}
+
+function createAccessContext(req: Request, authReq: RequestWithAuthContext): AccessContext {
+  return {
+    userId: authReq.user?.id ?? 'anonymous',
+    sessionId: authReq.sessionID,
+    ipAddress: req.ip,
+    userAgent: req.headers['user-agent'],
+  };
+}
+
+function sendMissingResourceId(res: Response): void {
+  res.status(400).json({
+    error: 'Resource identifier missing',
+  });
+}
+
+function sendMissingAuthorizationContext(res: Response): void {
+  res.status(404).json({
+    error: 'Resource authorization context not found',
+  });
+}
+
+function sendAccessDenied(res: Response, error: unknown): void {
+  res.status(403).json({
+    error: 'Access denied',
+    message: error instanceof Error ? error.message : 'Insufficient permissions',
+  });
+}
+
+async function authorizePermissionRequest(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+  permission: Permission,
+  resourceTypeOverride?: 'file' | 'archive'
+): Promise<void> {
+  const authReq = req as RequestWithAuthContext;
+  const { resourceId, resourceType } = resolveRouteResource(req, resourceTypeOverride);
+
+  if (!resourceId) {
+    sendMissingResourceId(res);
+    return;
+  }
+
+  const permissions = rbac.getResourcePermissions(resourceId);
+  if (!permissions || permissions.resourceType !== resourceType) {
+    sendMissingAuthorizationContext(res);
+    return;
+  }
+
+  try {
+    const context = createAccessContext(req, authReq);
+    await rbac.requireAccess(resourceId, resourceType, context.userId, permission, context);
+    next();
+  } catch (error) {
+    sendAccessDenied(res, error);
+  }
+}
+
 /**
  * Middleware to check RBAC permissions
  */
-export function requirePermission(permission: Permission) {
-  return async (req: any, res: any, next: any) => {
-    const resourceId = req.params.id || req.params.archiveId || req.params.fileId;
-    const resourceType = req.path.includes('/files/') ? 'file' : 'archive';
-    const userId = req.user?.id || 'anonymous';
-
-    const context: AccessContext = {
-      userId,
-      sessionId: req.sessionID,
-      ipAddress: req.ip || req.connection.remoteAddress,
-      userAgent: req.headers['user-agent'],
-    };
-
-    try {
-      await rbac.requireAccess(resourceId, resourceType, userId, permission, context);
-      next();
-    } catch (error) {
-      res.status(403).json({
-        error: 'Access denied',
-        message: error instanceof Error ? error.message : 'Insufficient permissions',
-      });
-    }
+export function requirePermission(
+  permission: Permission,
+  resourceTypeOverride?: 'file' | 'archive'
+): RequestHandler {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    void authorizePermissionRequest(req, res, next, permission, resourceTypeOverride).catch(
+      (error: unknown) => {
+        next(error);
+      }
+    );
   };
 }

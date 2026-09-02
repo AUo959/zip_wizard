@@ -145,6 +145,8 @@ ENABLE_CIRCUIT_BREAKER=true
 ENABLE_AUDIT_LOG=true
 MAX_UPLOAD_SIZE=100MB
 SCAN_TIMEOUT=30s
+API_AUTH_TOKEN=change-me
+CORS_ALLOWED_ORIGINS=https://app.example.com
 ```
 
 ## 🚀 Performance & Scalability

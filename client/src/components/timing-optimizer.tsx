@@ -81,6 +81,24 @@ interface CircuitBreaker {
   nextRetryTime?: Date;
 }
 
+type RandomValueProvider = Pick<typeof globalThis.crypto, 'getRandomValues'>;
+
+type GlobalWithOptionalCrypto = Omit<typeof globalThis, 'crypto'> & {
+  crypto?: RandomValueProvider;
+};
+
+function secureJitter(maxExclusive: number): number {
+  const cryptoApi = (globalThis as unknown as GlobalWithOptionalCrypto).crypto;
+  const getRandomValues = cryptoApi?.getRandomValues.bind(cryptoApi);
+  if (!getRandomValues) {
+    return maxExclusive / 2;
+  }
+
+  const values = new Uint32Array(1);
+  getRandomValues(values);
+  return (values[0] / 0xffffffff) * maxExclusive;
+}
+
 export function TimingOptimizer({
   onOptimizationApplied,
   onTimeoutPrevented,
@@ -149,66 +167,75 @@ export function TimingOptimizer({
   }, [config, metrics, throughput, onOptimizationApplied]);
 
   // Exponential backoff retry logic
-  const calculateRetryDelay = useCallback((attempt: number): number => {
-    const baseDelay = config.retryDelay;
-    const maxDelay = 30000;
-    const delay = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
-    // Add jitter to prevent thundering herd
-    return delay + Math.random() * 1000;
-  }, [config.retryDelay]);
+  const calculateRetryDelay = useCallback(
+    (attempt: number): number => {
+      const baseDelay = config.retryDelay;
+      const maxDelay = 30000;
+      const delay = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
+      // Add jitter to prevent thundering herd
+      return delay + secureJitter(1000);
+    },
+    [config.retryDelay]
+  );
 
   // Circuit breaker implementation
-  const checkCircuitBreaker = useCallback((operationName: string): boolean => {
-    const breaker = circuitBreakers.get(operationName);
-    if (!breaker || !config.circuitBreakerEnabled) return true;
+  const checkCircuitBreaker = useCallback(
+    (operationName: string): boolean => {
+      const breaker = circuitBreakers.get(operationName);
+      if (!breaker || !config.circuitBreakerEnabled) return true;
 
-    if (breaker.state === 'open') {
-      if (breaker.nextRetryTime && new Date() > breaker.nextRetryTime) {
-        // Try half-open state
-        setCircuitBreakers(prev => {
-          const updated = new Map(prev);
-          updated.set(operationName, { ...breaker, state: 'half-open' });
-          return updated;
-        });
-        return true;
-      }
-      return false;
-    }
-
-    return true;
-  }, [circuitBreakers, config.circuitBreakerEnabled]);
-
-  const updateCircuitBreaker = useCallback((operationName: string, success: boolean) => {
-    if (!config.circuitBreakerEnabled) return;
-
-    setCircuitBreakers(prev => {
-      const updated = new Map(prev);
-      const breaker = updated.get(operationName) || {
-        state: 'closed' as const,
-        failures: 0,
-        successCount: 0,
-      };
-
-      if (success) {
-        if (breaker.state === 'half-open') {
-          breaker.state = 'closed';
-          breaker.failures = 0;
+      if (breaker.state === 'open') {
+        if (breaker.nextRetryTime && new Date() > breaker.nextRetryTime) {
+          // Try half-open state
+          setCircuitBreakers(prev => {
+            const updated = new Map(prev);
+            updated.set(operationName, { ...breaker, state: 'half-open' });
+            return updated;
+          });
+          return true;
         }
-        breaker.successCount++;
-      } else {
-        breaker.failures++;
-        breaker.lastFailureTime = new Date();
-
-        if (breaker.failures >= 5) {
-          breaker.state = 'open';
-          breaker.nextRetryTime = new Date(Date.now() + 30000); // 30 seconds
-        }
+        return false;
       }
 
-      updated.set(operationName, breaker);
-      return updated;
-    });
-  }, [config.circuitBreakerEnabled]);
+      return true;
+    },
+    [circuitBreakers, config.circuitBreakerEnabled]
+  );
+
+  const updateCircuitBreaker = useCallback(
+    (operationName: string, success: boolean) => {
+      if (!config.circuitBreakerEnabled) return;
+
+      setCircuitBreakers(prev => {
+        const updated = new Map(prev);
+        const breaker = updated.get(operationName) || {
+          state: 'closed' as const,
+          failures: 0,
+          successCount: 0,
+        };
+
+        if (success) {
+          if (breaker.state === 'half-open') {
+            breaker.state = 'closed';
+            breaker.failures = 0;
+          }
+          breaker.successCount++;
+        } else {
+          breaker.failures++;
+          breaker.lastFailureTime = new Date();
+
+          if (breaker.failures >= 5) {
+            breaker.state = 'open';
+            breaker.nextRetryTime = new Date(Date.now() + 30000); // 30 seconds
+          }
+        }
+
+        updated.set(operationName, breaker);
+        return updated;
+      });
+    },
+    [config.circuitBreakerEnabled]
+  );
 
   // Priority queue implementation
   const addToQueue = (
@@ -238,88 +265,97 @@ export function TimingOptimizer({
   };
 
   // Resource pooling
-  const acquireResource = useCallback(async (type: string, amount: number = 1): Promise<boolean> => {
-    if (!config.resourcePooling) return true;
+  const acquireResource = useCallback(
+    async (type: string, amount: number = 1): Promise<boolean> => {
+      if (!config.resourcePooling) return true;
 
-    const pool = resourcePools.find(p => p.type === type);
-    if (!pool) {
-      // Create new pool
-      setResourcePools(prev => [
-        ...prev,
-        {
-          id: `pool-${type}`,
-          type,
-          available: 10 - amount,
-          total: 10,
-          inUse: amount,
-          waitQueue: 0,
-        },
-      ]);
-      return true;
-    }
+      const pool = resourcePools.find(p => p.type === type);
+      if (!pool) {
+        // Create new pool
+        setResourcePools(prev => [
+          ...prev,
+          {
+            id: `pool-${type}`,
+            type,
+            available: 10 - amount,
+            total: 10,
+            inUse: amount,
+            waitQueue: 0,
+          },
+        ]);
+        return true;
+      }
 
-    if (pool.available >= amount) {
+      if (pool.available >= amount) {
+        setResourcePools(prev =>
+          prev.map(p =>
+            p.type === type ? { ...p, available: p.available - amount, inUse: p.inUse + amount } : p
+          )
+        );
+        return true;
+      }
+
+      // Add to wait queue
+      setResourcePools(prev =>
+        prev.map(p => (p.type === type ? { ...p, waitQueue: p.waitQueue + 1 } : p))
+      );
+
+      // Wait and retry
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return acquireResource(type, amount);
+    },
+    [config.resourcePooling, resourcePools]
+  );
+
+  const releaseResource = useCallback(
+    (type: string, amount: number = 1) => {
+      if (!config.resourcePooling) return;
+
       setResourcePools(prev =>
         prev.map(p =>
-          p.type === type ? { ...p, available: p.available - amount, inUse: p.inUse + amount } : p
+          p.type === type
+            ? {
+                ...p,
+                available: Math.min(p.available + amount, p.total),
+                inUse: Math.max(p.inUse - amount, 0),
+                waitQueue: Math.max(p.waitQueue - 1, 0),
+              }
+            : p
         )
       );
-      return true;
-    }
+    },
+    [config.resourcePooling]
+  );
 
-    // Add to wait queue
-    setResourcePools(prev =>
-      prev.map(p => (p.type === type ? { ...p, waitQueue: p.waitQueue + 1 } : p))
-    );
+  const updateMetrics = useCallback(
+    (operationName: string, success: boolean, duration: number) => {
+      const existing = metricsRef.current.get(operationName) || {
+        name: operationName,
+        averageTime: 0,
+        successRate: 0,
+        timeouts: 0,
+        retries: 0,
+        lastRun: new Date(),
+        status: 'pending' as const,
+      };
 
-    // Wait and retry
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return acquireResource(type, amount);
-  }, [config.resourcePooling, resourcePools]);
+      const totalRuns = (existing.successRate > 0 ? 1 / existing.successRate : 0) + 1;
+      existing.averageTime = (existing.averageTime * (totalRuns - 1) + duration) / totalRuns;
+      existing.successRate = success
+        ? (existing.successRate * (totalRuns - 1) + 1) / totalRuns
+        : (existing.successRate * (totalRuns - 1)) / totalRuns;
+      existing.status = success ? 'success' : 'failed';
+      existing.lastRun = new Date();
 
-  const releaseResource = useCallback((type: string, amount: number = 1) => {
-    if (!config.resourcePooling) return;
+      if (!success && duration >= config.timeout) {
+        existing.timeouts++;
+      }
 
-    setResourcePools(prev =>
-      prev.map(p =>
-        p.type === type
-          ? {
-              ...p,
-              available: Math.min(p.available + amount, p.total),
-              inUse: Math.max(p.inUse - amount, 0),
-              waitQueue: Math.max(p.waitQueue - 1, 0),
-            }
-          : p
-      )
-    );
-  }, [config.resourcePooling]);
-
-  const updateMetrics = useCallback((operationName: string, success: boolean, duration: number) => {
-    const existing = metricsRef.current.get(operationName) || {
-      name: operationName,
-      averageTime: 0,
-      successRate: 0,
-      timeouts: 0,
-      retries: 0,
-      lastRun: new Date(),
-      status: 'pending' as const,
-    };
-
-    const totalRuns = (existing.successRate > 0 ? 1 / existing.successRate : 0) + 1;
-    existing.averageTime = (existing.averageTime * (totalRuns - 1) + duration) / totalRuns;
-    existing.successRate = success
-      ? (existing.successRate * (totalRuns - 1) + 1) / totalRuns
-      : (existing.successRate * (totalRuns - 1)) / totalRuns;
-    existing.status = success ? 'success' : 'failed';
-    existing.lastRun = new Date();
-
-    if (!success && duration >= config.timeout) {
-      existing.timeouts++;
-    }
-
-    metricsRef.current.set(operationName, existing);
-    setMetrics(Array.from(metricsRef.current.values()));
-  }, [config.timeout]);
+      metricsRef.current.set(operationName, existing);
+      setMetrics(Array.from(metricsRef.current.values()));
+    },
+    [config.timeout]
+  );
 
   // Process queue with concurrency control
   const processQueue = useCallback(async () => {
@@ -394,7 +430,17 @@ export function TimingOptimizer({
       // Process next item
       processQueue();
     }
-  }, [queue, config, onTimeoutPrevented, acquireResource, calculateRetryDelay, checkCircuitBreaker, releaseResource, updateCircuitBreaker, updateMetrics]);
+  }, [
+    queue,
+    config,
+    onTimeoutPrevented,
+    acquireResource,
+    calculateRetryDelay,
+    checkCircuitBreaker,
+    releaseResource,
+    updateCircuitBreaker,
+    updateMetrics,
+  ]);
 
   // Monitor system load
   useEffect(() => {

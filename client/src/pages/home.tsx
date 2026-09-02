@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -50,6 +49,7 @@ import { EnhancedArchiveManager } from '@/components/enhanced-archive-manager';
 import { AdvancedArchiveManager } from '@/components/advanced-archive-manager';
 import { ArchiveManager } from '@/components/ArchiveManager';
 import { convertSchemaArchive } from '@/lib/archive-converter';
+import { apiRequest } from '@/lib/queryClient';
 import { PrivacyShield } from '@/components/privacy-shield';
 import { MultilingualSupport } from '@/components/multilingual-support';
 import { FlowStateManager } from '@/components/flow-state-manager';
@@ -82,6 +82,9 @@ import type { Archive as ArchiveType, File } from '@shared/schema';
 import type { FileNode } from '@shared/archive-types';
 import { type ViewType, ALL_VIEWS, VIEW_METADATA } from '@shared/views';
 import { EnhancedViewTabs } from '@/components/enhanced-view-tabs';
+import { useArchiveNavigation } from '@/hooks/useArchiveNavigation';
+import { useWorkbenchState } from '@/hooks/useWorkbenchState';
+import { type PrivacySettings, usePrivacyControls } from '@/hooks/usePrivacyControls';
 
 /**
  * Convert database File to FileNode format
@@ -103,21 +106,41 @@ const fileToNode = (file: File): FileNode => ({
  * @see ALL_VIEWS - Complete list of available views
  */
 export default function Home() {
-  const [selectedArchive, setSelectedArchive] = useState<ArchiveType | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [openTabs, setOpenTabs] = useState<File[]>([]);
-  const [activeTab, setActiveTab] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [fileTreeMode, setFileTreeMode] = useState<'classic' | 'enhanced'>('enhanced');
-  const [recentFiles, setRecentFiles] = useState<File[]>([]);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('main');
   const [dreamMode, setDreamMode] = useState(false);
-  const [privacyShieldActive, setPrivacyShieldActive] = useState(true);
   const [currentLanguage, setCurrentLanguage] = useState('en');
+
+  const {
+    archives,
+    files,
+    selectedArchive,
+    setSelectedArchive,
+    convertedArchive,
+    refetchArchives,
+  } = useArchiveNavigation(showUpload);
+
+  const {
+    selectedFile,
+    recentFiles,
+    openTabs,
+    activeTab,
+    setActiveTab,
+    setSelectedFile,
+    handleFileSelect: workbenchHandleFileSelect,
+    handleTabClose,
+  } = useWorkbenchState();
+
+  const {
+    privacyShieldActive,
+    handlePrivacyToggle,
+    handlePrivacySettingsChange: updatePrivacySettings,
+  } = usePrivacyControls(true);
 
   // Badge state for enhanced navigation
   const [vulnerabilityCount, _setVulnerabilityCount] = useState(0);
@@ -172,46 +195,34 @@ export default function Home() {
     ] as ViewType[],
   };
 
-  const { data: archives = [], refetch: refetchArchives } = useQuery<ArchiveType[]>({
-    queryKey: ['archives'],
-    enabled: !showUpload,
-  });
-
-  // Auto-select first archive
-  useEffect(() => {
-    if (archives.length > 0 && !selectedArchive) {
-      setSelectedArchive(archives[0]);
-    }
-  }, [archives, selectedArchive]);
-
-  const { data: files = [] } = useQuery<File[]>({
-    queryKey: [`archives/${selectedArchive?.id}/files`],
-    enabled: !!selectedArchive,
-  });
-
-  // Convert selectedArchive to Archive type for components
-  const convertedArchive = selectedArchive ? convertSchemaArchive(selectedArchive) : undefined;
-
   const handleArchiveUploaded = () => {
     setShowUpload(false);
     refetchArchives();
   };
 
-  const handleFileSelect = (file: File) => {
-    setSelectedFile(file);
+  const handleFileSelect = useCallback(
+    async (file: File) => {
+      const fullContentConsent = !privacyShieldActive;
+      if (fullContentConsent) {
+        try {
+          const response = await apiRequest(
+            'GET',
+            `files/${file.id}?includeContent=true&fullContentConsent=true`
+          );
+          const payload = await response.json();
+          if (payload?.data) {
+            workbenchHandleFileSelect(payload.data);
+            return;
+          }
+        } catch (error) {
+          console.error('Failed to hydrate full file content', error);
+        }
+      }
 
-    // Add to recent files (keep last 10)
-    setRecentFiles(prev => {
-      const filtered = prev.filter(f => f.id !== file.id);
-      return [file, ...filtered].slice(0, 10);
-    });
-
-    // Add to tabs if not already open
-    if (!openTabs.find(tab => tab.id === file.id)) {
-      setOpenTabs([...openTabs, file]);
-    }
-    setActiveTab(file.id);
-  };
+      workbenchHandleFileSelect(file);
+    },
+    [privacyShieldActive, workbenchHandleFileSelect]
+  );
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -242,16 +253,6 @@ export default function Home() {
       action: () => setShowShortcuts(true),
     },
   ]);
-
-  const handleTabClose = (fileId: string) => {
-    const newTabs = openTabs.filter(tab => tab.id !== fileId);
-    setOpenTabs(newTabs);
-
-    if (activeTab === fileId) {
-      setActiveTab(newTabs.length > 0 ? newTabs[newTabs.length - 1].id : null);
-      setSelectedFile(newTabs.length > 0 ? newTabs[newTabs.length - 1] : null);
-    }
-  };
 
   const handleTabSelect = (file: File) => {
     setActiveTab(file.id);
@@ -292,7 +293,7 @@ export default function Home() {
           setCurrentView('pattern-recognition');
           break;
         case 'toggle-privacy':
-          setPrivacyShieldActive(params?.enabled ?? !privacyShieldActive);
+          handlePrivacyToggle(params?.enabled ?? !privacyShieldActive);
           break;
         default:
           console.log('Unknown symbolic command:', command);
@@ -301,17 +302,17 @@ export default function Home() {
     [privacyShieldActive]
   );
 
-  const _handleArchiveProcess = useCallback((archiveId: string, operation: string, params?: any) => {
-    console.log('Archive operation:', operation, 'on archive:', archiveId, 'with params:', params);
-  }, []);
-
   const _handleBatchOperation = useCallback((archiveIds: string[], operation: string) => {
     console.log('Batch operation:', operation, 'on archives:', archiveIds);
   }, []);
 
-  const handlePrivacySettingsChange = useCallback((settings: any) => {
-    console.log('Privacy settings changed:', settings);
-  }, []);
+  const handlePrivacySettingsChange = useCallback(
+    (settings: PrivacySettings) => {
+      updatePrivacySettings(settings);
+      console.log('Privacy settings changed:', settings);
+    },
+    [updatePrivacySettings]
+  );
 
   const handleLanguageChange = useCallback((language: string) => {
     setCurrentLanguage(language);
@@ -570,7 +571,7 @@ export default function Home() {
             <div className="p-6">
               <PrivacyShield
                 isActive={privacyShieldActive}
-                onToggle={setPrivacyShieldActive}
+                onToggle={handlePrivacyToggle}
                 onSettingsChange={handlePrivacySettingsChange}
               />
             </div>
