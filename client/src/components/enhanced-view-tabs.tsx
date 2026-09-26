@@ -142,7 +142,8 @@ export function EnhancedViewTabs({
       enableNumberKeys: true,
       enableHomeEnd: true,
       announceChanges: true,
-  });
+    }
+  );
 
   // Detect mobile viewport
   useEffect(() => {
