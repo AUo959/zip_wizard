@@ -17,15 +17,19 @@ interface CriticalEvent {
 }
 
 interface StatusData {
-  health?: {
-    score: number;
-    status: 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
-    issues: string[];
+  symbolicChain: string;
+  threadTag: string;
+  ethicsLock: string;
+  trustAnchor: string;
+  deploymentStatus: {
+    guiHabitat: boolean;
+    glyphcardExport: boolean;
+    zipBundle: string;
+    monitoring: 'Active' | 'Expired';
+    acknowledgment: boolean;
   };
-  recovery?: {
-    attempted: boolean;
-    successful: boolean;
-    replayable: boolean;
+  replayState: {
+    replayable: boolean | null;
     continuityAnchors: string;
   };
   activitySummary?: {
@@ -198,7 +202,7 @@ export function StatusDashboard({ archiveId }: StatusDashboardProps) {
 
 interface StatusItemProps {
   label: string;
-  status?: boolean;
+  status?: boolean | null;
   value?: string;
   pending?: boolean;
   icon?: React.ReactNode;

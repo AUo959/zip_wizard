@@ -19,17 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Settings,
-  Palette,
-  Monitor,
-  FileText,
-  Zap,
-  Moon,
-  Sun,
-  Eye,
-  Database,
-} from 'lucide-react';
+import { Settings, Palette, Monitor, FileText, Zap, Moon, Sun, Eye, Database } from 'lucide-react';
 
 interface PreferencesDialogProps {
   open: boolean;
