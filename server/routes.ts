@@ -1220,50 +1220,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get status dashboard for an archive
-  app.get('/api/v1/archives/:id/status', async (req, res) => {
-    try {
-      const archive = await storage.getArchive(req.params.id);
-      if (!archive) {
-        return res.status(404).json({
+  app.get(
+    '/api/v1/archives/:id/status',
+    authenticateRequest,
+    requirePermission('read', 'archive'),
+    asyncHandler(async (req, res) => {
+      try {
+        const archive = await storage.getArchive(req.params.id);
+        if (!archive) {
+          return res.status(404).json({
+            success: false,
+            error: 'Archive not found',
+          });
+        }
+
+        const withinWindow = await observer.isWithinMonitoringWindow(req.params.id);
+        const activitySummary = await observer.getActivitySummary(
+          req.params.id,
+          archive.monitoringWindow || 48
+        );
+
+        res.json({
+          success: true,
+          data: {
+            symbolicChain: archive.symbolicChain || 'N/A',
+            threadTag: archive.threadTag || 'N/A',
+            ethicsLock: archive.ethicsLock || 'N/A',
+            trustAnchor: archive.trustAnchor || 'N/A',
+            deploymentStatus: {
+              guiHabitat: true,
+              glyphcardExport: true,
+              zipBundle: archive.name,
+              monitoring: withinWindow ? 'Active' : 'Expired',
+              acknowledgment: false,
+            },
+            replayState: {
+              replayable: archive.replayable,
+              continuityAnchors: 'Verified',
+            },
+            activitySummary,
+          },
+        });
+      } catch (_error) {
+        res.status(500).json({
           success: false,
-          error: 'Archive not found',
+          error: 'Failed to retrieve status',
         });
       }
-
-      const withinWindow = await observer.isWithinMonitoringWindow(req.params.id);
-      const activitySummary = await observer.getActivitySummary(
-        req.params.id,
-        archive.monitoringWindow || 48
-      );
-
-      res.json({
-        success: true,
-        data: {
-          symbolicChain: archive.symbolicChain || 'N/A',
-          threadTag: archive.threadTag || 'N/A',
-          ethicsLock: archive.ethicsLock || 'N/A',
-          trustAnchor: archive.trustAnchor || 'N/A',
-          deploymentStatus: {
-            guiHabitat: true,
-            glyphcardExport: true,
-            zipBundle: archive.name,
-            monitoring: withinWindow ? 'Active' : 'Expired',
-            acknowledgment: false,
-          },
-          replayState: {
-            replayable: archive.replayable,
-            continuityAnchors: 'Verified',
-          },
-          activitySummary,
-        },
-      });
-    } catch (_error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to retrieve status',
-      });
-    }
-  });
+    })
+  );
 
   // Get recent mutations
   app.get('/api/v1/mutations', async (req, res) => {
