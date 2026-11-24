@@ -116,43 +116,46 @@ export function MultilingualSupport({
     },
   ];
 
-  const culturalContexts: Record<string, CulturalContext> = useMemo(() => ({
-    en: {
-      dateFormat: 'MM/DD/YYYY',
-      timeFormat: '12-hour',
-      numberFormat: 'US (1,234.56)',
-      fileNamingConvention: 'CamelCase, spaces allowed',
-      archiveStructure: 'Hierarchical folders',
-    },
-    de: {
-      dateFormat: 'DD.MM.YYYY',
-      timeFormat: '24-hour',
-      numberFormat: 'German (1.234,56)',
-      fileNamingConvention: 'Compound words, no spaces',
-      archiveStructure: 'Deep categorization',
-    },
-    ja: {
-      dateFormat: 'YYYY/MM/DD',
-      timeFormat: '24-hour',
-      numberFormat: 'Japanese (1,234.56)',
-      fileNamingConvention: 'Mixed scripts, date prefixes',
-      archiveStructure: 'Categorical grouping',
-    },
-    ar: {
-      dateFormat: 'DD/MM/YYYY',
-      timeFormat: '12-hour',
-      numberFormat: 'Arabic (١٬٢٣٤٫٥٦)',
-      fileNamingConvention: 'Right-to-left naming',
-      archiveStructure: 'Topic-based organization',
-    },
-    zh: {
-      dateFormat: 'YYYY-MM-DD',
-      timeFormat: '24-hour',
-      numberFormat: 'Chinese (1,234.56)',
-      fileNamingConvention: 'Pinyin with characters',
-      archiveStructure: 'Thematic grouping',
-    },
-  }), []);
+  const culturalContexts: Record<string, CulturalContext> = useMemo(
+    () => ({
+      en: {
+        dateFormat: 'MM/DD/YYYY',
+        timeFormat: '12-hour',
+        numberFormat: 'US (1,234.56)',
+        fileNamingConvention: 'CamelCase, spaces allowed',
+        archiveStructure: 'Hierarchical folders',
+      },
+      de: {
+        dateFormat: 'DD.MM.YYYY',
+        timeFormat: '24-hour',
+        numberFormat: 'German (1.234,56)',
+        fileNamingConvention: 'Compound words, no spaces',
+        archiveStructure: 'Deep categorization',
+      },
+      ja: {
+        dateFormat: 'YYYY/MM/DD',
+        timeFormat: '24-hour',
+        numberFormat: 'Japanese (1,234.56)',
+        fileNamingConvention: 'Mixed scripts, date prefixes',
+        archiveStructure: 'Categorical grouping',
+      },
+      ar: {
+        dateFormat: 'DD/MM/YYYY',
+        timeFormat: '12-hour',
+        numberFormat: 'Arabic (١٬٢٣٤٫٥٦)',
+        fileNamingConvention: 'Right-to-left naming',
+        archiveStructure: 'Topic-based organization',
+      },
+      zh: {
+        dateFormat: 'YYYY-MM-DD',
+        timeFormat: '24-hour',
+        numberFormat: 'Chinese (1,234.56)',
+        fileNamingConvention: 'Pinyin with characters',
+        archiveStructure: 'Thematic grouping',
+      },
+    }),
+    []
+  );
 
   const translations = {
     en: {

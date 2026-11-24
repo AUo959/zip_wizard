@@ -17,15 +17,19 @@ interface CriticalEvent {
 }
 
 interface StatusData {
-  health?: {
-    score: number;
-    status: 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
-    issues: string[];
+  symbolicChain: string;
+  threadTag: string;
+  ethicsLock: string;
+  trustAnchor: string;
+  deploymentStatus: {
+    guiHabitat: boolean;
+    glyphcardExport: boolean;
+    zipBundle: string;
+    monitoring: 'Active' | 'Expired';
+    acknowledgment: boolean;
   };
-  recovery?: {
-    attempted: boolean;
-    successful: boolean;
-    replayable: boolean;
+  replayState: {
+    replayable: boolean | null;
     continuityAnchors: string;
   };
   activitySummary?: {
@@ -146,7 +150,11 @@ export function StatusDashboard({ archiveId }: StatusDashboardProps) {
         <div className="space-y-2">
           <h3 className="text-sm font-semibold text-purple-700">Replay State</h3>
           <div className="space-y-2">
-            <StatusItem label="Replayable" status={replayState.replayable} />
+            <StatusItem
+              label="Replayable"
+              status={replayState.replayable ?? undefined}
+              value={replayState.replayable === null ? 'Unknown' : undefined}
+            />
             <StatusItem label="Continuity Anchors" value={replayState.continuityAnchors} />
           </div>
         </div>

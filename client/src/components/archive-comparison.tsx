@@ -64,9 +64,9 @@ export function ArchiveComparison({
 }: ArchiveComparisonProps) {
   const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null);
   const [isComparing, setIsComparing] = useState(false);
-  const [_selectedTab, _setSelectedTab] = useState<
-    'overview' | 'added' | 'removed' | 'modified'
-  >('overview');
+  const [_selectedTab, _setSelectedTab] = useState<'overview' | 'added' | 'removed' | 'modified'>(
+    'overview'
+  );
   const [filterText, setFilterText] = useState('');
 
   const compareArchives = useCallback(() => {
