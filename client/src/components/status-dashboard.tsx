@@ -17,30 +17,19 @@ interface CriticalEvent {
 }
 
 interface StatusData {
-  symbolicChain?: string;
-  threadTag?: string;
-  ethicsLock?: string;
-  trustAnchor?: string;
-  deploymentStatus?: {
+  symbolicChain: string;
+  threadTag: string;
+  ethicsLock: string;
+  trustAnchor: string;
+  deploymentStatus: {
     guiHabitat: boolean;
     glyphcardExport: boolean;
     zipBundle: string;
-    monitoring: string;
+    monitoring: 'Active' | 'Expired';
     acknowledgment: boolean;
   };
-  replayState?: {
-    replayable: boolean;
-    continuityAnchors: string;
-  };
-  health?: {
-    score: number;
-    status: 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
-    issues: string[];
-  };
-  recovery?: {
-    attempted: boolean;
-    successful: boolean;
-    replayable: boolean;
+  replayState: {
+    replayable: boolean | null;
     continuityAnchors: string;
   };
   activitySummary?: {
@@ -73,21 +62,12 @@ export function StatusDashboard({ archiveId }: StatusDashboardProps) {
   if (!response?.data) return null;
 
   const {
-    symbolicChain = 'Unavailable',
-    threadTag = 'Unavailable',
-    ethicsLock = 'Unavailable',
-    trustAnchor = 'Unavailable',
-    deploymentStatus = {
-      guiHabitat: false,
-      glyphcardExport: false,
-      zipBundle: 'Unavailable',
-      monitoring: 'Inactive',
-      acknowledgment: false,
-    },
-    replayState = {
-      replayable: response.data.recovery?.replayable ?? false,
-      continuityAnchors: response.data.recovery?.continuityAnchors ?? 'Unavailable',
-    },
+    symbolicChain,
+    threadTag,
+    ethicsLock,
+    trustAnchor,
+    deploymentStatus,
+    replayState,
     activitySummary,
   } = response.data;
 
@@ -170,7 +150,11 @@ export function StatusDashboard({ archiveId }: StatusDashboardProps) {
         <div className="space-y-2">
           <h3 className="text-sm font-semibold text-purple-700">Replay State</h3>
           <div className="space-y-2">
-            <StatusItem label="Replayable" status={replayState.replayable} />
+            <StatusItem
+              label="Replayable"
+              status={replayState.replayable ?? undefined}
+              value={replayState.replayable === null ? 'Unknown' : undefined}
+            />
             <StatusItem label="Continuity Anchors" value={replayState.continuityAnchors} />
           </div>
         </div>
