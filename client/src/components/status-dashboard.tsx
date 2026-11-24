@@ -41,8 +41,8 @@ interface StatusData {
 }
 
 export function StatusDashboard({ archiveId }: StatusDashboardProps) {
-  const { data: response, isLoading } = useQuery<{ success: boolean; data: StatusData }>({
-    queryKey: [`/api/v1/archives/${archiveId}/status`],
+  const { data: status, isLoading } = useQuery<StatusData>({
+    queryKey: [`archives/${encodeURIComponent(archiveId ?? '')}/status`],
     enabled: !!archiveId,
   });
 
@@ -59,7 +59,7 @@ export function StatusDashboard({ archiveId }: StatusDashboardProps) {
     );
   }
 
-  if (!response?.data) return null;
+  if (!status) return null;
 
   const {
     symbolicChain,
@@ -69,7 +69,7 @@ export function StatusDashboard({ archiveId }: StatusDashboardProps) {
     deploymentStatus,
     replayState,
     activitySummary,
-  } = response.data;
+  } = status;
 
   return (
     <Card className="border-purple-300 bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50 shadow-xl">
