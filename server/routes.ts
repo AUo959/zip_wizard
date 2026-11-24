@@ -896,6 +896,10 @@ const upload = multer({
   },
 });
 
+function archiveStatusLabel(value: string | null): string {
+  return value?.length ? value : 'N/A';
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Apply CORS middleware
   const corsMiddleware = cors(API_CONFIG.cors);
@@ -1235,18 +1239,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const withinWindow = await observer.isWithinMonitoringWindow(req.params.id);
-        const activitySummary = await observer.getActivitySummary(
-          req.params.id,
-          archive.monitoringWindow || 48
-        );
+        const windowHours = archive.monitoringWindow === 0 ? 48 : (archive.monitoringWindow ?? 48);
+        const activitySummary = await observer.getActivitySummary(req.params.id, windowHours);
 
         res.json({
           success: true,
           data: {
-            symbolicChain: archive.symbolicChain || 'N/A',
-            threadTag: archive.threadTag || 'N/A',
-            ethicsLock: archive.ethicsLock || 'N/A',
-            trustAnchor: archive.trustAnchor || 'N/A',
+            symbolicChain: archiveStatusLabel(archive.symbolicChain),
+            threadTag: archiveStatusLabel(archive.threadTag),
+            ethicsLock: archiveStatusLabel(archive.ethicsLock),
+            trustAnchor: archiveStatusLabel(archive.trustAnchor),
             deploymentStatus: {
               guiHabitat: true,
               glyphcardExport: true,

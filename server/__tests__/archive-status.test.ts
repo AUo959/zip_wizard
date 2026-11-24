@@ -2,6 +2,7 @@ import { once } from 'node:events';
 import { type AddressInfo } from 'node:net';
 import express from 'express';
 import { afterEach, expect, it, vi } from 'vitest';
+import { observer } from '../observer';
 import { rbac } from '../rbac';
 import { registerRoutes } from '../routes';
 
@@ -14,7 +15,8 @@ vi.mock('../storage', () => ({
     getArchive: vi.fn().mockResolvedValue({
       name: 'test.zip',
       replayable: null,
-      monitoringWindow: 48,
+      symbolicChain: '',
+      monitoringWindow: 0,
     }),
   },
 }));
@@ -59,8 +61,13 @@ it('serves archive status only with authentication and archive read permission',
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       success: true,
-      data: { replayState: { replayable: null }, deploymentStatus: { zipBundle: 'test.zip' } },
+      data: {
+        symbolicChain: 'N/A',
+        replayState: { replayable: null },
+        deploymentStatus: { zipBundle: 'test.zip' },
+      },
     });
+    expect(observer.getActivitySummary).toHaveBeenCalledWith(archiveId, 48);
   } finally {
     server.close();
     await once(server, 'close');
