@@ -5,6 +5,7 @@ import {
   varchar,
   jsonb,
   integer,
+  index,
   timestamp,
   boolean,
   json,
@@ -12,22 +13,27 @@ import {
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
-export const archives = pgTable('archives', {
-  id: varchar('id')
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  name: text('name').notNull(),
-  originalSize: integer('original_size').notNull(),
-  fileCount: integer('file_count').notNull(),
-  uploadedAt: timestamp('uploaded_at').defaultNow().notNull(),
-  // Enhanced metadata for ZIPWizard v2.2.6b
-  symbolicChain: text('symbolic_chain'),
-  threadTag: text('thread_tag'),
-  ethicsLock: text('ethics_lock'),
-  trustAnchor: text('trust_anchor'),
-  replayable: boolean('replayable').default(true),
-  monitoringWindow: integer('monitoring_window').default(48), // hours
-});
+export const archives = pgTable(
+  'archives',
+  {
+    id: varchar('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    name: text('name').notNull(),
+    ownerId: varchar('owner_id', { length: 128 }),
+    originalSize: integer('original_size').notNull(),
+    fileCount: integer('file_count').notNull(),
+    uploadedAt: timestamp('uploaded_at').defaultNow().notNull(),
+    // Enhanced metadata for ZIPWizard v2.2.6b
+    symbolicChain: text('symbolic_chain'),
+    threadTag: text('thread_tag'),
+    ethicsLock: text('ethics_lock'),
+    trustAnchor: text('trust_anchor'),
+    replayable: boolean('replayable').default(true),
+    monitoringWindow: integer('monitoring_window').default(48), // hours
+  },
+  table => [index('archives_owner_id_idx').on(table.ownerId)]
+);
 
 export const files = pgTable('files', {
   id: varchar('id')
@@ -41,6 +47,7 @@ export const files = pgTable('files', {
   extension: text('extension'),
   size: integer('size').notNull(),
   content: text('content'),
+  redactedPreview: text('redacted_preview'),
   isDirectory: text('is_directory').notNull().default('false'),
   parentPath: text('parent_path'),
   language: text('language'),
@@ -102,6 +109,7 @@ export const auditLogs = pgTable('audit_logs', {
 export const insertArchiveSchema = createInsertSchema(archives).omit({
   id: true,
   uploadedAt: true,
+  ownerId: true,
 });
 
 export const insertFileSchema = createInsertSchema(files).omit({
@@ -121,9 +129,44 @@ export const insertFileMutationSchema = createInsertSchema(fileMutations).omit({
 export const insertAuditLogSchema = createInsertSchema(auditLogs);
 
 export type InsertArchive = z.infer<typeof insertArchiveSchema>;
-export type Archive = typeof archives.$inferSelect;
+
+export interface Archive {
+  id: string;
+  name: string;
+  originalSize: number;
+  fileCount: number;
+  uploadedAt: Date;
+  symbolicChain: string | null;
+  threadTag: string | null;
+  ethicsLock: string | null;
+  trustAnchor: string | null;
+  replayable: boolean | null;
+  monitoringWindow: number | null;
+}
+
 export type InsertFile = z.infer<typeof insertFileSchema>;
-export type File = typeof files.$inferSelect;
+
+export interface File {
+  id: string;
+  archiveId: string;
+  path: string;
+  name: string;
+  extension: string | null;
+  size: number;
+  content: string | null;
+  redactedPreview: string | null;
+  isDirectory: string;
+  parentPath: string | null;
+  language: string | null;
+  description: string | null;
+  tags: string[] | null;
+  complexity: string | null;
+  dependencies: string[] | null;
+  originalHash: string | null;
+  currentHash: string | null;
+  lastMutated: Date | null;
+}
+
 export type ObserverEvent = typeof observerEvents.$inferSelect;
 export type InsertObserverEvent = z.infer<typeof insertObserverEventSchema>;
 export type FileMutation = typeof fileMutations.$inferSelect;

@@ -12,6 +12,7 @@ import express, { Request } from 'express';
 import { auditLog } from '../audit-log';
 import { rbac } from '../rbac';
 import { notificationService } from '../notifications';
+import { requireAdministrator } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -25,7 +26,7 @@ interface AuthRequest extends Request {
  * GET /api/v1/security/audit-logs
  * Query audit logs with filters
  */
-router.get('/audit-logs', async (req, res) => {
+router.get('/audit-logs', requireAdministrator, async (req, res) => {
   try {
     const filters = {
       startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
@@ -58,7 +59,7 @@ router.get('/audit-logs', async (req, res) => {
  * GET /api/v1/security/audit-logs/export
  * Export audit logs in JSON or CSV format
  */
-router.get('/audit-logs/export', async (req, res) => {
+router.get('/audit-logs/export', requireAdministrator, async (req, res) => {
   try {
     const format = (req.query.format as string) || 'json';
     const filters = {
@@ -101,7 +102,7 @@ router.get('/audit-logs/export', async (req, res) => {
  * GET /api/v1/security/audit-logs/statistics
  * Get audit log statistics
  */
-router.get('/audit-logs/statistics', async (req, res) => {
+router.get('/audit-logs/statistics', requireAdministrator, async (req, res) => {
   try {
     const filters = {
       startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
@@ -124,7 +125,7 @@ router.get('/audit-logs/statistics', async (req, res) => {
  * GET /api/v1/security/notifications
  * Get all notifications for current user
  */
-router.get('/notifications', async (req, res) => {
+router.get('/notifications', requireAdministrator, (req, res) => {
   try {
     const unacknowledgedOnly = req.query.unacknowledged === 'true';
 
@@ -149,28 +150,32 @@ router.get('/notifications', async (req, res) => {
  * POST /api/v1/security/notifications/:id/acknowledge
  * Acknowledge a notification
  */
-router.post('/notifications/:id/acknowledge', async (req: AuthRequest, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user?.id || 'anonymous';
+router.post(
+  '/notifications/:id/acknowledge',
+  requireAdministrator,
+  async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id || 'anonymous';
 
-    await notificationService.acknowledge(id, userId);
+      await notificationService.acknowledge(id, userId);
 
-    res.json({ success: true, message: 'Notification acknowledged' });
-  } catch (error) {
-    console.error('Error acknowledging notification:', error);
-    res.status(500).json({
-      error: 'Failed to acknowledge notification',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
+      res.json({ success: true, message: 'Notification acknowledged' });
+    } catch (error) {
+      console.error('Error acknowledging notification:', error);
+      res.status(500).json({
+        error: 'Failed to acknowledge notification',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   }
-});
+);
 
 /**
  * POST /api/v1/security/notifications/:id/snooze
  * Snooze a notification
  */
-router.post('/notifications/:id/snooze', async (req: AuthRequest, res) => {
+router.post('/notifications/:id/snooze', requireAdministrator, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
     const { durationMinutes } = req.body;
@@ -205,7 +210,11 @@ router.post('/check-permission', async (req: AuthRequest, res) => {
     const { resourceId, resourceType, permission } = req.body;
     const userId = req.user?.id || 'anonymous';
 
-    if (!resourceId || !resourceType || !permission) {
+    if (
+      typeof resourceId !== 'string' ||
+      !permission ||
+      (resourceType !== 'archive' && resourceType !== 'file')
+    ) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -232,7 +241,7 @@ router.post('/check-permission', async (req: AuthRequest, res) => {
  * POST /api/v1/security/report-event
  * Report a security event
  */
-router.post('/report-event', async (req: AuthRequest, res) => {
+router.post('/report-event', requireAdministrator, async (req: AuthRequest, res) => {
   try {
     const { level, category, action, details } = req.body;
     const userId = req.user?.id || 'anonymous';
@@ -271,19 +280,24 @@ router.get('/permissions/:resourceId', async (req: AuthRequest, res) => {
     const { resourceId } = req.params;
     const userId = req.user?.id || 'anonymous';
 
-    const permissions = rbac.getResourcePermissions(resourceId);
-    const userRole = rbac.getUserRole(resourceId, userId);
+    const resourceType = req.query.resourceType ?? 'archive';
+    if (resourceType !== 'archive' && resourceType !== 'file') {
+      return res.status(400).json({ error: 'Invalid resource type' });
+    }
+    const permissions = await rbac.resolveResourcePermissions(resourceId, resourceType);
+    const userRole = rbac.roleForUser(permissions, userId);
+    if (!permissions || !userRole) {
+      return res.status(404).json({ error: 'Resource permissions unavailable' });
+    }
 
     res.json({
       resourceId,
       userRole,
-      permissions: permissions
-        ? {
-            resourceType: permissions.resourceType,
-            ownerId: permissions.ownerId,
-            publicRole: permissions.publicRole,
-          }
-        : null,
+      permissions: {
+        resourceType: permissions.resourceType,
+        ownerId: permissions.ownerId,
+        publicRole: permissions.publicRole,
+      },
     });
   } catch (error) {
     console.error('Error getting permissions:', error);

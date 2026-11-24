@@ -7,6 +7,22 @@
  */
 
 import { auditLog } from './audit-log';
+import { storage } from './storage';
+import type { NextFunction, Request, RequestHandler, Response } from 'express';
+
+type RequestWithAuthContext = Request & {
+  user?: {
+    id?: string;
+  };
+  sessionID?: string;
+};
+
+type RouteResourceParams = Partial<Record<'fileId' | 'id' | 'archiveId', string>>;
+
+type ResolvedRouteResource = {
+  resourceId?: string;
+  resourceType: 'file' | 'archive';
+};
 
 export type Role = 'reader' | 'editor' | 'owner' | 'admin';
 export type Permission =
@@ -60,11 +76,22 @@ class RBACService {
     return this.resourcePermissions.get(resourceId);
   }
 
+  async resolveResourcePermissions(resourceId: string, resourceType: 'archive' | 'file') {
+    const known = this.getResourcePermissions(resourceId);
+    if (known?.resourceType === resourceType) return known;
+    const ownerId = await storage.getResourceOwner(resourceId, resourceType);
+    if (!ownerId) return undefined;
+    return { resourceId, resourceType, ownerId, permissions: new Map<string, Role>() };
+  }
+
   /**
    * Get user's role for a resource
    */
   getUserRole(resourceId: string, userId: string): Role | null {
-    const permissions = this.resourcePermissions.get(resourceId);
+    return this.roleForUser(this.getResourcePermissions(resourceId), userId);
+  }
+
+  roleForUser(permissions: ResourcePermissions | undefined, userId: string): Role | null {
     if (!permissions) return null;
 
     // Owner always has full access
@@ -90,8 +117,9 @@ class RBACService {
     userId: string,
     permission: Permission,
     context: AccessContext
-  ): Promise<{ allowed: boolean; reason?: string }> {
-    const role = this.getUserRole(resourceId, userId);
+  ): Promise<{ allowed: boolean; reason?: string; missing?: boolean }> {
+    const permissions = await this.resolveResourcePermissions(resourceId, resourceType);
+    const role = this.roleForUser(permissions, userId);
 
     // Log access attempt
     await auditLog.log(
@@ -125,6 +153,7 @@ class RBACService {
       return {
         allowed: false,
         reason: 'No role assigned for this resource',
+        missing: !permissions,
       };
     }
 
@@ -281,7 +310,7 @@ class RBACService {
     resourceId: string,
     resourceType: 'file' | 'archive',
     context: AccessContext,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     const level = operation === 'delete' ? 'warning' : 'info';
 
@@ -302,30 +331,98 @@ class RBACService {
 // Singleton instance
 export const rbac = new RBACService();
 
+function routeTargetsFile(req: Request, routeParams: RouteResourceParams): boolean {
+  return routeParams.fileId !== undefined || req.path.includes('/files/');
+}
+
+function resolveRouteResource(
+  req: Request,
+  resourceTypeOverride?: 'file' | 'archive'
+): ResolvedRouteResource {
+  const routeParams = req.params as RouteResourceParams;
+  return {
+    resourceId: routeParams.fileId ?? routeParams.id ?? routeParams.archiveId,
+    resourceType: resourceTypeOverride ?? (routeTargetsFile(req, routeParams) ? 'file' : 'archive'),
+  };
+}
+
+function createAccessContext(req: Request, authReq: RequestWithAuthContext): AccessContext {
+  return {
+    userId: authReq.user?.id ?? 'anonymous',
+    sessionId: authReq.sessionID,
+    ipAddress: req.ip,
+    userAgent: req.headers['user-agent'],
+  };
+}
+
+function sendMissingResourceId(res: Response): void {
+  res.status(400).json({
+    error: 'Resource identifier missing',
+  });
+}
+
+function sendMissingAuthorizationContext(res: Response): void {
+  res.status(404).json({
+    error: 'Resource authorization context not found',
+  });
+}
+
+function sendAccessDenied(res: Response, reason?: string): void {
+  res.status(403).json({
+    error: 'Access denied',
+    message: reason ?? 'Insufficient permissions',
+  });
+}
+
+async function authorizePermissionRequest(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+  permission: Permission,
+  resourceTypeOverride?: 'file' | 'archive',
+  resourceIdSource?: 'archive-body'
+): Promise<void> {
+  const authReq = req as RequestWithAuthContext;
+  const resource = resolveRouteResource(req, resourceTypeOverride);
+  const body = req.body as { archive_id?: unknown } | undefined;
+  const resourceId = resourceIdSource === 'archive-body' ? body?.archive_id : resource.resourceId;
+
+  if (typeof resourceId !== 'string' || !resourceId) {
+    sendMissingResourceId(res);
+    return;
+  }
+
+  const context = createAccessContext(req, authReq);
+  const result = await rbac.canAccess(
+    resourceId,
+    resource.resourceType,
+    context.userId,
+    permission,
+    context
+  );
+  if (result.allowed) next();
+  else if (result.missing) sendMissingAuthorizationContext(res);
+  else sendAccessDenied(res, result.reason);
+}
+
 /**
  * Middleware to check RBAC permissions
  */
-export function requirePermission(permission: Permission) {
-  return async (req: any, res: any, next: any) => {
-    const resourceId = req.params.id || req.params.archiveId || req.params.fileId;
-    const resourceType = req.path.includes('/files/') ? 'file' : 'archive';
-    const userId = req.user?.id || 'anonymous';
-
-    const context: AccessContext = {
-      userId,
-      sessionId: req.sessionID,
-      ipAddress: req.ip || req.connection.remoteAddress,
-      userAgent: req.headers['user-agent'],
-    };
-
-    try {
-      await rbac.requireAccess(resourceId, resourceType, userId, permission, context);
-      next();
-    } catch (error) {
-      res.status(403).json({
-        error: 'Access denied',
-        message: error instanceof Error ? error.message : 'Insufficient permissions',
-      });
-    }
+export function requirePermission(
+  permission: Permission,
+  resourceTypeOverride?: 'file' | 'archive',
+  resourceIdSource?: 'archive-body'
+): RequestHandler {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    void authorizePermissionRequest(
+      req,
+      res,
+      next,
+      permission,
+      resourceTypeOverride,
+      resourceIdSource
+    ).catch((error: unknown) => {
+      next(error);
+    });
   };
 }

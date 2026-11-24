@@ -2,18 +2,20 @@ import { QueryClient, QueryFunction } from '@tanstack/react-query';
 import { buildApiUrl, getApiHeaders, APP_CONFIG } from './config';
 
 async function throwIfResNotOk(res: Response) {
-  if (!res.ok) {
+  if (res.ok) return;
+
+  const text = await res.text();
+  let message = res.statusText;
+  if (res.headers.get('content-type')?.includes('application/json')) {
     try {
-      const errorData = await res.json();
-      if (errorData.error) {
-        throw new Error(errorData.error);
-      }
+      const data = JSON.parse(text);
+      if (typeof data?.error === 'string') message = data.error;
+      else if (typeof data?.message === 'string') message = data.message;
     } catch {
-      // Fallback to text if JSON parsing fails
+      // Keep the HTTP status when an error response contains invalid JSON.
     }
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
   }
+  throw new Error(`${res.status}: ${message}`);
 }
 
 export async function apiRequest(
@@ -26,9 +28,9 @@ export async function apiRequest(
 
   const res = await fetch(url, {
     method,
-    headers: isFormData ? {} : getApiHeaders(),
-    body: isFormData ? data : data ? JSON.stringify(data) : undefined,
-    credentials: 'include',
+    headers: getApiHeaders(!isFormData),
+    body: isFormData ? data : data === undefined ? undefined : JSON.stringify(data),
+    credentials: 'same-origin',
     signal: AbortSignal.timeout(APP_CONFIG.api.timeout),
   });
 
@@ -46,7 +48,7 @@ export const getQueryFn: <T>(options: { on401: UnauthorizedBehavior }) => QueryF
 
     const res = await fetch(url, {
       headers: getApiHeaders(),
-      credentials: 'include',
+      credentials: 'same-origin',
       signal: AbortSignal.timeout(APP_CONFIG.api.timeout),
     });
 

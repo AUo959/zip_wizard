@@ -145,7 +145,18 @@ ENABLE_CIRCUIT_BREAKER=true
 ENABLE_AUDIT_LOG=true
 MAX_UPLOAD_SIZE=100MB
 SCAN_TIMEOUT=30s
+API_AUTH_TOKEN=<server-managed-token>
+API_AUTH_USER_ID=zip-operator
+CORS_ALLOWED_ORIGINS=https://app.example.com
 ```
+
+### Authentication and archive ownership
+
+Set either `API_AUTH_TOKEN` and `API_AUTH_USER_ID` for one identity or `API_AUTH_CREDENTIALS` to a JSON object mapping stable user IDs to distinct tokens. Keep these values in server configuration. `API_AUTH_USER_ID` defaults to `T1_ANCHOR_SERVICE` for the single-token configuration. `API_AUTH_ADMIN_USERS` is a comma-separated list of IDs allowed to manage audit logs and system notifications. Archive and file access still requires archive ownership or an assigned resource role.
+
+For direct browser access, enter your API token at sign-in. The browser keeps it in memory until sign-out or reload. For a same-origin reverse proxy, the proxy authenticates the user, removes incoming authorization headers, and supplies the bearer token assigned to that user when forwarding requests to the private backend. Keep the backend inaccessible directly in that deployment. Use HTTPS and list each browser origin in `CORS_ALLOWED_ORIGINS`. For local development only, `DEV_AUTH_BYPASS_USER_ID` can supply a fixed test identity when credential configuration is absent.
+
+For an existing database, apply [the archive ownership migration](migrations/0001_archive_ownership.pgsql) before starting this version. New archives persist the authenticated owner's ID, and their files inherit archive ownership. Older rows have a null owner and remain unavailable until an operator assigns them. Assign only archive IDs with verified owners and a configured identity. For example, execute a parameterized update using `UPDATE archives SET owner_id = $1 WHERE id = $2 AND owner_id IS NULL RETURNING id`, with the confirmed owner ID and archive ID. The migration itself leaves existing ownership unassigned and preserves archive content.
 
 ## 🚀 Performance & Scalability
 
