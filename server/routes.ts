@@ -1372,8 +1372,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(
     '/api/v1/privacy/scan',
     authenticateRequest,
-    requirePermission('read', 'archive', req => req.body?.archive_id),
-    async (req, res) => {
+    requirePermission('read', 'archive', 'archive-body'),
+    (req, res) => {
       try {
         const { archive_id } = req.body;
 

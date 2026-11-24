@@ -380,11 +380,12 @@ async function authorizePermissionRequest(
   next: NextFunction,
   permission: Permission,
   resourceTypeOverride?: 'file' | 'archive',
-  selectResourceId?: (_request: Request) => unknown
+  resourceIdSource?: 'archive-body'
 ): Promise<void> {
   const authReq = req as RequestWithAuthContext;
   const resource = resolveRouteResource(req, resourceTypeOverride);
-  const resourceId = selectResourceId ? selectResourceId(req) : resource.resourceId;
+  const body = req.body as { archive_id?: unknown } | undefined;
+  const resourceId = resourceIdSource === 'archive-body' ? body?.archive_id : resource.resourceId;
 
   if (typeof resourceId !== 'string' || !resourceId) {
     sendMissingResourceId(res);
@@ -410,7 +411,7 @@ async function authorizePermissionRequest(
 export function requirePermission(
   permission: Permission,
   resourceTypeOverride?: 'file' | 'archive',
-  selectResourceId?: (_request: Request) => unknown
+  resourceIdSource?: 'archive-body'
 ): RequestHandler {
   return (req: Request, res: Response, next: NextFunction): void => {
     void authorizePermissionRequest(
@@ -419,7 +420,7 @@ export function requirePermission(
       next,
       permission,
       resourceTypeOverride,
-      selectResourceId
+      resourceIdSource
     ).catch((error: unknown) => {
       next(error);
     });

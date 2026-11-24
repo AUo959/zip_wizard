@@ -59,7 +59,12 @@ export function AccessGate({ children }: { children: ReactNode }) {
   if (access === 'required') {
     return (
       <main className="flex min-h-screen items-center justify-center p-6">
-        <form className="w-full max-w-sm space-y-4 rounded-lg border bg-card p-6" onSubmit={signIn}>
+        <form
+          className="w-full max-w-sm space-y-4 rounded-lg border bg-card p-6"
+          onSubmit={event => {
+            void signIn(event);
+          }}
+        >
           <h1 className="text-xl font-semibold">Sign in to ZIP Wizard</h1>
           <label className="block space-y-2" htmlFor="api-token">
             <span>API token</span>
