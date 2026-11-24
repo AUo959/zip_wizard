@@ -7,9 +7,10 @@ import { observer } from './observer';
 import { type Archive, type File, type InsertFile } from '@shared/schema';
 import path from 'path';
 import cors from 'cors';
+import { z } from 'zod';
 import crypto from 'crypto';
 import { auditLog } from './audit-log';
-import { rbac, requirePermission } from './rbac';
+import { requirePermission } from './rbac';
 import { buildCorsOptions } from './utils/cors';
 import { redactContent } from './utils/redaction';
 import { authenticateRequest, type AuthenticatedRequest } from './middleware/auth';
@@ -370,13 +371,11 @@ type UploadProcessingResult = {
 
 type PersistDirectoryOptions = {
   archiveId: string;
-  requesterId: string;
   relativePath: string;
 };
 
 type PersistFileOptions = {
   archiveId: string;
-  requesterId: string;
   relativePath: string;
   buffer: Buffer;
   extension: string;
@@ -386,7 +385,6 @@ type PersistFileOptions = {
 
 type ProcessUploadOptions = {
   archive: Archive;
-  requesterId: string;
   uploadedFile: Express.Multer.File;
   isZipArchive: boolean;
 };
@@ -484,15 +482,6 @@ function getUploadKind(uploadedFile: Express.Multer.File): { isZipArchive: boole
   };
 }
 
-function setOwnerPermission(resourceId: string, resourceType: 'file' | 'archive', ownerId: string) {
-  rbac.setResourcePermissions(resourceId, {
-    resourceId,
-    resourceType,
-    ownerId,
-    permissions: new Map([[ownerId, 'owner']]),
-  });
-}
-
 function shouldAnalyzeAsText(content: string, extension: string): boolean {
   return !extension || TEXT_ANALYSIS_EXTENSIONS.has(extension) || /[\x20-\x7E\n\r\t]/.test(content);
 }
@@ -532,25 +521,25 @@ async function createUploadArchive(
   uploadedFile: Express.Multer.File,
   requesterId: string
 ): Promise<Archive> {
-  const archive = await storage.createArchive({
-    name: uploadedFile.originalname,
-    originalSize: uploadedFile.size,
-    fileCount: 0,
-    symbolicChain: `T1_CHAIN::ZIPWizard::v2.2.6b::${getRequestBodyValue(req, 'from', 'USER')}::${getRequestBodyValue(req, 'operation', 'Upload')}`,
-    threadTag: `Thread_${getRequestBodyValue(req, 'tag', 'Upload')}_${Date.now()}`,
-    ethicsLock: getRequestBodyValue(req, 'ethicsLock', 'Picard_Delta_3'),
-    trustAnchor: getRequestBodyValue(req, 'trustAnchor', 'SN1-AS3-TRUSTED'),
-    replayable: true,
-    monitoringWindow: parseMonitoringWindow(req),
-  });
-
-  setOwnerPermission(archive.id, 'archive', requesterId);
-  return archive;
+  return storage.createArchive(
+    {
+      name: uploadedFile.originalname,
+      originalSize: uploadedFile.size,
+      fileCount: 0,
+      symbolicChain: `T1_CHAIN::ZIPWizard::v2.2.6b::${getRequestBodyValue(req, 'from', 'USER')}::${getRequestBodyValue(req, 'operation', 'Upload')}`,
+      threadTag: `Thread_${getRequestBodyValue(req, 'tag', 'Upload')}_${Date.now()}`,
+      ethicsLock: getRequestBodyValue(req, 'ethicsLock', 'Picard_Delta_3'),
+      trustAnchor: getRequestBodyValue(req, 'trustAnchor', 'SN1-AS3-TRUSTED'),
+      replayable: true,
+      monitoringWindow: parseMonitoringWindow(req),
+    },
+    requesterId
+  );
 }
 
 async function persistUploadDirectory(options: PersistDirectoryOptions): Promise<File> {
-  const { archiveId, requesterId, relativePath } = options;
-  const dirFile = await storage.createFile({
+  const { archiveId, relativePath } = options;
+  return storage.createFile({
     archiveId,
     path: relativePath,
     name: path.basename(relativePath) || relativePath,
@@ -566,9 +555,6 @@ async function persistUploadDirectory(options: PersistDirectoryOptions): Promise
     complexity: null,
     dependencies: [],
   });
-
-  setOwnerPermission(dirFile.id, 'file', requesterId);
-  return dirFile;
 }
 
 function buildStoredFileInput(options: PersistFileOptions, analysis: FileAnalysis): InsertFile {
@@ -601,7 +587,6 @@ async function persistUploadFile(options: PersistFileOptions): Promise<File> {
   const analysis = analyzeUploadedFile(options.name, content, options.extension);
   const file = await storage.createFile(buildStoredFileInput(options, analysis));
 
-  setOwnerPermission(file.id, 'file', options.requesterId);
   if (analysis.language) {
     await observer.trackAnalysis(options.archiveId, file.id, options.name, analysis);
   }
@@ -626,7 +611,6 @@ async function processZipUpload(options: ProcessUploadOptions): Promise<UploadPr
       processedFiles.push(
         await persistUploadDirectory({
           archiveId: options.archive.id,
-          requesterId: options.requesterId,
           relativePath,
         })
       );
@@ -643,7 +627,6 @@ async function processZipUpload(options: ProcessUploadOptions): Promise<UploadPr
     processedFiles.push(
       await persistUploadFile({
         archiveId: options.archive.id,
-        requesterId: options.requesterId,
         relativePath,
         buffer: fileBuffer,
         extension: path.extname(relativePath),
@@ -662,7 +645,6 @@ async function processSingleFileUpload(
   const uploadedFile = options.uploadedFile;
   const processedFile = await persistUploadFile({
     archiveId: options.archive.id,
-    requesterId: options.requesterId,
     relativePath: uploadedFile.originalname,
     buffer: uploadedFile.buffer,
     extension: path.extname(uploadedFile.originalname),
@@ -832,11 +814,15 @@ function handleArchiveUpload(req: AuthenticatedRequest, res: Response): Promise<
   const validation = validateUploadRequest(req, res);
   if (!validation) return Promise.resolve();
 
-  const requesterId = req.user?.id ?? 'anonymous';
+  const requesterId = req.user?.id;
+  if (!requesterId) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return Promise.resolve();
+  }
   return createUploadArchive(req, validation.uploadedFile, requesterId)
     .then(archive => {
       createdArchiveId = archive.id;
-      return processUploadedArchive({ archive, requesterId, ...validation }).then(result =>
+      return processUploadedArchive({ archive, ...validation }).then(result =>
         finalizeUploadArchive(archive, result).then(finalArchive => {
           sendUploadResponse(res, finalArchive, result);
         })
@@ -895,6 +881,18 @@ const upload = multer({
     fileSize: API_CONFIG.maxFileSize,
   },
 });
+
+const listLimit = z
+  .string()
+  .regex(/^\d+$/)
+  .transform(Number)
+  .pipe(z.number().int().min(1).max(500));
+const observerQuery = z.object({
+  archiveId: z.string().min(1).optional(),
+  type: z.string().min(1).optional(),
+  limit: listLimit.default('100'),
+});
+const mutationQuery = z.object({ limit: listLimit.default('50') });
 
 function archiveStatusLabel(value: string | null): string {
   return value?.length ? value : 'N/A';
@@ -994,6 +992,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  app.get('/api/v1/auth/session', authenticateRequest, (req: AuthenticatedRequest, res) => {
+    res.json({ data: req.user });
+  });
+
   // Upload and process any file type - now supports comprehensive parsing
   app.post(
     '/api/v1/archives',
@@ -1002,13 +1004,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     asyncHandler(handleArchiveUpload)
   );
 
-  // Get all archives
+  // List the authenticated user's archives
   app.get(
     '/api/v1/archives',
     authenticateRequest,
-    asyncHandler(async (_req, res) => {
+    asyncHandler(async (req, res) => {
       try {
-        const archives = await storage.getAllArchives();
+        const archives = await storage.getOwnedArchives(req.user!.id);
         res.json({
           success: true,
           data: archives,
@@ -1198,30 +1200,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })
   );
 
-  // Get observer events
-  app.get('/api/v1/observer/events', async (req, res) => {
-    try {
-      const { archiveId, limit = '100', type } = req.query;
-      const events = type
-        ? await storage.getObserverEventsByType(type as string, parseInt(limit as string))
-        : await storage.getObserverEvents(archiveId as string, parseInt(limit as string));
-
+  app.get(
+    '/api/v1/observer/events',
+    authenticateRequest,
+    asyncHandler(async (req, res) => {
+      const filters = observerQuery.safeParse(req.query);
+      if (!filters.success) {
+        res.status(400).json({ error: 'Invalid observer event filters' });
+        return;
+      }
+      const { archiveId, limit, type } = filters.data;
+      const events = await storage.getOwnedObserverEvents(req.user!.id, limit, archiveId, type);
       res.json({
         success: true,
         data: events,
-        meta: {
-          total: events.length,
-          limit: parseInt(limit as string),
-          filters: { archiveId, type },
-        },
+        meta: { total: events.length, limit, filters: { archiveId, type } },
       });
-    } catch (_error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to retrieve observer events',
-      });
-    }
-  });
+    })
+  );
 
   // Get status dashboard for an archive
   app.get(
@@ -1272,27 +1268,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })
   );
 
-  // Get recent mutations
-  app.get('/api/v1/mutations', async (req, res) => {
-    try {
-      const { limit = '50' } = req.query;
-      const mutations = await storage.getRecentMutations(parseInt(limit as string));
-
-      res.json({
-        success: true,
-        data: mutations,
-        meta: {
-          total: mutations.length,
-          limit: parseInt(limit as string),
-        },
-      });
-    } catch (_error) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to retrieve mutations',
-      });
-    }
-  });
+  app.get(
+    '/api/v1/mutations',
+    authenticateRequest,
+    asyncHandler(async (req, res) => {
+      const query = mutationQuery.safeParse(req.query);
+      if (!query.success) {
+        res.status(400).json({ error: 'Invalid mutation limit' });
+        return;
+      }
+      const { limit } = query.data;
+      const mutations = await storage.getRecentMutations(req.user!.id, limit);
+      res.json({ success: true, data: mutations, meta: { total: mutations.length, limit } });
+    })
+  );
 
   // Enhanced Features - Symbolic Interface API
   app.get('/api/v1/symbolic/command/:symbol', async (req, res) => {
@@ -1340,69 +1329,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Enhanced Archive Management API
-  app.post('/api/v1/enhanced/archives/:id/optimize', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { mode = 'balanced' } = req.body;
+  app.post(
+    '/api/v1/enhanced/archives/:id/optimize',
+    authenticateRequest,
+    requirePermission('write', 'archive'),
+    async (req, res) => {
+      try {
+        const { id } = req.params;
+        const { mode = 'balanced' } = req.body;
 
-      res.json({
-        success: true,
-        data: {
-          archive_id: id,
-          optimization_mode: mode,
-          status: 'processing',
-          estimated_savings: '25%',
-          progress: 0,
-          eta: '2 minutes',
-        },
-      });
-    } catch (_error) {
-      console.error('Archive optimization error:', _error);
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-      });
+        res.json({
+          success: true,
+          data: {
+            archive_id: id,
+            optimization_mode: mode,
+            status: 'processing',
+            estimated_savings: '25%',
+            progress: 0,
+            eta: '2 minutes',
+          },
+        });
+      } catch (_error) {
+        console.error('Archive optimization error:', _error);
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error',
+        });
+      }
     }
-  });
+  );
 
   // Privacy Shield API
-  app.post('/api/v1/privacy/scan', async (req, res) => {
-    try {
-      const { archive_id } = req.body;
+  app.post(
+    '/api/v1/privacy/scan',
+    authenticateRequest,
+    requirePermission('read', 'archive', req => req.body?.archive_id),
+    async (req, res) => {
+      try {
+        const { archive_id } = req.body;
 
-      res.json({
-        success: true,
-        data: {
-          scan_id: `scan_${Date.now()}`,
-          archive_id,
-          status: 'completed',
-          privacy_score: 78,
-          issues_found: [
-            {
-              file: 'user_data.csv',
-              type: 'PII',
-              severity: 'high',
-              description: 'Contains personal identifiable information',
-            },
-          ],
-          recommendations: [
-            'Enable data redaction for PII fields',
-            'Encrypt sensitive configuration files',
-          ],
-        },
-      });
-    } catch (_error) {
-      console.error('Privacy scan error:', _error);
-      res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-      });
+        res.json({
+          success: true,
+          data: {
+            scan_id: `scan_${Date.now()}`,
+            archive_id,
+            status: 'completed',
+            privacy_score: 78,
+            issues_found: [
+              {
+                file: 'user_data.csv',
+                type: 'PII',
+                severity: 'high',
+                description: 'Contains personal identifiable information',
+              },
+            ],
+            recommendations: [
+              'Enable data redaction for PII fields',
+              'Encrypt sensitive configuration files',
+            ],
+          },
+        });
+      } catch (_error) {
+        console.error('Privacy scan error:', _error);
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error',
+        });
+      }
     }
-  });
+  );
 
   // Import and register security routes
   const securityRoutes = await import('./routes/security');
-  app.use('/api/v1/security', securityRoutes.default);
+  app.use('/api/v1/security', authenticateRequest, securityRoutes.default);
 
   const httpServer = createServer(app);
   return httpServer;

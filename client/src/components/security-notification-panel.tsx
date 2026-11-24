@@ -1,3 +1,4 @@
+import { apiRequest } from '@/lib/queryClient';
 /**
  * Security Notification Panel
  *
@@ -69,9 +70,7 @@ export function SecurityNotificationPanel() {
 
     // Call API to acknowledge
     try {
-      await fetch(`/api/v1/security/notifications/${id}/acknowledge`, {
-        method: 'POST',
-      });
+      await apiRequest('POST', `security/notifications/${encodeURIComponent(id)}/acknowledge`);
     } catch (error) {
       console.error('Failed to acknowledge notification:', error);
     }
@@ -84,10 +83,8 @@ export function SecurityNotificationPanel() {
 
     // Call API to snooze
     try {
-      await fetch(`/api/v1/security/notifications/${id}/snooze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ durationMinutes: durationHours * 60 }),
+      await apiRequest('POST', `security/notifications/${encodeURIComponent(id)}/snooze`, {
+        durationMinutes: durationHours * 60,
       });
     } catch (error) {
       console.error('Failed to snooze notification:', error);

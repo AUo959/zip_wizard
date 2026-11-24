@@ -1013,8 +1013,9 @@ export default function Home() {
                         {selectedArchive && (
                           <DropdownMenuItem
                             onClick={async () => {
-                              const response = await fetch(
-                                `/api/v1/archives/${selectedArchive.id}/export`
+                              const response = await apiRequest(
+                                'GET',
+                                `archives/${encodeURIComponent(selectedArchive.id)}/export`
                               );
                               const blob = await response.blob();
                               const url = window.URL.createObjectURL(blob);

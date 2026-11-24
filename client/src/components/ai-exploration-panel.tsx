@@ -1,3 +1,4 @@
+import { apiRequest } from '@/lib/queryClient';
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -207,7 +208,7 @@ export function AIExplorationPanel({
   const handleExportArchive = async () => {
     setIsAnalyzing(true);
     try {
-      const response = await fetch(`/api/v1/archives/${archive.id}/export`);
+      const response = await apiRequest('GET', `archives/${encodeURIComponent(archive.id)}/export`);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');

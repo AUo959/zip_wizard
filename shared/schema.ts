@@ -5,6 +5,7 @@ import {
   varchar,
   jsonb,
   integer,
+  index,
   timestamp,
   boolean,
   json,
@@ -12,22 +13,27 @@ import {
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
-export const archives = pgTable('archives', {
-  id: varchar('id')
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  name: text('name').notNull(),
-  originalSize: integer('original_size').notNull(),
-  fileCount: integer('file_count').notNull(),
-  uploadedAt: timestamp('uploaded_at').defaultNow().notNull(),
-  // Enhanced metadata for ZIPWizard v2.2.6b
-  symbolicChain: text('symbolic_chain'),
-  threadTag: text('thread_tag'),
-  ethicsLock: text('ethics_lock'),
-  trustAnchor: text('trust_anchor'),
-  replayable: boolean('replayable').default(true),
-  monitoringWindow: integer('monitoring_window').default(48), // hours
-});
+export const archives = pgTable(
+  'archives',
+  {
+    id: varchar('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    name: text('name').notNull(),
+    ownerId: varchar('owner_id', { length: 128 }),
+    originalSize: integer('original_size').notNull(),
+    fileCount: integer('file_count').notNull(),
+    uploadedAt: timestamp('uploaded_at').defaultNow().notNull(),
+    // Enhanced metadata for ZIPWizard v2.2.6b
+    symbolicChain: text('symbolic_chain'),
+    threadTag: text('thread_tag'),
+    ethicsLock: text('ethics_lock'),
+    trustAnchor: text('trust_anchor'),
+    replayable: boolean('replayable').default(true),
+    monitoringWindow: integer('monitoring_window').default(48), // hours
+  },
+  table => [index('archives_owner_id_idx').on(table.ownerId)]
+);
 
 export const files = pgTable('files', {
   id: varchar('id')
@@ -103,6 +109,7 @@ export const auditLogs = pgTable('audit_logs', {
 export const insertArchiveSchema = createInsertSchema(archives).omit({
   id: true,
   uploadedAt: true,
+  ownerId: true,
 });
 
 export const insertFileSchema = createInsertSchema(files).omit({

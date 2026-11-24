@@ -6,6 +6,8 @@ vi.mock('../audit-log', () => ({
   },
 }));
 
+vi.mock('../storage', () => ({ storage: { getResourceOwner: vi.fn().mockResolvedValue(null) } }));
+
 import { rbac, requirePermission } from '../rbac';
 
 function createResponse() {

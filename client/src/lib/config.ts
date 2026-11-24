@@ -32,15 +32,10 @@ export const APP_CONFIG = {
 // API endpoint builder
 export function buildApiUrl(endpoint: string): string {
   const { baseUrl, version } = APP_CONFIG.api;
-  // Remove leading slash if present
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
-
-  // Handle endpoints that already include version
-  if (cleanEndpoint.includes('/v1/') || cleanEndpoint === 'health') {
-    return `${baseUrl}/api/${cleanEndpoint}`;
-  }
-
-  return `${baseUrl}/api/${version}/${cleanEndpoint}`;
+  const path = endpoint.replace(/^\/+/, '');
+  if (path.startsWith('api/')) return `${baseUrl}/${path}`;
+  if (path.startsWith(`${version}/`) || path === 'health') return `${baseUrl}/api/${path}`;
+  return `${baseUrl}/api/${version}/${path}`;
 }
 
 // Feature flags
@@ -48,13 +43,15 @@ export function isFeatureEnabled(feature: keyof typeof APP_CONFIG.features): boo
   return APP_CONFIG.features[feature] === true;
 }
 
-// Cross-platform headers
-export function getApiHeaders(additionalHeaders?: Record<string, string>): Record<string, string> {
-  const anchorUser = import.meta.env.VITE_API_USER_ANCHOR;
+let sessionToken: string | undefined;
 
+export function setApiToken(token?: string): void {
+  sessionToken = token;
+}
+
+export function getApiHeaders(json = true): Record<string, string> {
   return {
-    ...APP_CONFIG.api.headers,
-    ...(anchorUser ? { 'X-ZipWizard-User': anchorUser } : {}),
-    ...additionalHeaders,
+    ...(json ? APP_CONFIG.api.headers : {}),
+    ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}),
   };
 }

@@ -21,7 +21,6 @@ describe('buildCorsOptions', () => {
     process.env = { ...originalEnv };
     delete process.env.CORS_ALLOWED_ORIGINS;
     delete process.env.CORS_ORIGIN;
-    delete process.env.CORS_ALLOW_NO_ORIGIN;
     process.env.NODE_ENV = 'production';
   });
 
@@ -30,18 +29,8 @@ describe('buildCorsOptions', () => {
     vi.restoreAllMocks();
   });
 
-  it('rejects no-origin requests unless explicitly allowed', () => {
-    const callback = invokeOrigin(undefined);
-
-    expect(callback).toHaveBeenCalledWith(expect.any(Error));
-  });
-
-  it('allows no-origin requests when explicitly configured', () => {
-    process.env.CORS_ALLOW_NO_ORIGIN = 'true';
-
-    const callback = invokeOrigin(undefined);
-
-    expect(callback).toHaveBeenCalledWith(null, true);
+  it('leaves no-origin requests to normal authentication without emitting CORS headers', () => {
+    expect(invokeOrigin(undefined)).toHaveBeenCalledWith(null, false);
   });
 
   it('allows configured origins and rejects unlisted origins', () => {

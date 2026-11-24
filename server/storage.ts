@@ -12,7 +12,7 @@ import {
 } from '@shared/schema';
 import { normalizeTags, normalizeDependencies } from '@shared/validation';
 import { db } from './db';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, getTableColumns } from 'drizzle-orm';
 import { auditLog } from './audit-log';
 
 type StoredArchive = {
@@ -56,10 +56,17 @@ type StoredFileUpdate = Partial<StoredFile>;
 /* eslint-disable no-unused-vars -- Interface method arguments define the storage contract. */
 export interface IStorage {
   // Archive operations
-  createArchive(archive: InsertArchive): Promise<StoredArchive>;
+  createArchive(archive: InsertArchive, ownerId: string): Promise<StoredArchive>;
   updateArchive(id: string, updates: StoredArchiveUpdate): Promise<StoredArchive | undefined>;
   getArchive(id: string): Promise<StoredArchive | undefined>;
-  getAllArchives(): Promise<StoredArchive[]>;
+  getOwnedArchives(ownerId: string): Promise<StoredArchive[]>;
+  getResourceOwner(resourceId: string, resourceType: 'archive' | 'file'): Promise<string | null>;
+  getOwnedObserverEvents(
+    ownerId: string,
+    limit: number,
+    archiveId?: string,
+    type?: string
+  ): Promise<ObserverEvent[]>;
   deleteArchive(id: string): Promise<void>;
 
   // File operations
@@ -79,14 +86,17 @@ export interface IStorage {
   // File mutation operations
   createFileMutation(mutation: InsertFileMutation): Promise<FileMutation>;
   getFileMutations(fileId: string): Promise<FileMutation[]>;
-  getRecentMutations(limit?: number): Promise<FileMutation[]>;
+  getRecentMutations(ownerId: string, limit?: number): Promise<FileMutation[]>;
   deleteFileMutationsByFileId(fileId: string): Promise<void>;
 }
 /* eslint-enable no-unused-vars */
 
 export class DatabaseStorage implements IStorage {
-  async createArchive(insertArchive: InsertArchive): Promise<StoredArchive> {
-    const [archive] = await db.insert(archives).values([insertArchive]).returning();
+  async createArchive(insertArchive: InsertArchive, ownerId: string): Promise<StoredArchive> {
+    const [archive] = await db
+      .insert(archives)
+      .values({ ...insertArchive, ownerId })
+      .returning();
     return archive;
   }
 
@@ -103,8 +113,46 @@ export class DatabaseStorage implements IStorage {
     return archive || undefined;
   }
 
-  async getAllArchives(): Promise<StoredArchive[]> {
-    return await db.select().from(archives);
+  async getOwnedArchives(ownerId: string): Promise<StoredArchive[]> {
+    return await db.select().from(archives).where(eq(archives.ownerId, ownerId));
+  }
+
+  async getResourceOwner(
+    resourceId: string,
+    resourceType: 'archive' | 'file'
+  ): Promise<string | null> {
+    const ownerField = { owner: archives.ownerId };
+    const [record] =
+      resourceType === 'archive'
+        ? await db.select(ownerField).from(archives).where(eq(archives.id, resourceId)).limit(1)
+        : await db
+            .select(ownerField)
+            .from(files)
+            .innerJoin(archives, eq(files.archiveId, archives.id))
+            .where(eq(files.id, resourceId))
+            .limit(1);
+    return record?.owner ?? null;
+  }
+
+  async getOwnedObserverEvents(
+    ownerId: string,
+    limit: number,
+    archiveId?: string,
+    type?: string
+  ): Promise<ObserverEvent[]> {
+    return await db
+      .select(getTableColumns(observerEvents))
+      .from(observerEvents)
+      .innerJoin(archives, eq(observerEvents.archiveId, archives.id))
+      .where(
+        and(
+          eq(archives.ownerId, ownerId),
+          archiveId === undefined ? undefined : eq(observerEvents.archiveId, archiveId),
+          type === undefined ? undefined : eq(observerEvents.type, type)
+        )
+      )
+      .orderBy(desc(observerEvents.timestamp))
+      .limit(limit);
   }
 
   async deleteArchive(id: string): Promise<void> {
@@ -230,10 +278,13 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(fileMutations.timestamp));
   }
 
-  async getRecentMutations(limit: number = 50): Promise<FileMutation[]> {
+  async getRecentMutations(ownerId: string, limit: number = 50): Promise<FileMutation[]> {
     return await db
-      .select()
+      .select(getTableColumns(fileMutations))
       .from(fileMutations)
+      .innerJoin(files, eq(fileMutations.fileId, files.id))
+      .innerJoin(archives, eq(files.archiveId, archives.id))
+      .where(eq(archives.ownerId, ownerId))
       .orderBy(desc(fileMutations.timestamp))
       .limit(limit);
   }

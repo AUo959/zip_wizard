@@ -17,11 +17,7 @@ export function buildCorsOptions(): CorsOptions {
   return {
     origin: (origin, callback) => {
       if (!origin) {
-        if (process.env.CORS_ALLOW_NO_ORIGIN === 'true') {
-          callback(null, true);
-          return;
-        }
-        callback(new Error('Origin required by CORS policy'));
+        callback(null, false);
         return;
       }
       if (allowedOrigins.includes(origin)) {
@@ -31,7 +27,8 @@ export function buildCorsOptions(): CorsOptions {
       callback(new Error('Origin not allowed by CORS policy'));
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-ZipWizard-User'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['X-ZipWizard-Archive-Truncated', 'X-ZipWizard-Skipped-Entries'],
     credentials: allowCredentials,
   };
 }
