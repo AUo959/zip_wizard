@@ -150,7 +150,11 @@ export function StatusDashboard({ archiveId }: StatusDashboardProps) {
         <div className="space-y-2">
           <h3 className="text-sm font-semibold text-purple-700">Replay State</h3>
           <div className="space-y-2">
-            <StatusItem label="Replayable" status={replayState.replayable} />
+            <StatusItem
+              label="Replayable"
+              status={replayState.replayable ?? undefined}
+              value={replayState.replayable === null ? 'Unknown' : undefined}
+            />
             <StatusItem label="Continuity Anchors" value={replayState.continuityAnchors} />
           </div>
         </div>
@@ -202,7 +206,7 @@ export function StatusDashboard({ archiveId }: StatusDashboardProps) {
 
 interface StatusItemProps {
   label: string;
-  status?: boolean | null;
+  status?: boolean;
   value?: string;
   pending?: boolean;
   icon?: React.ReactNode;
