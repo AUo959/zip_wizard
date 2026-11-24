@@ -7,14 +7,9 @@ export interface AuthenticatedRequest extends Request {
 
 const USER_ID = /^[A-Za-z0-9:_@.-]{1,128}$/;
 
-function credentials(): [string, string][] {
-  const configured = process.env.API_AUTH_CREDENTIALS;
-  const token = process.env.API_AUTH_TOKEN;
-  if (!configured)
-    return token ? [[process.env.API_AUTH_USER_ID || 'T1_ANCHOR_SERVICE', token]] : [];
-
+function credentialMap(configured: string): [string, string][] {
   const mapping: unknown = JSON.parse(configured);
-  if (!mapping || typeof mapping !== 'object' || Array.isArray(mapping) || token) {
+  if (!mapping || typeof mapping !== 'object' || Array.isArray(mapping)) {
     throw new Error('Invalid API credential mapping');
   }
   const entries = Object.entries(mapping);
@@ -27,6 +22,21 @@ function credentials(): [string, string][] {
     tokens.add(value);
     return [id, value];
   });
+}
+
+function credentials(): [string, string][] {
+  const configured = process.env.API_AUTH_CREDENTIALS;
+  const token = process.env.API_AUTH_TOKEN;
+  if (configured) {
+    if (token) throw new Error('Use one API credential configuration');
+    return credentialMap(configured);
+  }
+  return token ? [[process.env.API_AUTH_USER_ID ?? 'T1_ANCHOR_SERVICE', token]] : [];
+}
+
+export function authenticatedUserId(req: AuthenticatedRequest): string {
+  if (!req.user) throw new Error('Missing authenticated request context');
+  return req.user.id;
 }
 
 function digest(value: string): Buffer {

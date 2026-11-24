@@ -13,7 +13,11 @@ import { auditLog } from './audit-log';
 import { requirePermission } from './rbac';
 import { buildCorsOptions } from './utils/cors';
 import { redactContent } from './utils/redaction';
-import { authenticateRequest, type AuthenticatedRequest } from './middleware/auth';
+import {
+  authenticateRequest,
+  authenticatedUserId,
+  type AuthenticatedRequest,
+} from './middleware/auth';
 
 // Extract code snippets from text/chat content
 function extractCodeFromText(content: string): { snippets: string[]; languages: string[] } {
@@ -1010,7 +1014,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     authenticateRequest,
     asyncHandler(async (req, res) => {
       try {
-        const archives = await storage.getOwnedArchives(req.user!.id);
+        const archives = await storage.getOwnedArchives(authenticatedUserId(req));
         res.json({
           success: true,
           data: archives,
@@ -1210,7 +1214,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
       const { archiveId, limit, type } = filters.data;
-      const events = await storage.getOwnedObserverEvents(req.user!.id, limit, archiveId, type);
+      const events = await storage.getOwnedObserverEvents(
+        authenticatedUserId(req),
+        limit,
+        archiveId,
+        type
+      );
       res.json({
         success: true,
         data: events,
@@ -1278,7 +1287,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
       const { limit } = query.data;
-      const mutations = await storage.getRecentMutations(req.user!.id, limit);
+      const mutations = await storage.getRecentMutations(authenticatedUserId(req), limit);
       res.json({ success: true, data: mutations, meta: { total: mutations.length, limit } });
     })
   );
@@ -1333,7 +1342,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     '/api/v1/enhanced/archives/:id/optimize',
     authenticateRequest,
     requirePermission('write', 'archive'),
-    async (req, res) => {
+    (req, res) => {
       try {
         const { id } = req.params;
         const { mode = 'balanced' } = req.body;

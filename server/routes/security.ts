@@ -125,7 +125,7 @@ router.get('/audit-logs/statistics', requireAdministrator, async (req, res) => {
  * GET /api/v1/security/notifications
  * Get all notifications for current user
  */
-router.get('/notifications', requireAdministrator, async (req, res) => {
+router.get('/notifications', requireAdministrator, (req, res) => {
   try {
     const unacknowledgedOnly = req.query.unacknowledged === 'true';
 

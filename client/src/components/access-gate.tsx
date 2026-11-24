@@ -69,7 +69,9 @@ export function AccessGate({ children }: { children: ReactNode }) {
               autoComplete="off"
               value={token}
               required
-              onChange={event => setToken(event.target.value)}
+              onChange={event => {
+                setToken(event.target.value);
+              }}
             />
           </label>
           {error && (

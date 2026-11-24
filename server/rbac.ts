@@ -380,7 +380,7 @@ async function authorizePermissionRequest(
   next: NextFunction,
   permission: Permission,
   resourceTypeOverride?: 'file' | 'archive',
-  selectResourceId?: (request: Request) => unknown
+  selectResourceId?: (_request: Request) => unknown
 ): Promise<void> {
   const authReq = req as RequestWithAuthContext;
   const resource = resolveRouteResource(req, resourceTypeOverride);
@@ -410,7 +410,7 @@ async function authorizePermissionRequest(
 export function requirePermission(
   permission: Permission,
   resourceTypeOverride?: 'file' | 'archive',
-  selectResourceId?: (request: Request) => unknown
+  selectResourceId?: (_request: Request) => unknown
 ): RequestHandler {
   return (req: Request, res: Response, next: NextFunction): void => {
     void authorizePermissionRequest(
